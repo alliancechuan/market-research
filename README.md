@@ -2,12 +2,14 @@
 
 ## 网页版（推荐，免装 Cursor）
 
-打开：
+**https://zhen-2mao-tech.github.io/crm-ecosystem-atlas/**
 
-**https://alliancechuan.github.io/market-research/**
+- 默认以**访客**进入，无需登录即可浏览与筛选
+- 公司邮箱登录后可做经办认领
 
-- 默认以**访客**进入，无需登录即可浏览
-- 公司邮箱登录后可做经办认领（初始密码问管理员）
+源码仓库（含 Canvas 与 Web 工程）：https://github.com/alliancechuan/market-research
+
+公开站点仓库：https://github.com/zhen-2mao-tech/crm-ecosystem-atlas
 
 ## 本地开发
 
@@ -19,4 +21,4 @@ npm run dev
 
 ## Cursor Canvas 版
 
-也可在 Cursor 中打开 `global-platform-fintech-atlas.canvas.tsx` 侧边预览。
+在 Cursor 中打开 `global-platform-fintech-atlas.canvas.tsx` 侧边预览。

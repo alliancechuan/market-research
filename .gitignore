@@ -1,0 +1,11 @@
+node_modules/
+web/node_modules/
+web/dist/
+*.canvas.tsx
+!global-platform-fintech-atlas.canvas.tsx
+*.canvas.data.json
+!global-platform-fintech-atlas.canvas.data.json
+*.canvas.status.json
+!global-platform-fintech-atlas.canvas.status.json
+tsconfig.json
+.DS_Store

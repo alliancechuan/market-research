@@ -31,6 +31,8 @@ import {
   type NbfcDataQuality,
 } from "./data/nbfcCountryStats";
 import { LendingHeatGlobe } from "./LendingHeatGlobe";
+import { InvestedHeatGlobe } from "./InvestedHeatGlobe";
+import { CombinedHeatGlobe } from "./CombinedHeatGlobe";
 
 /**
  * 分类（用户口径）
@@ -16815,7 +16817,7 @@ function AppTabBar({
   );
 }
 
-type ScreenSub = "home" | "nbfc";
+type ScreenSub = "overlay" | "home" | "invested" | "nbfc";
 
 function qualityTone(q: NbfcDataQuality): "success" | "warning" | "neutral" | "info" {
   if (q === "official") return "success";
@@ -16944,33 +16946,75 @@ function NbfcStatsSubpage() {
   );
 }
 
-/** 大屏：独立视图；子页逐步扩展 */
-function BigScreenOverview() {
+function MapPanel({ children }: { children: ReactNode }) {
   const theme = useHostTheme();
+  return (
+    <div
+      style={mergeStyle({
+        padding: 16,
+        borderRadius: 12,
+        background: theme.bg.elevated,
+        border: `1px solid ${theme.stroke.tertiary}`,
+      })}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** 大屏：红绿叠加（默认） */
+function BigScreenOverlay() {
+  return (
+    <Stack gap={14}>
+      <Stack gap={4}>
+        <H2>红绿叠加热力图</H2>
+        <Text size="small" tone="secondary">
+          底色红=市场放贷总量 · 绿色描边/圆点=已投国家（在贷越大越深越大）· 点击查看详情
+        </Text>
+      </Stack>
+      <MapPanel>
+        <CombinedHeatGlobe height={440} />
+      </MapPanel>
+    </Stack>
+  );
+}
+
+/** 大屏：市场放贷（红） */
+function BigScreenOverview() {
   return (
     <Stack gap={14}>
       <Stack gap={4}>
         <H2>放贷总量平面热力图</H2>
         <Text size="small" tone="secondary">
-          按 NBFC 统计子页各国放贷总量(USD)着色 · 越多越红 · 同国多口径已加总 · 平面展开静止展示
+          按市场放贷总量(USD)着色 · 越多越红 · 点击有数据国家可放大
         </Text>
       </Stack>
-      <div
-        style={mergeStyle({
-          padding: 16,
-          borderRadius: 12,
-          background: theme.bg.elevated,
-          border: `1px solid ${theme.stroke.tertiary}`,
-        })}
-      >
+      <MapPanel>
         <LendingHeatGlobe height={440} />
-      </div>
+      </MapPanel>
+    </Stack>
+  );
+}
+
+/** 大屏：已投生产商（绿） */
+function BigScreenInvested() {
+  return (
+    <Stack gap={14}>
+      <Stack gap={4}>
+        <H2>已投生产商热力图</H2>
+        <Text size="small" tone="secondary">
+          已投国家绿色点亮 · 生产商在贷余额越大颜色越深 · 点击国家查看已投平台
+        </Text>
+      </Stack>
+      <MapPanel>
+        <InvestedHeatGlobe height={440} />
+      </MapPanel>
     </Stack>
   );
 }
 
 function BigScreen() {
-  const [sub, setSub] = useCanvasState<ScreenSub>("screenSub2", "home");
+  const [sub, setSub] = useCanvasState<ScreenSub>("screenSub4", "overlay");
 
   return (
     <Stack gap={16}>
@@ -16982,15 +17026,35 @@ function BigScreen() {
       </Stack>
 
       <Row gap={8} wrap>
+        <Button
+          variant={sub === "overlay" ? "primary" : "secondary"}
+          onClick={() => setSub("overlay")}
+        >
+          红绿叠加
+        </Button>
         <Button variant={sub === "home" ? "primary" : "secondary"} onClick={() => setSub("home")}>
-          总览
+          仅红
+        </Button>
+        <Button
+          variant={sub === "invested" ? "primary" : "secondary"}
+          onClick={() => setSub("invested")}
+        >
+          仅绿
         </Button>
         <Button variant={sub === "nbfc" ? "primary" : "secondary"} onClick={() => setSub("nbfc")}>
           NBFC国家统计
         </Button>
       </Row>
 
-      {sub === "nbfc" ? <NbfcStatsSubpage /> : <BigScreenOverview />}
+      {sub === "nbfc" ? (
+        <NbfcStatsSubpage />
+      ) : sub === "invested" ? (
+        <BigScreenInvested />
+      ) : sub === "home" ? (
+        <BigScreenOverview />
+      ) : (
+        <BigScreenOverlay />
+      )}
     </Stack>
   );
 }

@@ -16768,7 +16768,69 @@ function DigitalSceneAtlasBrowse() {
   );
 }
 
+type AppTab = "crm" | "screen";
+
+function AppTabBar({
+  appTab,
+  setAppTab,
+}: {
+  appTab: AppTab;
+  setAppTab: (t: AppTab) => void;
+}) {
+  return (
+    <Row gap={8} align="center" wrap>
+      <Button
+        variant={appTab === "crm" ? "primary" : "secondary"}
+        onClick={() => setAppTab("crm")}
+      >
+        CRM生态系统
+      </Button>
+      <Button
+        variant={appTab === "screen" ? "primary" : "secondary"}
+        onClick={() => setAppTab("screen")}
+      >
+        大屏
+      </Button>
+    </Row>
+  );
+}
+
+/** 大屏：独立视图，后续逐步设计 */
+function BigScreen() {
+  const theme = useHostTheme();
+  return (
+    <Stack gap={16}>
+      <Stack gap={6}>
+        <H1>大屏</H1>
+        <Text size="small" tone="secondary">
+          独立展示视图 · 与 CRM 名单并行，互不影响
+        </Text>
+      </Stack>
+      <div
+        style={mergeStyle({
+          minHeight: 420,
+          padding: 24,
+          borderRadius: 12,
+          background: theme.bg.elevated,
+          border: `1px dashed ${theme.stroke.secondary}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        })}
+      >
+        <Stack gap={8} style={{ maxWidth: 480, textAlign: "center" }}>
+          <Text weight="medium">画布已就绪</Text>
+          <Text size="small" tone="secondary">
+            下一步可一起定：布局分区、核心指标、地图/名单、刷新节奏等。先说你想先落哪一块。
+          </Text>
+        </Stack>
+      </div>
+    </Stack>
+  );
+}
+
 export default function Canvas() {
+  const [appTab, setAppTab] = useCanvasState<AppTab>("appTab1", "crm");
   const [hub, setHub] = useCanvasState<"home" | InstitutionType>("hub6", "home");
   const [region, setRegion] = useCanvasState<Region>("region5", "all");
   const [country, setCountry] = useCanvasState<CountryCode>("country8", "all");
@@ -16951,11 +17013,21 @@ export default function Canvas() {
     return <LoginPage />;
   }
 
+  if (appTab === "screen") {
+    return (
+      <Stack gap={20}>
+        <SessionChrome />
+        <AppTabBar appTab={appTab} setAppTab={setAppTab} />
+        <BigScreen />
+      </Stack>
+    );
+  }
+
   return (
     <Stack gap={20}>
       <SessionChrome />
 
-      <H1>CRM生态系统</H1>
+      <AppTabBar appTab={appTab} setAppTab={setAppTab} />
 
       <CursorStyleComposer
         value={keyword}

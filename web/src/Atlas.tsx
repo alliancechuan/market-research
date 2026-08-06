@@ -24,6 +24,13 @@ import {
   useHostTheme,
 } from "cursor/canvas";
 import type { ReactNode } from "react";
+import {
+  DATA_QUALITY_LABEL,
+  NBFC_STATS,
+  downloadNbfcXlsx,
+  type NbfcDataQuality,
+} from "./data/nbfcCountryStats";
+import { LendingHeatGlobe } from "./LendingHeatGlobe";
 
 /**
  * 分类（用户口径）
@@ -16781,7 +16788,215 @@ function DigitalSceneAtlasBrowse() {
   );
 }
 
+type AppTab = "crm" | "screen";
+
+function AppTabBar({
+  appTab,
+  setAppTab,
+}: {
+  appTab: AppTab;
+  setAppTab: (t: AppTab) => void;
+}) {
+  return (
+    <Row gap={8} align="center" wrap>
+      <Button
+        variant={appTab === "crm" ? "primary" : "secondary"}
+        onClick={() => setAppTab("crm")}
+      >
+        CRM生态系统
+      </Button>
+      <Button
+        variant={appTab === "screen" ? "primary" : "secondary"}
+        onClick={() => setAppTab("screen")}
+      >
+        大屏
+      </Button>
+    </Row>
+  );
+}
+
+type ScreenSub = "home" | "nbfc";
+
+function qualityTone(q: NbfcDataQuality): "success" | "warning" | "neutral" | "info" {
+  if (q === "official") return "success";
+  if (q === "semi-official") return "warning";
+  if (q === "secondary") return "info";
+  return "neutral";
+}
+
+function NbfcStatsSubpage() {
+  const theme = useHostTheme();
+  const rows = NBFC_STATS.rows;
+  const withCount = rows.filter((r) => r.nbfc_count.trim()).length;
+  const official = rows.filter((r) => r.data_quality === "official").length;
+
+  const th: React.CSSProperties = {
+    position: "sticky",
+    top: 0,
+    zIndex: 1,
+    textAlign: "left",
+    padding: "8px 10px",
+    fontSize: 12,
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+    background: theme.bg.elevated,
+    borderBottom: `1px solid ${theme.stroke.secondary}`,
+    color: theme.text.secondary,
+  };
+  const td: React.CSSProperties = {
+    padding: "8px 10px",
+    fontSize: 12,
+    verticalAlign: "top",
+    borderBottom: `1px solid ${theme.stroke.tertiary}`,
+    color: theme.text.primary,
+    maxWidth: 220,
+  };
+
+  return (
+    <Stack gap={14}>
+      <Row gap={8} align="center" justify="space-between" wrap>
+        <Stack gap={4}>
+          <H2>NBFC 国家统计</H2>
+          <Text size="small" tone="secondary">
+            {NBFC_STATS.meta.title} · 更新 {NBFC_STATS.meta.updated} · {rows.length} 行 · 有机构数{" "}
+            {withCount} · 官方口径 {official}
+          </Text>
+        </Stack>
+        <Button variant="primary" onClick={downloadNbfcXlsx}>
+          Download
+        </Button>
+      </Row>
+
+      <Callout tone="info">
+        {NBFC_STATS.meta.note}
+        {NBFC_STATS.meta.fx_note ? ` ${NBFC_STATS.meta.fx_note}` : ""}
+      </Callout>
+
+      <div
+        style={{
+          overflow: "auto",
+          maxHeight: "70vh",
+          border: `1px solid ${theme.stroke.tertiary}`,
+          borderRadius: 10,
+          background: theme.bg.elevated,
+        }}
+      >
+        <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 1400 }}>
+          <thead>
+            <tr>
+              <th style={th}>国家</th>
+              <th style={th}>NBFC/等效</th>
+              <th style={th}>监管机构</th>
+              <th style={th}>机构数量</th>
+              <th style={th}>放贷总量</th>
+              <th style={th}>放贷总量(USD)</th>
+              <th style={th}>覆盖人数</th>
+              <th style={th}>平均放贷额</th>
+              <th style={th}>Default/NPL</th>
+              <th style={th}>时点</th>
+              <th style={th}>信源</th>
+              <th style={th}>质量</th>
+              <th style={th}>其他</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={`${r.country_code}-${r.nbfc_equivalent_name}-${i}`}>
+                <td style={td}>
+                  <Text size="small" weight="medium" as="span">
+                    {r.country_name_zh}
+                  </Text>
+                  <Text size="small" tone="tertiary" as="span">
+                    {" "}
+                    {r.country_code}
+                  </Text>
+                </td>
+                <td style={td}>{r.nbfc_equivalent_name || "—"}</td>
+                <td style={td}>{r.regulator || "—"}</td>
+                <td style={td}>{r.nbfc_count || "—"}</td>
+                <td style={td}>{r.loan_book_total || "—"}</td>
+                <td style={td}>{r.loan_book_usd || "—"}</td>
+                <td style={td}>{r.borrowers_covered || "—"}</td>
+                <td style={td}>{r.avg_loan_size || "—"}</td>
+                <td style={td}>{r.default_rate || "—"}</td>
+                <td style={td}>{r.as_of || "—"}</td>
+                <td style={td}>
+                  {r.source_url ? (
+                    <Link href={r.source_url}>{r.source_title || r.source_url}</Link>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td style={td}>
+                  <Pill size="sm" tone={qualityTone(r.data_quality)}>
+                    {DATA_QUALITY_LABEL[r.data_quality]}
+                  </Pill>
+                </td>
+                <td style={{ ...td, maxWidth: 260 }}>
+                  {[r.other_info, r.notes].filter(Boolean).join(" · ") || "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Stack>
+  );
+}
+
+/** 大屏：独立视图；子页逐步扩展 */
+function BigScreenOverview() {
+  const theme = useHostTheme();
+  return (
+    <Stack gap={14}>
+      <Stack gap={4}>
+        <H2>放贷总量平面热力图</H2>
+        <Text size="small" tone="secondary">
+          按 NBFC 统计子页各国放贷总量(USD)着色 · 越多越红 · 同国多口径已加总 · 平面展开静止展示
+        </Text>
+      </Stack>
+      <div
+        style={mergeStyle({
+          padding: 16,
+          borderRadius: 12,
+          background: theme.bg.elevated,
+          border: `1px solid ${theme.stroke.tertiary}`,
+        })}
+      >
+        <LendingHeatGlobe height={440} />
+      </div>
+    </Stack>
+  );
+}
+
+function BigScreen() {
+  const [sub, setSub] = useCanvasState<ScreenSub>("screenSub2", "home");
+
+  return (
+    <Stack gap={16}>
+      <Stack gap={6}>
+        <H1>大屏</H1>
+        <Text size="small" tone="secondary">
+          独立展示视图 · 与 CRM 名单并行，互不影响
+        </Text>
+      </Stack>
+
+      <Row gap={8} wrap>
+        <Button variant={sub === "home" ? "primary" : "secondary"} onClick={() => setSub("home")}>
+          总览
+        </Button>
+        <Button variant={sub === "nbfc" ? "primary" : "secondary"} onClick={() => setSub("nbfc")}>
+          NBFC国家统计
+        </Button>
+      </Row>
+
+      {sub === "nbfc" ? <NbfcStatsSubpage /> : <BigScreenOverview />}
+    </Stack>
+  );
+}
+
 export default function Canvas() {
+  const [appTab, setAppTab] = useCanvasState<AppTab>("appTab1", "crm");
   const [hub, setHub] = useCanvasState<"home" | InstitutionType>("hub6", "home");
   const [region, setRegion] = useCanvasState<Region>("region5", "all");
   const [country, setCountry] = useCanvasState<CountryCode>("country8", "all");
@@ -16965,11 +17180,21 @@ export default function Canvas() {
     return <LoginPage />;
   }
 
+  if (appTab === "screen") {
+    return (
+      <Stack gap={20}>
+        <SessionChrome />
+        <AppTabBar appTab={appTab} setAppTab={setAppTab} />
+        <BigScreen />
+      </Stack>
+    );
+  }
+
   return (
     <Stack gap={20}>
       <SessionChrome />
 
-      <H1>CRM生态系统</H1>
+      <AppTabBar appTab={appTab} setAppTab={setAppTab} />
 
       <CursorStyleComposer
         value={keyword}

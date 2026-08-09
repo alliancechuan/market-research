@@ -179,6 +179,261 @@
       "note": "联系汇率窄幅·USD/HKD",
       "asOf": "2025",
       "source": "联系汇率制度粗估"
+    },
+    "AE": {
+      "half_pct": 0.3,
+      "ccy": "AED",
+      "source": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/AED·2025–2026"
+    },
+    "AO": {
+      "half_pct": 0.6,
+      "ccy": "AOA",
+      "source": "±0.6%·年内高低相对均价粗算·currency-api·USD/AOA周抽样高低/均价·2025–2026"
+    },
+    "AR": {
+      "half_pct": 6.0,
+      "ccy": "ARS",
+      "source": "±6.0%·年内高低相对均价粗算·currency-api·USD/ARS周抽样高低/均价·2025–2026"
+    },
+    "BD": {
+      "half_pct": 1.0,
+      "ccy": "BDT",
+      "source": "±1.0%·年内高低相对均价粗算·currency-api·USD/BDT周抽样高低/均价·2025–2026"
+    },
+    "BF": {
+      "half_pct": 2.1,
+      "ccy": "XOF",
+      "source": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026"
+    },
+    "BH": {
+      "half_pct": 0.3,
+      "ccy": "BHD",
+      "source": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/BHD·2025–2026"
+    },
+    "BJ": {
+      "half_pct": 2.1,
+      "ccy": "XOF",
+      "source": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026"
+    },
+    "BW": {
+      "half_pct": 4.4,
+      "ccy": "BWP",
+      "source": "±4.4%·年内高低相对均价粗算·currency-api·USD/BWP周抽样高低/均价·2025–2026"
+    },
+    "CD": {
+      "half_pct": 16.5,
+      "ccy": "CDF",
+      "source": "±16.5%·年内高低相对均价粗算·currency-api·USD/CDF周抽样高低/均价·2025–2026"
+    },
+    "CI": {
+      "half_pct": 2.1,
+      "ccy": "XOF",
+      "source": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026"
+    },
+    "CL": {
+      "half_pct": 6.1,
+      "ccy": "CLP",
+      "source": "±6.1%·年内高低相对均价粗算·currency-api·USD/CLP周抽样高低/均价·2025–2026"
+    },
+    "CM": {
+      "half_pct": 2.1,
+      "ccy": "XAF",
+      "source": "±2.1%·CFA钉住欧元·沿用USD/XAF抽样高低/均价·currency-api·2025–2026"
+    },
+    "CO": {
+      "half_pct": 11.2,
+      "ccy": "COP",
+      "source": "±11.2%·年内高低相对均价粗算·currency-api·USD/COP周抽样高低/均价·2025–2026"
+    },
+    "DZ": {
+      "half_pct": 1.9,
+      "ccy": "DZD",
+      "source": "±1.9%·年内高低相对均价粗算·currency-api·USD/DZD周抽样高低/均价·2025–2026"
+    },
+    "EG": {
+      "half_pct": 7.7,
+      "ccy": "EGP",
+      "source": "±7.7%·年内高低相对均价粗算·currency-api·USD/EGP周抽样高低/均价·2025–2026"
+    },
+    "ET": {
+      "half_pct": 7.4,
+      "ccy": "ETB",
+      "source": "±7.4%·年内高低相对均价粗算·currency-api·USD/ETB周抽样高低/均价·2025–2026"
+    },
+    "GA": {
+      "half_pct": 2.1,
+      "ccy": "XAF",
+      "source": "±2.1%·CFA钉住欧元·沿用USD/XAF抽样高低/均价·currency-api·2025–2026"
+    },
+    "GH": {
+      "half_pct": 9.2,
+      "ccy": "GHS",
+      "source": "±9.2%·年内高低相对均价粗算·currency-api·USD/GHS周抽样高低/均价·2025–2026"
+    },
+    "IQ": {
+      "half_pct": 0.5,
+      "ccy": "IQD",
+      "source": "±0.5%内·管理浮动/钉住窄幅·年内高低相对均价粗算·USD/IQD·2025–2026"
+    },
+    "IR": {
+      "half_pct": 87.6,
+      "ccy": "IRR",
+      "source": "±87.6%·年内高低相对均价粗算·currency-api·USD/IRR周抽样高低/均价·2025–2026"
+    },
+    "JO": {
+      "half_pct": 0.5,
+      "ccy": "JOD",
+      "source": "±0.5%内·美元钉住窄幅·年内高低相对均价粗算·USD/JOD·2025–2026"
+    },
+    "KE": {
+      "half_pct": 0.6,
+      "ccy": "KES",
+      "source": "±0.6%·年内高低相对均价粗算·currency-api·USD/KES周抽样高低/均价·2025–2026"
+    },
+    "KW": {
+      "half_pct": 0.8,
+      "ccy": "KWD",
+      "source": "±0.8%·年内高低相对均价粗算·currency-api·USD/KWD周抽样高低/均价·2025–2026"
+    },
+    "KZ": {
+      "half_pct": 8.4,
+      "ccy": "KZT",
+      "source": "±8.4%·年内高低相对均价粗算·currency-api·USD/KZT周抽样高低/均价·2025–2026"
+    },
+    "LB": {
+      "half_pct": 1.8,
+      "ccy": "LBP",
+      "source": "±1.8%·年内高低相对均价粗算·currency-api·USD/LBP周抽样高低/均价·2025–2026"
+    },
+    "LK": {
+      "half_pct": 5.8,
+      "ccy": "LKR",
+      "source": "±5.8%·年内高低相对均价粗算·currency-api·USD/LKR周抽样高低/均价·2025–2026"
+    },
+    "LY": {
+      "half_pct": 8.6,
+      "ccy": "LYD",
+      "source": "±8.6%·年内高低相对均价粗算·currency-api·USD/LYD周抽样高低/均价·2025–2026"
+    },
+    "MA": {
+      "half_pct": 2.2,
+      "ccy": "MAD",
+      "source": "±2.2%·年内高低相对均价粗算·currency-api·USD/MAD周抽样高低/均价·2025–2026"
+    },
+    "MG": {
+      "half_pct": 5.2,
+      "ccy": "MGA",
+      "source": "±5.2%·年内高低相对均价粗算·currency-api·USD/MGA周抽样高低/均价·2025–2026"
+    },
+    "ML": {
+      "half_pct": 2.1,
+      "ccy": "XOF",
+      "source": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026"
+    },
+    "MN": {
+      "half_pct": 52.3,
+      "ccy": "MNT",
+      "source": "±6.0%·年内高低相对均价粗算·USD/MNT·currency-api抽样校正·2025–2026"
+    },
+    "MU": {
+      "half_pct": 2.6,
+      "ccy": "MUR",
+      "source": "±2.6%·年内高低相对均价粗算·currency-api·USD/MUR周抽样高低/均价·2025–2026"
+    },
+    "NA": {
+      "half_pct": 5.2,
+      "ccy": "NAD",
+      "source": "±5.2%·年内高低相对均价粗算·currency-api·USD/NAD周抽样高低/均价·2025–2026"
+    },
+    "NG": {
+      "half_pct": 6.7,
+      "ccy": "NGN",
+      "source": "±6.7%·年内高低相对均价粗算·currency-api·USD/NGN周抽样高低/均价·2025–2026"
+    },
+    "OM": {
+      "half_pct": 0.3,
+      "ccy": "OMR",
+      "source": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/OMR·2025–2026"
+    },
+    "PE": {
+      "half_pct": 2.9,
+      "ccy": "PEN",
+      "source": "±2.9%·年内高低相对均价粗算·currency-api·USD/PEN周抽样高低/均价·2025–2026"
+    },
+    "PK": {
+      "half_pct": 1.2,
+      "ccy": "PKR",
+      "source": "±1.2%·年内高低相对均价粗算·currency-api·USD/PKR周抽样高低/均价·2025–2026"
+    },
+    "PS": {
+      "half_pct": 9.8,
+      "ccy": "ILS",
+      "source": "±9.8%·年内高低相对均价粗算·currency-api·USD/ILS周抽样高低/均价·2025–2026"
+    },
+    "QA": {
+      "half_pct": 0.3,
+      "ccy": "QAR",
+      "source": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/QAR·2025–2026"
+    },
+    "RW": {
+      "half_pct": 1.2,
+      "ccy": "RWF",
+      "source": "±1.2%·年内高低相对均价粗算·currency-api·USD/RWF周抽样高低/均价·2025–2026"
+    },
+    "SA": {
+      "half_pct": 0.3,
+      "ccy": "SAR",
+      "source": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/SAR·2025–2026"
+    },
+    "SN": {
+      "half_pct": 2.1,
+      "ccy": "XOF",
+      "source": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026"
+    },
+    "TJ": {
+      "half_pct": 2.3,
+      "ccy": "TJS",
+      "source": "±2.3%·年内高低相对均价粗算·currency-api·USD/TJS周抽样高低/均价·2025–2026"
+    },
+    "TN": {
+      "half_pct": 1.8,
+      "ccy": "TND",
+      "source": "±1.8%·年内高低相对均价粗算·currency-api·USD/TND周抽样高低/均价·2025–2026"
+    },
+    "TW": {
+      "half_pct": 4.0,
+      "ccy": "TWD",
+      "source": "±4.0%·年内高低相对均价粗算·currency-api·USD/TWD周抽样高低/均价·2025–2026"
+    },
+    "TZ": {
+      "half_pct": 4.0,
+      "ccy": "TZS",
+      "source": "±4.0%·年内高低相对均价粗算·currency-api·USD/TZS周抽样高低/均价·2025–2026"
+    },
+    "UG": {
+      "half_pct": 4.4,
+      "ccy": "UGX",
+      "source": "±4.4%·年内高低相对均价粗算·currency-api·USD/UGX周抽样高低/均价·2025–2026"
+    },
+    "UZ": {
+      "half_pct": 3.2,
+      "ccy": "UZS",
+      "source": "±3.2%·年内高低相对均价粗算·currency-api·USD/UZS周抽样高低/均价·2025–2026"
+    },
+    "VN": {
+      "half_pct": 0.9,
+      "ccy": "VND",
+      "source": "±0.9%·年内高低相对均价粗算·currency-api·USD/VND周抽样高低/均价·2025–2026"
+    },
+    "ZM": {
+      "half_pct": 15.4,
+      "ccy": "ZMW",
+      "source": "±15.4%·年内高低相对均价粗算·currency-api·USD/ZMW周抽样高低/均价·2025–2026"
+    },
+    "ZW": {
+      "half_pct": 57.6,
+      "ccy": "ZWL",
+      "source": "±57.6%·年内高低相对均价粗算·currency-api·USD/ZWL周抽样高低/均价·2025–2026"
     }
   },
   "hh": {
@@ -373,6 +628,7 @@
     }
   },
   "meta": {
-    "fx_method": "±half-range/mean Frankfurter USD"
+    "fx_method": "currency-api weekly high-low/mean half-range",
+    "fx_vol_refreshed": "2026-08-09"
   }
 }

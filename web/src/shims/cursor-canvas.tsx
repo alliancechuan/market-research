@@ -5,6 +5,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type CSSProperties,
@@ -118,7 +119,8 @@ export function CanvasThemeProvider({ children }: { children: ReactNode }) {
 
 const STORE_KEY = "crm-atlas-web-state-v1";
 
-function readStore(): Record<string, unknown> {
+/** 内存镜像：同 key 的多个 useCanvasState 必须共享，否则登录 setSession 无法让父组件离开关门页 */
+const memoryStore: Record<string, unknown> = (() => {
   try {
     const raw = localStorage.getItem(STORE_KEY);
     if (!raw) return {};
@@ -126,34 +128,63 @@ function readStore(): Record<string, unknown> {
   } catch {
     return {};
   }
+})();
+
+const storeListeners = new Map<string, Set<() => void>>();
+
+function readStore(): Record<string, unknown> {
+  return memoryStore;
 }
 
-function writeStore(next: Record<string, unknown>) {
+function writeStore() {
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(next));
+    localStorage.setItem(STORE_KEY, JSON.stringify(memoryStore));
   } catch {
     /* ignore quota */
   }
 }
 
+function subscribeStore(key: string, listener: () => void) {
+  let set = storeListeners.get(key);
+  if (!set) {
+    set = new Set();
+    storeListeners.set(key, set);
+  }
+  set.add(listener);
+  return () => {
+    set!.delete(listener);
+  };
+}
+
+function notifyStore(key: string) {
+  const set = storeListeners.get(key);
+  if (!set) return;
+  for (const listener of set) listener();
+}
+
 export type SetCanvasState<T> = (action: T | ((prev: T) => T)) => void;
 
 export function useCanvasState<T>(key: string, defaultValue: T): [T, SetCanvasState<T>] {
-  const [value, setValue] = useState<T>(() => {
-    const store = readStore();
-    return key in store ? (store[key] as T) : defaultValue;
-  });
+  const read = (): T => (key in memoryStore ? (memoryStore[key] as T) : defaultValue);
+  const [value, setValue] = useState<T>(read);
+
+  useEffect(() => {
+    setValue(read());
+    return subscribeStore(key, () => {
+      setValue(read());
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- key/defaultValue identity
+  }, [key]);
 
   const setPersistent = useCallback<SetCanvasState<T>>(
     (action) => {
-      setValue((prev) => {
-        const next = typeof action === "function" ? (action as (p: T) => T)(prev) : action;
-        const store = readStore();
-        store[key] = next;
-        writeStore(store);
-        return next;
-      });
+      const prev = read();
+      const next = typeof action === "function" ? (action as (p: T) => T)(prev) : action;
+      memoryStore[key] = next;
+      writeStore();
+      notifyStore(key);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [key],
   );
 
@@ -665,6 +696,8 @@ export function Pill({
           padding: "0 8px",
           borderRadius: 999,
           fontSize: size === "sm" ? 11 : 12,
+          whiteSpace: "nowrap",
+          flexShrink: 0,
           border: `1px solid ${t.stroke.secondary}`,
           background: active ? t.fill.secondary : t.fill.quaternary,
           color: t.text.secondary,

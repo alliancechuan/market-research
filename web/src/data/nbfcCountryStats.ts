@@ -37,10 +37,18 @@ export type NbfcCountryStatsDataset = {
 
 export const NBFC_STATS: NbfcCountryStatsDataset = raw as NbfcCountryStatsDataset;
 
-/** 国家代码 → 中文名（来自统计表） */
-export const COUNTRY_LABEL_ZH: Record<string, string> = Object.fromEntries(
-  NBFC_STATS.rows.map((r) => [r.country_code, r.country_name_zh]),
-);
+/** 底图/名单缺省名；港澳台统一「中国×」口径 */
+const COUNTRY_LABEL_OVERRIDES: Record<string, string> = {
+  HK: "中国香港",
+  MO: "中国澳门",
+  TW: "中国台湾",
+};
+
+/** 国家代码 → 中文名（来自统计表 + 口径覆盖） */
+export const COUNTRY_LABEL_ZH: Record<string, string> = {
+  ...Object.fromEntries(NBFC_STATS.rows.map((r) => [r.country_code, r.country_name_zh])),
+  ...COUNTRY_LABEL_OVERRIDES,
+};
 
 /** 后台脚本生成的 Excel（scripts/generate-nbfc-xlsx.py），经 Vite 打包可下载 */
 export const NBFC_XLSX_HREF = nbfcXlsxUrl;

@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "source": "RBI NBFC CoR 公开名录交叉（全量 bs_nbfclist 未整表抓取；数字消费贷头部样本）",
+    "as_of": "2026-08-08",
+    "note": "印度 NBFC 全量数千家；此处仅导入 CRM 相关数字消费贷/BNPL 头部品牌作消金小贷标签种子",
+    "source_url": "https://www.rbi.org.in/scripts/bs_nbfclist.aspx"
+  },
+  "companies": [
+    { "brand": "KreditBee", "legalName": "KreditBee / Krazybee Services", "group": "KreditBee｜KreditBee｜KreditBee（KreditBee·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "MoneyView", "legalName": "MoneyView / Whizdm", "group": "MoneyView｜MoneyView｜MoneyView（MoneyView·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "CASHe", "legalName": "CASHe", "group": "CASHe｜CASHe｜CASHe（CASHe·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "EarlySalary", "legalName": "EarlySalary / Fibe", "group": "EarlySalary/Fibe｜Fibe｜EarlySalary（Fibe·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "Navi", "legalName": "Navi Finserv", "group": "Navi｜Navi｜Navi Finserv（Navi·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "Lendingkart", "legalName": "Lendingkart Finance", "group": "Lendingkart｜Lendingkart｜Lendingkart（Lendingkart·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "Capital Float", "legalName": "Capital Float / Axio", "group": "Axio/Capital Float｜Axio｜Axio（Axio·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "PaySense", "legalName": "PaySense", "group": "PaySense｜PaySense｜PaySense（PaySense·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "HomeCredit IN", "legalName": "Home Credit India", "group": "Home Credit IN｜HomeCredit｜Home Credit（HomeCredit·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "Bajaj Finance", "legalName": "Bajaj Finance", "group": "Bajaj Finance｜Bajaj｜Bajaj Finance（Bajaj·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "Muthoot", "legalName": "Muthoot Finance", "group": "Muthoot Finance｜Muthoot｜Muthoot（Muthoot·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "Manappuram", "legalName": "Manappuram Finance", "group": "Manappuram｜Manappuram｜Manappuram（Manappuram·IN）", "kind": "NBFC", "line": "cash" },
+    { "brand": "LazyPay", "legalName": "LazyPay / PayU", "group": "LazyPay｜LazyPay｜LazyPay（LazyPay·IN）", "kind": "NBFC/BNPL", "line": "bnpl" },
+    { "brand": "Simpl", "legalName": "Get Simpl", "group": "Simpl｜Simpl｜Get Simpl（Simpl·IN）", "kind": "BNPL合作", "line": "bnpl" },
+    { "brand": "ZestMoney", "legalName": "ZestMoney", "group": "ZestMoney｜ZestMoney｜ZestMoney（ZestMoney·IN）", "kind": "NBFC/BNPL", "line": "bnpl" }
+  ]
+}

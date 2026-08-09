@@ -5,33 +5,34 @@ import type { Feature, FeatureCollection, Geometry } from "geojson";
 import worldTopology from "world-atlas/countries-110m.json";
 import { COUNTRY_LABEL_ZH } from "./data/nbfcCountryStats";
 import {
-  INVESTED_BY_CODE,
-  PRODUCER_HOLDINGS,
-  formatUsdCompact,
-  type InvestedCountry,
-} from "./data/producerHoldings";
+  buildMacroMetric,
+  formatMacroValue,
+  type MacroMapFactorId,
+} from "./data/macroMapMetrics";
+import { getCountryMacro } from "./data/countryMacro";
+import { formatCountryLanguageLine } from "./data/countryLanguage";
 import {
-  MapSection,
-  MapKV,
-  MapDetailShell,
   MapChip,
   MapSvgFrame,
   MapTooltip,
   SteppedLegend,
   MapSideLegend,
   MapMuted,
-  useMapChrome,
-  producerCardStyle,
-  Button,
-  heatColorAdded,
+  MapDetailShell,
   MapCountryMacroBrief,
-  RankBarList,
+  MapSection,
+  MapKV,
+  useMapChrome,
+  Button,
+  heatColorRemoved,
   type MapLegendPlacement,
 } from "./HeatMapChrome";
-import { formatCountryLanguageLine } from "./data/countryLanguage";
+import { summarizeNbfcForCountry } from "./data/countryZoomDetails";
+import { INVESTED_BY_CODE, formatUsdCompact } from "./data/producerHoldings";
 
 type CountryProps = { name?: string };
 
+/** ISO 3166-1 numeric → CRM alpha-2（与放贷/已投图对齐） */
 const N3_TO_A2: Record<string, string> = {
   "356": "IN",
   "156": "CN",
@@ -40,19 +41,98 @@ const N3_TO_A2: Record<string, string> = {
   "764": "TH",
   "458": "MY",
   "484": "MX",
-  "608": "PH",
-  "344": "HK",
-  "704": "VN",
-  "410": "KR",
-  "158": "TW",
-  "840": "US",
-  "076": "BR",
-  "76": "BR",
+  "050": "BD",
+  "50": "BD",
   "710": "ZA",
+  "144": "LK",
+  "288": "GH",
+  "586": "PK",
   "566": "NG",
   "404": "KE",
-  "643": "RU",
+  "158": "TW",
+  "410": "KR",
+  "704": "VN",
+  "608": "PH",
+  "344": "HK",
+  "840": "US",
+  "124": "CA",
+  "826": "GB",
+  "076": "BR",
+  "76": "BR",
+  "170": "CO",
+  "032": "AR",
+  "32": "AR",
+  "604": "PE",
+  "152": "CL",
+  "818": "EG",
+  "504": "MA",
+  "682": "SA",
+  "784": "AE",
+  "792": "TR",
+  "276": "DE",
+  "250": "FR",
+  "528": "NL",
+  "724": "ES",
+  "620": "PT",
+  "380": "IT",
+  "752": "SE",
+  "616": "PL",
+  "372": "IE",
+  "036": "AU",
+  "36": "AU",
+  "554": "NZ",
   "702": "SG",
+  "704": "VN",
+  "012": "DZ",
+  "818": "EG",
+  "434": "LY",
+  "788": "TN",
+  "686": "SN",
+  "384": "CI",
+  "120": "CM",
+  "566": "NG",
+  "288": "GH",
+  "404": "KE",
+  "800": "UG",
+  "834": "TZ",
+  "231": "ET",
+  "710": "ZA",
+  "508": "MZ",
+  "894": "ZM",
+  "716": "ZW",
+  "072": "BW",
+  "516": "NA",
+  "478": "MR",
+  "480": "MU",
+  "450": "MG",
+  "646": "RW",
+  "024": "AO",
+  "178": "CG",
+  "180": "CD",
+  "266": "GA",
+  "854": "BF",
+  "466": "ML",
+  "204": "BJ",
+  "368": "IQ",
+  "364": "IR",
+  "760": "SY",
+  "887": "YE",
+  "400": "JO",
+  "422": "LB",
+  "275": "PS",
+  "376": "IL",
+  "414": "KW",
+  "512": "OM",
+  "048": "BH",
+  "634": "QA",
+  "398": "KZ",
+  "860": "UZ",
+  "417": "KG",
+  "762": "TJ",
+  "795": "TM",
+  "496": "MN",
+  "643": "RU",
+  "804": "UA",
 };
 
 function normId(id: string | number | undefined): string {
@@ -60,80 +140,83 @@ function normId(id: string | number | undefined): string {
   return String(id).replace(/^0+/, "") || "0";
 }
 
-function aggregateInvestedOutstandingUsd(): Record<string, number> {
-  const out: Record<string, number> = {};
-  for (const c of PRODUCER_HOLDINGS.countries) {
-    if (c.outstanding_usd_for_heat > 0) out[c.country_code] = c.outstanding_usd_for_heat;
-  }
-  return out;
-}
-
-
 type HoverInfo = {
   a2: string;
   name: string;
-  outstandingUsd: number;
-  investmentUsd: number;
-  producerCount: number;
+  value: number;
+  raw: string;
   x: number;
   y: number;
 };
 
-function CountryDetailPanel({
+function MacroDetailPanel({
   code,
-  invested,
+  factorId,
   onClose,
   overlay = false,
 }: {
   code: string;
-  invested: InvestedCountry | undefined;
+  factorId: MacroMapFactorId;
   onClose: () => void;
   overlay?: boolean;
 }) {
-  const { theme, c } = useMapChrome();
-  const name = COUNTRY_LABEL_ZH[code] ?? invested?.country_zh ?? code;
+  const metric = buildMacroMetric(factorId);
+  const name = COUNTRY_LABEL_ZH[code] ?? code;
+  const nbfc = summarizeNbfcForCountry(code);
+  const invested = INVESTED_BY_CODE[code];
+  const snap = getCountryMacro(code);
+  const v = metric.byCode[code];
   const langLine = formatCountryLanguageLine(code);
   return (
     <MapDetailShell
       title={`${name} · ${code}`}
-      subtitle={langLine ? `${langLine} · 已投生产商详情` : "已投生产商详情"}
+      subtitle={[langLine, `宏观分布 · ${metric.label}`, snap?.asOf].filter(Boolean).join(" · ")}
       onClose={onClose}
       overlay={overlay}
     >
-      <MapSection title="已投生产商">
-        {invested ? (
-          <>
-            <MapKV k="基金投资合计" v={formatUsdCompact(invested.investment_usd)} />
-            <MapKV k="热力在贷合计" v={formatUsdCompact(invested.outstanding_usd_for_heat)} />
-            <MapKV k="平台数" v={String(invested.producers.length)} />
-            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
-              {invested.producers.map((p) => (
-                <div key={p.id} style={producerCardStyle(theme)}>
-                  <div style={{ fontWeight: 600, color: c.added, marginBottom: 4 }}>{p.name}</div>
-                  <div style={{ color: c.textTertiary, marginBottom: 6 }}>{p.product_type}</div>
-                  <MapKV k="基金投资" v={formatUsdCompact(p.investment_usd)} />
-                  <MapKV k="在贷余额" v={p.outstanding_display} />
-                  <MapKV k="服务客户数" v={p.customers_display} />
-                  {p.ranking_note ? <MapKV k="排名/定位" v={p.ranking_note} /> : null}
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <MapMuted>该国暂无已投生产商记录</MapMuted>
-        )}
+      <MapSection title="当前图层读数">
+        <MapKV
+          k={metric.label}
+          v={
+            v != null
+              ? `${formatMacroValue(factorId, v)}（${metric.unit}）`
+              : "该国暂无该因子数值"
+          }
+        />
+        {metric.rawByCode[code] ? <MapKV k="原文口径" v={metric.rawByCode[code]} /> : null}
+        <MapMuted>{metric.blurb}</MapMuted>
       </MapSection>
       <MapCountryMacroBrief code={code} />
+      {invested ? (
+        <MapSection title="已投对照">
+          <MapKV k="基金投资" v={formatUsdCompact(invested.investment_usd)} />
+          <MapKV k="热力在贷" v={formatUsdCompact(invested.outstanding_usd_for_heat)} />
+        </MapSection>
+      ) : null}
+      {nbfc && nbfc.lendingUsdBn > 0 ? (
+        <MapSection title="市场放贷对照">
+          <MapKV
+            k="放贷总量(USD)"
+            v={`约 USD ${nbfc.lendingUsdBn >= 10 ? nbfc.lendingUsdBn.toFixed(1) : nbfc.lendingUsdBn.toFixed(2)} bn`}
+          />
+        </MapSection>
+      ) : null}
     </MapDetailShell>
   );
 }
 
-export function InvestedHeatGlobe({
+/**
+ * 宏观因子地域分布图：单因子色阶面填。
+ * 与放贷/已投图并列——宏观定风险中枢，点击看全套因子 + 放贷/已投对照。
+ */
+export function MacroHeatGlobe({
   height = 420,
+  factor = "hhDebt",
   fill = false,
   legendPlacement = "side",
 }: {
   height?: number;
+  factor?: MacroMapFactorId;
   fill?: boolean;
   legendPlacement?: MapLegendPlacement;
 }) {
@@ -141,13 +224,15 @@ export function InvestedHeatGlobe({
   const width = Math.round(height * 2.05);
   const bottomLegend = fill || legendPlacement === "bottom";
   const place: MapLegendPlacement = bottomLegend ? "bottom" : "side";
-  const outstanding = useMemo(() => aggregateInvestedOutstandingUsd(), []);
-  const values = useMemo(() => Object.values(outstanding), [outstanding]);
-  const maxUsd = useMemo(() => Math.max(...values, 1), [values]);
-  const minUsd = useMemo(
-    () => Math.min(...values.filter((v) => v > 0), maxUsd),
-    [values, maxUsd],
-  );
+  const metric = useMemo(() => buildMacroMetric(factor), [factor]);
+  const vals = useMemo(() => Object.values(metric.byCode), [metric]);
+  const minV = useMemo(() => (vals.length ? Math.min(...vals) : 0), [vals]);
+  const maxV = useMemo(() => (vals.length ? Math.max(...vals) : 1), [vals]);
+
+  const intensity = (v: number) => {
+    if (!(maxV > minV)) return 1;
+    return Math.min(1, Math.max(0, (v - minV) / (maxV - minV)));
+  };
 
   const countries = useMemo(() => {
     const topo = worldTopology as {
@@ -175,7 +260,7 @@ export function InvestedHeatGlobe({
     return countries.features.find((f) => a2Of(f) === focus) ?? null;
   }, [focus, countries]);
 
-  const { pathGen, outline } = useMemo(() => {
+  const { pathGen, outline, graticulePath } = useMemo(() => {
     const projection = geoNaturalEarth1();
     if (focusFeature) {
       projection.fitExtent(
@@ -194,36 +279,19 @@ export function InvestedHeatGlobe({
         { type: "Sphere" },
       );
     }
-    const pathGen = geoPath(projection);
-    return { pathGen, outline: pathGen({ type: "Sphere" }) };
-  }, [width, height, focusFeature]);
-
-  const graticulePath = useMemo(() => pathGen(geoGraticule10()), [pathGen]);
-
-  const intensity = (usd: number) => {
-    if (!(usd > 0)) return 0;
-    const lo = Math.log10(minUsd);
-    const hi = Math.log10(maxUsd);
-    if (hi <= lo) return 1;
-    return (Math.log10(usd) - lo) / (hi - lo);
-  };
+    const path = geoPath(projection);
+    return {
+      pathGen: path,
+      outline: path({ type: "Sphere" }) ?? "",
+      graticulePath: path(geoGraticule10()) ?? "",
+    };
+  }, [focusFeature, width, height]);
 
   const ranked = useMemo(
     () =>
-      [...PRODUCER_HOLDINGS.countries].sort(
-        (a, b) => b.outstanding_usd_for_heat - a.outstanding_usd_for_heat,
-      ),
-    [],
+      Object.entries(metric.byCode).sort((a, b) => b[1] - a[1]),
+    [metric],
   );
-
-  const mapCodes = useMemo(() => {
-    const set = new Set<string>();
-    for (const f of countries.features) {
-      const a2 = a2Of(f);
-      if (a2) set.add(a2);
-    }
-    return set;
-  }, [countries]);
 
   return (
     <div
@@ -283,7 +351,7 @@ export function InvestedHeatGlobe({
               }
         }
       >
-        {focus ? (
+        {focus && !bottomLegend ? (
           <div
             style={{
               position: "absolute",
@@ -298,9 +366,7 @@ export function InvestedHeatGlobe({
             <Button variant="secondary" onClick={() => setFocus(null)}>
               返回全球
             </Button>
-            <MapChip>
-              已放大：{COUNTRY_LABEL_ZH[focus] ?? INVESTED_BY_CODE[focus]?.country_zh ?? focus}
-            </MapChip>
+            <MapChip>已放大：{COUNTRY_LABEL_ZH[focus] ?? focus}</MapChip>
           </div>
         ) : null}
 
@@ -311,55 +377,51 @@ export function InvestedHeatGlobe({
           ) : null}
           {countries.features.map((f, i) => {
             const a2 = a2Of(f);
-            const usd = a2 ? (outstanding[a2] ?? 0) : 0;
+            const v = a2 != null ? metric.byCode[a2] : undefined;
             const d = pathGen(f);
             if (!d) return null;
             const isFocus = focus != null && a2 === focus;
             const dimmed = focus != null && !isFocus;
-            const fill = usd > 0 ? heatColorAdded(intensity(usd), theme) : c.emptyLand;
-            const stroke = isFocus ? c.added : usd > 0 ? c.added : c.landStroke;
+            const has = v != null;
+            const fillColor = has ? heatColorRemoved(intensity(v), theme) : c.emptyLand;
             return (
               <path
                 key={`${f.id ?? i}`}
                 d={d}
-                fill={fill}
-                stroke={stroke}
-                strokeWidth={isFocus ? 1.4 : usd > 0 ? 0.55 : 0.35}
+                fill={fillColor}
+                stroke={isFocus ? c.accent : c.landStroke}
+                strokeWidth={isFocus ? 1.4 : has ? 0.55 : 0.35}
                 opacity={dimmed ? 0.22 : 1}
-                style={{ cursor: usd > 0 || INVESTED_BY_CODE[a2 || ""] ? "pointer" : "default" }}
+                style={{ cursor: has ? "pointer" : "default" }}
                 onClick={() => {
-                  if (a2 && (usd > 0 || INVESTED_BY_CODE[a2])) {
+                  if (a2 && has) {
                     setFocus(a2);
                     setHover(null);
                   }
                 }}
                 onMouseEnter={(ev) => {
-                  if (!a2 || !(usd > 0 || INVESTED_BY_CODE[a2])) {
+                  if (!a2 || v == null) {
                     setHover(null);
                     return;
                   }
-                  const inv = INVESTED_BY_CODE[a2];
                   const rect = (ev.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
                   setHover({
                     a2,
-                    name: COUNTRY_LABEL_ZH[a2] ?? inv?.country_zh ?? f.properties?.name ?? a2,
-                    outstandingUsd: inv?.outstanding_usd_for_heat ?? usd,
-                    investmentUsd: inv?.investment_usd ?? 0,
-                    producerCount: inv?.producers.length ?? 0,
+                    name: COUNTRY_LABEL_ZH[a2] ?? f.properties?.name ?? a2,
+                    value: v,
+                    raw: metric.rawByCode[a2] ?? "",
                     x: ev.clientX - rect.left,
                     y: ev.clientY - rect.top,
                   });
                 }}
                 onMouseMove={(ev) => {
-                  if (!a2 || !(usd > 0 || INVESTED_BY_CODE[a2])) return;
-                  const inv = INVESTED_BY_CODE[a2];
+                  if (!a2 || v == null) return;
                   const rect = (ev.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
                   setHover({
                     a2,
-                    name: COUNTRY_LABEL_ZH[a2] ?? inv?.country_zh ?? f.properties?.name ?? a2,
-                    outstandingUsd: inv?.outstanding_usd_for_heat ?? usd,
-                    investmentUsd: inv?.investment_usd ?? 0,
-                    producerCount: inv?.producers.length ?? 0,
+                    name: COUNTRY_LABEL_ZH[a2] ?? f.properties?.name ?? a2,
+                    value: v,
+                    raw: metric.rawByCode[a2] ?? "",
                     x: ev.clientX - rect.left,
                     y: ev.clientY - rect.top,
                   });
@@ -375,20 +437,20 @@ export function InvestedHeatGlobe({
           <MapTooltip
             left={Math.min(hover.x + 12, width - 200)}
             top={Math.max(8, hover.y - 56)}
-            accent="added"
+            accent="removed"
           >
             <div style={{ fontWeight: 600 }}>{hover.name}</div>
-            <div style={{ color: c.added }}>在贷(热力) {formatUsdCompact(hover.outstandingUsd)}</div>
             <div style={{ color: c.textSecondary }}>
-              基金 {formatUsdCompact(hover.investmentUsd)} · {hover.producerCount} 家平台
+              {metric.label} · {formatMacroValue(factor, hover.value)}
             </div>
+            <div style={{ color: c.textTertiary, marginTop: 2, fontSize: 11 }}>点击查看全套宏观因子</div>
           </MapTooltip>
         ) : null}
 
         {focus && bottomLegend ? (
-          <CountryDetailPanel
+          <MacroDetailPanel
             code={focus}
-            invested={INVESTED_BY_CODE[focus]}
+            factorId={factor}
             onClose={() => setFocus(null)}
             overlay
           />
@@ -396,15 +458,15 @@ export function InvestedHeatGlobe({
       </div>
 
       {focus && !bottomLegend ? (
-        <CountryDetailPanel
-          code={focus}
-          invested={INVESTED_BY_CODE[focus]}
-          onClose={() => setFocus(null)}
-        />
+        <MacroDetailPanel code={focus} factorId={factor} onClose={() => setFocus(null)} />
       ) : null}
       {!focus ? (
-        <MapSideLegend title="已投图例" placement={place}>
-          <SteppedLegend label="在贷余额 · 少 → 多" kind="added" compact={bottomLegend} />
+        <MapSideLegend title={`${metric.label} · 地域分布`} placement={place}>
+          <SteppedLegend
+            label={`${metric.label}（${metric.unit}）· 低 → 高`}
+            kind="gray"
+            compact={bottomLegend}
+          />
           <div
             style={{
               fontSize: 12,
@@ -413,26 +475,42 @@ export function InvestedHeatGlobe({
               marginTop: bottomLegend ? 8 : 0,
             }}
           >
-            已投 {ranked.length} 国 · 基金合计 {formatUsdCompact(PRODUCER_HOLDINGS.total_investment_usd)} ·
-            点击横条放大
+            有读数 {metric.count} 国 · {metric.blurb}
+            {metric.sense === "high_risk" ? " · 色深=读数高（风险向）" : " · 色深=读数高（容量向）"}
           </div>
-          <RankBarList
-            compact={false}
-            maxVisible={bottomLegend ? 20 : undefined}
-            scaleHint="条长 ∝ 展业在贷（相对列表最大值）"
-            onSelect={(code) => setFocus(code)}
-            items={ranked.map((row) => ({
-              key: row.country_code,
-              label: COUNTRY_LABEL_ZH[row.country_code] ?? row.country_zh,
-              value: row.outstanding_usd_for_heat,
-              valueLabel: formatUsdCompact(row.outstanding_usd_for_heat),
-            }))}
-          />
-          {INVESTED_BY_CODE.HK && !mapCodes.has("HK") ? (
-            <div style={{ marginTop: 10, fontSize: 11, color: c.textSecondary, lineHeight: 1.5 }}>
-              中国香港在底图无独立面，地图上以锚点标出，可直接点击。
-            </div>
-          ) : null}
+          <ol
+            style={{
+              margin: 0,
+              paddingLeft: 18,
+              fontSize: 12,
+              color: c.text,
+              lineHeight: 1.7,
+              maxHeight: 280,
+              overflow: "auto",
+            }}
+          >
+            {ranked.map(([code, v]) => (
+              <li key={code}>
+                <button
+                  type="button"
+                  onClick={() => setFocus(code)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    color: c.link,
+                    cursor: "pointer",
+                    font: "inherit",
+                    textDecoration: "underline",
+                  }}
+                >
+                  {COUNTRY_LABEL_ZH[code] ?? code}
+                </button>
+                {" · "}
+                {formatMacroValue(factor, v)}
+              </li>
+            ))}
+          </ol>
         </MapSideLegend>
       ) : null}
     </div>

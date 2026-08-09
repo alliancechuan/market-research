@@ -16,30 +16,78 @@ import {
   Select,
   Stack,
   Stat,
+  Table,
   Text,
   TextInput,
   UsageBar,
   mergeStyle,
   useCanvasState,
   useHostTheme,
-} from "cursor/canvas";
-import type { ReactNode } from "react";
+} from "./shims/cursor-canvas";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import {
   DATA_QUALITY_LABEL,
   NBFC_STATS,
   downloadNbfcXlsx,
   type NbfcDataQuality,
 } from "./data/nbfcCountryStats";
+import {
+  STORE_RANK_FINANCE,
+  compareByStoreRank,
+  countRanksForCountry,
+  lookupStoreRank,
+  storeRankSortOptions,
+  type StoreRankSortMode,
+} from "./data/storeRankFinance";
 import { LendingHeatGlobe } from "./LendingHeatGlobe";
 import { InvestedHeatGlobe } from "./InvestedHeatGlobe";
 import { CombinedHeatGlobe } from "./CombinedHeatGlobe";
+import { MacroHeatGlobe } from "./MacroHeatGlobe";
+import { MACRO_MAP_FACTORS, type MacroMapFactorId } from "./data/macroMapMetrics";
+import { VitalPyramid } from "./VitalPyramid";
+import { getVitalCountry } from "./data/vitalSeries";
+import { CreditDebtCharts, FxCaCharts, IncomeSectorCharts } from "./MacroFactorCharts";
+import { MORNING_BRIEF_36KR } from "./data/morningBrief36kr";
+import {
+  PAYMENT_KIND_BLURB,
+  PAYMENT_KIND_LABEL,
+  PAYMENT_KIND_ORDER,
+  PAYMENT_SERVICE_ROSTER,
+  type PaymentServiceKind,
+} from "./data/paymentServiceRoster";
+import {
+  EQUITY_INVESTOR_ROSTER,
+  EQUITY_KIND_BLURB,
+  EQUITY_KIND_LABEL,
+  EQUITY_KIND_ORDER,
+  equityMatchGroup,
+  type EquityInvestorKind,
+} from "./data/equityInvestorRoster";
+import { AGENT_SCENE_LEAVES, AI_PRODUCT_RANK_36KR } from "./data/aiProductRank36kr";
+import {
+  displayCreditNote,
+  getCountryMacro,
+  synthesizeCashLoanBrief,
+} from "./data/countryMacro";
+import {
+  COUNTRY_LANGUAGE,
+  LANGUAGE_ZONE_ORDER,
+  countriesInLanguageZone,
+  countryLanguageZone,
+  formatCountryLanguageLine,
+  getCountryLanguage,
+} from "./data/countryLanguage";
+import phSecLendingRoster from "./data/ph-sec-lending-roster.json";
+import inNbfcDigitalRoster from "./data/in-nbfc-digital-roster.json";
+
+
 
 /**
  * 分类（用户口径）
  * CRM 主档：机构（Institution）优先
  *    - 系统内先建机构并做 KYC；唯一识别=机构证件号码
  *    - 机构主体：以集团金融及金融生态服务为主业核心的控股主体
- *    - 机构类型：玩家（下场）| 流量服务商 | 数据服务方 | 监管 | 资金参与机构 | 风险参与机构
+ *    - 机构类型：玩家（下场）| 流量服务商 | 数据服务方 | 监管 | 资金参与机构 | 风险参与机构 | 股权投资人
  *               | 风控服务方 | 支付服务机构 | 回收机构 | 权益服务商 | 触达服务机构
  *               | 公关服务机构 | 信托服务机构 | 会计师事务所 | 律师事务所 | 评级机构
  *    - 资金参与机构细分：本地银行 | 本地银行代理 | 结构化服务商 | 优先投资人 | 夹层投资人
@@ -53,6 +101,8 @@ import { CombinedHeatGlobe } from "./CombinedHeatGlobe";
  * 信源（机构进出市场；系统定期检索引入；亦可人工创建；未来可扩信源）：
  *    - 流量源 · 监管源 · 经办认领（客户经理联系确认，对信息质量负责）
  *    - 研报源 · 墨腾创投（Momentum Works / 微信「墨腾创投」）：东南亚平台与金融科技长期学习源；见 MOTENG_LEARNED
+ *    - 宏观源 · Trading Economics：国家/地区维度；入口 hub=macro（与机构类型同级点选）；框架见 MacroFactorFrameworkOverview；单国卡片 CountryMacroPanel / COUNTRY_MACRO
+ *    - 债券源 · 中国货币网（chinamoney.com.cn / .org.cn）：银行间债市发行/流通/兑付/评级披露；核验国内 ABS·ABN·企业债等；见 CHINAMONEY_BOND
  *    - 场景 taxonomy 源 · 线上数字经济场景（Web2/Web3/Agent；见 SCENE_WIDE_TABLE / WEB3_SCENE_WIDE_TABLE）
  *    - 广告平台 Partner 目录源 · Meta/Google/TikTok/Apple Search Ads 官方目录（见 STANDARD_TRAFFIC_SOURCES）
  *    - 信源核实不作前端筛选标签；展开详情展示；多源齐备可给完整验证角标，提示客户经理用更高质量信源跟进
@@ -112,6 +162,8 @@ type GuaranteeRole = "商户" | "政府" | "平台" | "担保/保险公司" | "�
 type CountryCode =
   | "all"
   | "CN"
+  | "HK"
+  | "MO"
   | "TW"
   | "JP"
   | "KR"
@@ -121,6 +173,7 @@ type CountryCode =
   | "MY"
   | "TH"
   | "PH"
+  | "SG"
   | "IN"
   | "BD"
   | "PK"
@@ -194,7 +247,8 @@ type CountryCode =
   | "IT"
   | "SE"
   | "PL"
-  | "IE";
+  | "IE"
+  | "RU";
 /** 信贷横切标签：与三产品线正交（现金贷/消费分期/信用租赁均可兼发） */
 type CreditTag = "信用卡";
 /** 涉及金融牌照（粗类；明细在 licenseReg）。「其他」= 证券/租赁/征信等明确非四类牌照 */
@@ -210,6 +264,7 @@ type InstitutionType =
   | "监管"
   | "资金参与机构"
   | "风险参与机构"
+  | "股权投资人"
   | "风控服务方"
   | "支付服务机构"
   | "回收机构"
@@ -231,6 +286,8 @@ type FundParticipationKind =
   | "夹层投资人";
 /** 流量服务商细分（挂在「流量服务商」类型下） */
 type TrafficServiceKind = "流量平台" | "代理商" | "贷超" | "代理运营";
+/** 支付服务机构细分（挂在「支付服务机构」类型下） */
+type PaymentKind = PaymentServiceKind;
 /** 信源渠道（引入/核实机构；非经营性征标签） */
 type SourceChannel = "流量源" | "监管源" | "经办认领";
 /** 场景多标签（一玩家可多选）；「信用管理」横切亦可挂场景侧；大宽表+Web3 To C */
@@ -398,6 +455,10 @@ type CreditRow = {
   fundKinds: FundParticipationKind[];
   /** 流量服务商细分；非流量服务商则为空 */
   trafficKinds: TrafficServiceKind[];
+  /** 支付服务机构细分；非支付服务机构则为空 */
+  paymentKinds: PaymentKind[];
+  /** 股权投资人细分；非股权投资人则为空 */
+  equityKinds: EquityInvestorKind[];
   brands: string;
   countries: string;
   languages: string;
@@ -479,6 +540,8 @@ type CreditDraft = Omit<
   | "ecoRoles"
   | "fundKinds"
   | "trafficKinds"
+  | "paymentKinds"
+  | "equityKinds"
   | "founded"
   | "employees"
   | "orgDocNo"
@@ -498,6 +561,8 @@ type CreditDraft = Omit<
       | "ecoRoles"
       | "fundKinds"
       | "trafficKinds"
+      | "paymentKinds"
+      | "equityKinds"
       | "founded"
       | "employees"
       | "orgDocNo"
@@ -527,7 +592,9 @@ const REGION_LABEL: Record<Region, string> = {
 
 const COUNTRY_LABEL: Record<CountryCode, string> = {
   all: "全部",
-  CN: "中国",
+  CN: "中国大陆",
+  HK: "中国香港",
+  MO: "中国澳门",
   TW: "中国台湾",
   JP: "日本",
   KR: "韩国",
@@ -537,6 +604,7 @@ const COUNTRY_LABEL: Record<CountryCode, string> = {
   MY: "马来西亚",
   TH: "泰国",
   PH: "菲律宾",
+  SG: "新加坡",
   IN: "印度",
   BD: "孟加拉",
   PK: "巴基斯坦",
@@ -608,18 +676,19 @@ const COUNTRY_LABEL: Record<CountryCode, string> = {
   SE: "瑞典",
   PL: "波兰",
   IE: "爱尔兰",
+  RU: "俄罗斯",
 };
 
 /** 洲际 → 可选国家/地区（不含 all；选「全部洲际」时展示全部国家） */
 const COUNTRIES_BY_REGION: Record<Exclude<Region, "all">, Exclude<CountryCode, "all">[]> = {
-  "east-asia": ["CN", "TW", "JP", "KR", "MN"],
-  "se-asia": ["ID", "VN", "MY", "TH", "PH"],
+  "east-asia": ["CN", "HK", "MO", "TW", "JP", "KR", "MN"],
+  "se-asia": ["ID", "VN", "MY", "TH", "PH", "SG"],
   "south-asia": ["IN", "BD", "PK", "LK"],
   "central-asia": ["KZ", "UZ", "KG", "TJ", "TM"],
   latam: ["MX", "BR", "CO", "AR", "PE", "CL"],
   mena: ["EG", "MA", "DZ", "TN", "LY", "SD", "SA", "AE", "BH", "QA", "KW", "OM", "JO", "LB", "IQ", "IL", "PS", "TR", "YE", "IR"],
   africa: ["NG", "KE", "GH", "ZA", "TZ", "UG", "RW", "ET", "CI", "SN", "CM", "AO", "MZ", "ZM", "ZW", "BW", "NA", "MU", "MG", "BJ", "BF", "ML", "CD", "GA"],
-  west: ["US", "CA", "GB", "DE", "FR", "NL", "ES", "PT", "IT", "SE", "PL", "IE"],
+  west: ["US", "CA", "GB", "DE", "FR", "NL", "ES", "PT", "IT", "SE", "PL", "IE", "RU"],
 };
 
 function countriesForRegion(region: Region): CountryCode[] {
@@ -629,9 +698,124 @@ function countriesForRegion(region: Region): CountryCode[] {
   return ["all", ...COUNTRIES_BY_REGION[region]];
 }
 
-function countryInRegion(country: CountryCode, region: Region): boolean {
-  if (country === "all" || region === "all") return true;
-  return COUNTRIES_BY_REGION[region].includes(country);
+/** 单国码（不含 all） */
+type CountryCodeOne = Exclude<CountryCode, "all">;
+/**
+ * 国家筛选（兼容旧版单码字符串 + 多选数组）：
+ * - `"all"`：不收窄
+ * - 单码如 `"MX"`：只该国（持久化 country8 仍可能是这种）
+ * - 数组：多选；从「全部」点掉一国 → 池内其余全选
+ */
+type CountryFilter = "all" | CountryCodeOne | CountryCodeOne[];
+
+function regionCountryPool(region: Region): CountryCodeOne[] {
+  return countriesForRegion(region).filter((c): c is CountryCodeOne => c !== "all");
+}
+
+/** 把持久化/半成品状态归一成 all | 单码数组 */
+function normalizeCountryFilter(sel: unknown): "all" | CountryCodeOne[] {
+  if (sel == null || sel === "all" || sel === "") return "all";
+  if (Array.isArray(sel)) {
+    const next = sel.filter((c): c is CountryCodeOne => typeof c === "string" && c !== "all");
+    return next.length === 0 ? "all" : next;
+  }
+  if (typeof sel === "string") return [sel as CountryCodeOne];
+  return "all";
+}
+
+function countryInRegion(country: CountryCode | CountryFilter, region: Region): boolean {
+  const n = normalizeCountryFilter(country);
+  if (n === "all" || region === "all") return true;
+  const pool = new Set(regionCountryPool(region));
+  return n.every((c) => pool.has(c));
+}
+
+function countryFilterSingle(sel: CountryFilter): CountryCodeOne | null {
+  const n = normalizeCountryFilter(sel);
+  return n !== "all" && n.length === 1 ? n[0] : null;
+}
+
+function matchesCountryFilter(group: string, countries: string, sel: CountryFilter): boolean {
+  const n = normalizeCountryFilter(sel);
+  if (n === "all") return true;
+  return n.some((c) => matchesCountry(group, countries, c));
+}
+
+function pruneCountryFilter(sel: CountryFilter, region: Region): CountryFilter {
+  const n = normalizeCountryFilter(sel);
+  if (n === "all" || region === "all") return n === "all" ? "all" : n.length === 1 ? n[0] : n;
+  const pool = new Set(regionCountryPool(region));
+  const next = n.filter((c) => pool.has(c));
+  if (next.length === 0) return "all";
+  if (next.length === pool.size) return "all";
+  return next.length === 1 ? next[0] : next;
+}
+
+/** 点「全部」或点某一国芯片后的下一状态 */
+function toggleCountryFilter(sel: CountryFilter, k: CountryCode, region: Region): CountryFilter {
+  const pool = regionCountryPool(region);
+  const n = normalizeCountryFilter(sel);
+  if (k === "all") return "all";
+  if (n === "all") {
+    // 全部 → 点掉一国 = 其余全选（如除中国大陆外）
+    const next = pool.filter((c) => c !== k);
+    return next.length === 0 ? "all" : next.length === 1 ? next[0] : next;
+  }
+  if (n.includes(k)) {
+    const next = n.filter((c) => c !== k);
+    return next.length === 0 ? "all" : next.length === 1 ? next[0] : next;
+  }
+  const next = [...n, k];
+  if (next.length === pool.length && pool.every((c) => next.includes(c))) return "all";
+  return next.length === 1 ? next[0] : next;
+}
+
+function isCountryChipActive(sel: CountryFilter, k: CountryCode): boolean {
+  const n = normalizeCountryFilter(sel);
+  if (k === "all") return n === "all";
+  return n !== "all" && n.includes(k);
+}
+
+function formatCountryFilterLabel(sel: CountryFilter, region: Region): string | null {
+  const n = normalizeCountryFilter(sel);
+  if (n === "all") return null;
+  const pool = regionCountryPool(region);
+  if (n.length === pool.length - 1 && pool.length > 1) {
+    const missing = pool.find((c) => !n.includes(c));
+    if (missing) return `除${COUNTRY_LABEL[missing]}外`;
+  }
+  if (n.length === 1) return COUNTRY_LABEL[n[0]];
+  if (n.length <= 3) return n.map((c) => COUNTRY_LABEL[c]).join("、");
+  return `已选 ${n.length} 地`;
+}
+
+type LangZoneFilter = "all" | string;
+
+/** 当前洲际下可选语言区（有国别语言档案的） */
+function languageZonesForRegion(region: Region): string[] {
+  const pool =
+    region === "all"
+      ? (Object.keys(COUNTRY_LANGUAGE) as string[])
+      : regionCountryPool(region);
+  const present = new Set<string>();
+  for (const c of pool) {
+    const z = countryLanguageZone(c);
+    if (z) present.add(z);
+  }
+  return LANGUAGE_ZONE_ORDER.filter((z) => present.has(z));
+}
+
+function langZoneInRegion(langZone: LangZoneFilter, region: Region): boolean {
+  if (langZone === "all") return true;
+  return languageZonesForRegion(region).includes(langZone);
+}
+
+/** 洲际 × 语言区交叉后的国家芯片池 */
+function countriesForRegionAndLang(region: Region, langZone: LangZoneFilter): CountryCode[] {
+  const base = countriesForRegion(region);
+  if (langZone === "all") return base;
+  const allow = new Set(countriesInLanguageZone(langZone));
+  return base.filter((c) => c === "all" || allow.has(c));
 }
 
 /** 监管页：地域对应的法定/常用牌照名（可点选过滤监管主体与持牌玩家） */
@@ -1044,6 +1228,99 @@ const REGULATORY_LICENSE_CATALOG: RegLicenseDef[] = [
     regulatorRe: /FCA|PRA|消费信贷|Consumer Credit/i,
     holderRe: /消费信贷|Consumer Credit|FCA/i,
   },
+
+  // —— 韩国 ——
+  { id: "KR-bank", country: "KR", name: "银行（金融委员会/金监院）", regulatorRe: /金融委员会|FSC|FSS|银行/i, holderRe: /银行|Bank/i },
+  { id: "KR-card", country: "KR", name: "信用卡/贷专金融", regulatorRe: /信用卡|贷专|여신전문|FSC|FSS/i, holderRe: /信用卡|贷专|分期|租赁/i },
+  // —— 外蒙古 ——
+  { id: "MN-nbfi", country: "MN", name: "NBFI（FRC）", regulatorRe: /FRC|Financial Regulatory|NBFI/i, holderRe: /NBFI|FRC|非银/i },
+  { id: "MN-epay", country: "MN", name: "电子支付（FRC/BoM）", regulatorRe: /FRC|Bank of Mongolia|电子支付|钱包/i, holderRe: /电子支付|钱包|支付/i },
+  // —— 中国香港 ——
+  { id: "HK-bank", country: "HK", name: "银行牌照（HKMA）", regulatorRe: /HKMA|金管局|银行/i, holderRe: /银行|Bank|持牌银行/i },
+  { id: "HK-mto", country: "HK", name: "金钱服务经营者（海关/MSO）", regulatorRe: /金钱服务|MSO|海关|SVF/i, holderRe: /金钱服务|MSO|储值支付|SVF/i },
+  { id: "HK-sfc", country: "HK", name: "证监会牌照（SFC）", regulatorRe: /SFC|证监会|证券/i, holderRe: /证监会|SFC|第\d类/i },
+  // —— 中国澳门 ——
+  { id: "MO-bank", country: "MO", name: "银行（金管局 AMCM）", regulatorRe: /AMCM|澳门金管局|银行/i, holderRe: /银行|Bank/i },
+  { id: "MO-pay", country: "MO", name: "支付/货币兑换", regulatorRe: /AMCM|支付|兑换/i, holderRe: /支付|兑换|钱包/i },
+  // —— 中亚 ——
+  { id: "KZ-bank", country: "KZ", name: "银行/微金融（ARDFM）", regulatorRe: /ARDFM|哈萨克|微金融|银行/i, holderRe: /银行|微金融|信贷/i },
+  { id: "UZ-bank", country: "UZ", name: "银行/非银信贷（CBU）", regulatorRe: /Central Bank of Uzbekistan|CBU|银行|信贷/i, holderRe: /银行|微金融|信贷|BNPL/i },
+  { id: "KG-credit", country: "KG", name: "微金融/信贷（NBKR）", regulatorRe: /National Bank of the Kyrgyz|NBKR|微金融/i, holderRe: /微金融|信贷|BNPL/i },
+  { id: "TJ-credit", country: "TJ", name: "信贷机构（NBT）", regulatorRe: /National Bank of Tajikistan|NBT|信贷/i, holderRe: /信贷|微金融|银行/i },
+  { id: "TM-bank", country: "TM", name: "银行（土库曼斯坦央行）", regulatorRe: /Central Bank of Turkmenistan|银行/i, holderRe: /银行|信贷/i },
+  // —— 拉美补强 ——
+  { id: "CO-credit", country: "CO", name: "信贷/金融公司（SFC）", regulatorRe: /SFC|Superintendencia Financiera|信贷|金融公司/i, holderRe: /信贷|金融公司|BNPL|银行/i },
+  { id: "AR-credit", country: "AR", name: "金融/信贷（BCRA）", regulatorRe: /BCRA|阿根廷央行|信贷|金融/i, holderRe: /信贷|金融|BNPL|银行/i },
+  { id: "PE-credit", country: "PE", name: "银行/金融公司（SBS）", regulatorRe: /SBS|Superintendencia|银行|金融公司/i, holderRe: /银行|金融公司|信贷|BNPL/i },
+  { id: "CL-credit", country: "CL", name: "银行/消费信贷（CMF）", regulatorRe: /CMF|Comisión para el Mercado|银行|消费信贷/i, holderRe: /银行|消费信贷|BNPL/i },
+  { id: "MX-bank", country: "MX", name: "银行/SOFIPO", regulatorRe: /CNBV|Banxico|银行|SOFIPO/i, holderRe: /银行|SOFIPO|Fintech/i },
+  { id: "BR-scd", country: "BR", name: "SCD/SEP 信贷公司", regulatorRe: /BCB|SCD|SEP|信贷公司/i, holderRe: /SCD|SEP|信贷|Fintech/i },
+  { id: "BR-pay", country: "BR", name: "支付机构（PI）", regulatorRe: /BCB|支付机构|Payment Institution|PIX/i, holderRe: /支付|PIX|钱包|PI/i },
+  // —— 中东北非补强 ——
+  { id: "DZ-bank", country: "DZ", name: "银行/信贷（阿尔及利亚央行）", regulatorRe: /Bank of Algeria|阿尔及利亚|银行|信贷/i, holderRe: /银行|信贷|微金融/i },
+  { id: "TN-bank", country: "TN", name: "银行/租赁/保理（突尼斯）", regulatorRe: /BCT|Central Bank of Tunisia|租赁|保理|银行/i, holderRe: /银行|租赁|保理|信贷/i },
+  { id: "LY-bank", country: "LY", name: "银行（利比亚央行）", regulatorRe: /Central Bank of Libya|利比亚|银行/i, holderRe: /银行|信贷/i },
+  { id: "SD-bank", country: "SD", name: "银行（苏丹央行）", regulatorRe: /Central Bank of Sudan|苏丹|银行/i, holderRe: /银行|信贷/i },
+  { id: "JO-bank", country: "JO", name: "银行/金融公司（CBJ）", regulatorRe: /CBJ|Central Bank of Jordan|银行|金融公司/i, holderRe: /银行|金融公司|信贷/i },
+  { id: "LB-bank", country: "LB", name: "银行/金融公司（BDL）", regulatorRe: /BDL|Banque du Liban|银行|金融/i, holderRe: /银行|金融公司|信贷/i },
+  { id: "IQ-bank", country: "IQ", name: "银行（CBI）", regulatorRe: /Central Bank of Iraq|CBI|银行/i, holderRe: /银行|信贷/i },
+  { id: "IL-bank", country: "IL", name: "银行/信贷（BoI）", regulatorRe: /Bank of Israel|BoI|银行|信贷/i, holderRe: /银行|信贷|BNPL/i },
+  { id: "PS-bank", country: "PS", name: "银行/信贷（PMA）", regulatorRe: /PMA|Palestine Monetary|银行|信贷/i, holderRe: /银行|信贷/i },
+  { id: "TR-bank", country: "TR", name: "银行（BDDK/CBRT）", regulatorRe: /BDDK|CBRT|银行|BRSA/i, holderRe: /银行|Bank/i },
+  { id: "TR-finance", country: "TR", name: "金融公司/租赁/保理", regulatorRe: /finansman|leasing|factoring|金融公司|租赁/i, holderRe: /金融公司|租赁|保理|BNPL/i },
+  { id: "YE-bank", country: "YE", name: "银行（也门央行）", regulatorRe: /Central Bank of Yemen|也门|银行/i, holderRe: /银行|信贷/i },
+  { id: "IR-bank", country: "IR", name: "银行/信贷（CBI Iran）", regulatorRe: /Central Bank of Iran|伊朗|银行|信贷/i, holderRe: /银行|信贷|租赁/i },
+  { id: "SA-bank", country: "SA", name: "银行（SAMA）", regulatorRe: /SAMA|Saudi Central|银行/i, holderRe: /银行|Bank/i },
+  { id: "AE-bank", country: "AE", name: "银行（CBUAE）", regulatorRe: /CBUAE|银行/i, holderRe: /银行|Bank/i },
+  { id: "EG-bank", country: "EG", name: "银行（CBE）", regulatorRe: /CBE|Central Bank of Egypt|银行/i, holderRe: /银行|Bank/i },
+  // —— 非洲补强 ——
+  { id: "RW-credit", country: "RW", name: "银行/微金融（BNR）", regulatorRe: /National Bank of Rwanda|BNR|微金融|银行/i, holderRe: /银行|微金融|移动货币|信贷/i },
+  { id: "ET-credit", country: "ET", name: "银行/微金融（NBE）", regulatorRe: /National Bank of Ethiopia|NBE|银行|微金融/i, holderRe: /银行|微金融|信贷/i },
+  { id: "SN-credit", country: "SN", name: "BCEAO / 本地信贷", regulatorRe: /BCEAO|塞内加尔|信贷|微金融/i, holderRe: /信贷|微金融|支付|BNPL/i },
+  { id: "CM-credit", country: "CM", name: "COBAC / 本地信贷", regulatorRe: /COBAC|BEAC|喀麦隆|信贷/i, holderRe: /信贷|微金融|银行/i },
+  { id: "AO-bank", country: "AO", name: "银行（BNA）", regulatorRe: /Banco Nacional de Angola|BNA|银行/i, holderRe: /银行|信贷/i },
+  { id: "MZ-credit", country: "MZ", name: "银行/微金融（BoM）", regulatorRe: /Bank of Mozambique|BoM|微金融|银行/i, holderRe: /银行|微金融|信贷/i },
+  { id: "ZM-credit", country: "ZM", name: "银行/非银（BoZ）", regulatorRe: /Bank of Zambia|BoZ|非银|银行/i, holderRe: /银行|非银|信贷|BNPL/i },
+  { id: "ZW-credit", country: "ZW", name: "银行/信贷（RBZ）", regulatorRe: /Reserve Bank of Zimbabwe|RBZ|银行|信贷/i, holderRe: /银行|信贷/i },
+  { id: "BW-bank", country: "BW", name: "银行（BoB）", regulatorRe: /Bank of Botswana|BoB|银行/i, holderRe: /银行|信贷/i },
+  { id: "NA-bank", country: "NA", name: "银行（BoN）", regulatorRe: /Bank of Namibia|BoN|银行/i, holderRe: /银行|信贷/i },
+  { id: "MU-credit", country: "MU", name: "银行/非银（BoM Mauritius）", regulatorRe: /Bank of Mauritius|非银|银行|租赁/i, holderRe: /银行|非银|信贷|租赁/i },
+  { id: "MG-credit", country: "MG", name: "银行/微金融（BFM）", regulatorRe: /Banky Foiben|BFM|微金融|银行/i, holderRe: /银行|微金融|信贷/i },
+  { id: "BJ-credit", country: "BJ", name: "BCEAO / 本地信贷", regulatorRe: /BCEAO|贝宁|信贷|微金融/i, holderRe: /信贷|微金融|支付/i },
+  { id: "BF-credit", country: "BF", name: "BCEAO / 本地信贷", regulatorRe: /BCEAO|布基纳|信贷|微金融/i, holderRe: /信贷|微金融|支付/i },
+  { id: "ML-credit", country: "ML", name: "BCEAO / 本地信贷", regulatorRe: /BCEAO|马里|信贷|微金融/i, holderRe: /信贷|微金融|支付/i },
+  { id: "CD-credit", country: "CD", name: "银行/微金融（BCC）", regulatorRe: /Banque Centrale du Congo|BCC|微金融|银行/i, holderRe: /银行|微金融|信贷/i },
+  { id: "GA-credit", country: "GA", name: "COBAC / 本地信贷", regulatorRe: /COBAC|BEAC|加蓬|信贷/i, holderRe: /信贷|银行|微金融/i },
+  { id: "NG-bank", country: "NG", name: "商业银行（CBN）", regulatorRe: /CBN|商业银行|银行/i, holderRe: /商业银行|银行|Bank/i },
+  { id: "KE-bank", country: "KE", name: "商业银行（CBK）", regulatorRe: /CBK|商业银行|银行/i, holderRe: /商业银行|银行|Bank/i },
+  { id: "ZA-bank", country: "ZA", name: "银行（SARB/PA）", regulatorRe: /SARB|Prudential Authority|银行/i, holderRe: /银行|Bank/i },
+  // —— 欧美补强 ——
+  { id: "CA-bank", country: "CA", name: "银行（OSFI）", regulatorRe: /OSFI|银行|Bank of Canada/i, holderRe: /银行|Bank/i },
+  { id: "CA-lend", country: "CA", name: "省际放贷/消费信贷", regulatorRe: /消费信贷|payday|省际|FSRA|AMF/i, holderRe: /消费信贷|放贷|BNPL/i },
+  { id: "DE-bank", country: "DE", name: "信贷机构（BaFin）", regulatorRe: /BaFin|Kreditinstitut|信贷机构|银行/i, holderRe: /银行|信贷机构|Bank/i },
+  { id: "DE-pay", country: "DE", name: "支付机构（ZAG）", regulatorRe: /BaFin|Zahlungsinstitut|ZAG|支付/i, holderRe: /支付|钱包|EMI/i },
+  { id: "FR-bank", country: "FR", name: "信贷机构（ACPR）", regulatorRe: /ACPR|Banque de France|信贷机构|银行/i, holderRe: /银行|信贷机构|Bank/i },
+  { id: "FR-pay", country: "FR", name: "支付/电子货币", regulatorRe: /ACPR|paiement|支付|电子货币/i, holderRe: /支付|电子货币|钱包/i },
+  { id: "NL-bank", country: "NL", name: "银行（DNB/AFM）", regulatorRe: /DNB|AFM|银行/i, holderRe: /银行|Bank/i },
+  { id: "NL-pay", country: "NL", name: "支付机构", regulatorRe: /DNB|AFM|支付|PSD2/i, holderRe: /支付|钱包|EMI/i },
+  { id: "ES-bank", country: "ES", name: "银行/信贷（BdE/CNMV）", regulatorRe: /Banco de España|BdE|CNMV|银行|信贷/i, holderRe: /银行|信贷|BNPL/i },
+  { id: "PT-bank", country: "PT", name: "银行（BdP）", regulatorRe: /Banco de Portugal|BdP|银行/i, holderRe: /银行|信贷/i },
+  { id: "IT-bank", country: "IT", name: "银行（BdI）", regulatorRe: /Banca d'Italia|BdI|银行/i, holderRe: /银行|信贷/i },
+  { id: "SE-bank", country: "SE", name: "银行/消费信贷（FI）", regulatorRe: /Finansinspektionen|FI｜|银行|消费信贷/i, holderRe: /银行|消费信贷|BNPL/i },
+  { id: "PL-bank", country: "PL", name: "银行（KNF）", regulatorRe: /KNF|银行|Bank/i, holderRe: /银行|信贷|BNPL/i },
+  { id: "IE-bank", country: "IE", name: "银行/信贷（CBI）", regulatorRe: /Central Bank of Ireland|CBI|银行|信贷/i, holderRe: /银行|信贷|BNPL/i },
+  { id: "GB-bank", country: "GB", name: "银行（PRA/FCA）", regulatorRe: /PRA|FCA|银行|Bank/i, holderRe: /银行|Bank/i },
+  { id: "US-lend", country: "US", name: "州放贷牌照 / CFPB", regulatorRe: /CFPB|州放贷|lending license|MTL/i, holderRe: /州放贷|lending|消费信贷|BNPL/i },
+  // —— 既有市场补强（银行/支付） ——
+  { id: "MY-bank", country: "MY", name: "银行（BNM）", regulatorRe: /BNM|Bank Negara|银行/i, holderRe: /银行|Bank/i },
+  { id: "MY-pay", country: "MY", name: "电子货币/支付（BNM）", regulatorRe: /BNM|e-?money|电子货币|支付/i, holderRe: /电子货币|支付|钱包/i },
+  { id: "TH-bank", country: "TH", name: "银行（BOT）", regulatorRe: /BOT|Bank of Thailand|银行/i, holderRe: /银行|Bank/i },
+  { id: "TH-pay", country: "TH", name: "支付/电子货币（BOT）", regulatorRe: /BOT|支付|电子货币|PromptPay/i, holderRe: /支付|电子货币|钱包/i },
+  { id: "VN-bank", country: "VN", name: "银行（SBV）", regulatorRe: /SBV|State Bank of Vietnam|银行/i, holderRe: /银行|Bank/i },
+  { id: "JP-bank", country: "JP", name: "银行（金融厅）", regulatorRe: /FSA|金融庁|银行|Bank/i, holderRe: /银行|Bank/i },
+  { id: "JP-pay", country: "JP", name: "资金移动业/前払式", regulatorRe: /资金移动|前払|资金决济|支付/i, holderRe: /资金移动|支付|钱包|PayPay/i },
+  { id: "IN-nbhc", country: "IN", name: "HFC（NHB/RBI）", regulatorRe: /NHB|HFC|住房金融/i, holderRe: /HFC|住房金融/i },
+  { id: "ID-venture", country: "ID", name: "创业投资公司（OJK）", regulatorRe: /OJK|Modal Ventura|创业投资/i, holderRe: /Modal Ventura|创业投资|VC/i },
 ];
 
 /** 监管官方名录信源（对照时点写入 licenseReg；非实时爬取） */
@@ -1051,7 +1328,11 @@ const REGULATORY_DIRECTORY_SOURCES = {
   nfraBankCorp:
     "金管总局《银行业金融机构法人名单》截至2025-06-30（准入司2025-10披露）",
   pdicDigibank: "PDIC Directory of Insured Digital Banks（对照 BSP 数字银行牌照）",
-  ojkLpbbti: "OJK LPBBTI 持牌名录（官网公开名单交叉）",
+  ojkLpbbti: "AFPI 会员公开页 members_data（2026-08-07 抓取，约92家）；OJK Direktori PDF 抓取被拒，待与官网 PDF 交叉",
+  secLendingPh:
+    "SEC PH Lending/Financing+OLP 公开名录交叉（2026-08-08；官网 Cloudflare 拦截未能整表，待 PDF/Excel 回填）",
+  rbiNbfcDigital:
+    "RBI NBFC CoR 公开名录交叉·数字消费贷头部样本（2026-08-08；全量 bs_nbfclist 待整表）",
 } as const;
 
 type OfficialLicenseHolder = {
@@ -1227,6 +1508,8 @@ const NFRA_CONSUMER_FINANCE_HOLDERS: OfficialLicenseHolder[] = [
     code: "X0017H315020001",
     licenseKindLabel: "消费金融",
     source: "nfraBankCorp",
+    controller:
+      "中国内蒙古自治区持牌消费金融公司（金管总局法人名单）；≠外蒙古(MN)/蒙古国机构",
   },
   {
     group: "中原银行｜中原消费｜中原银行（中原·CN）",
@@ -1392,6 +1675,176 @@ const NFRA_AUTO_FINANCE_HOLDERS: OfficialLicenseHolder[] = [
   { group: "北汽汽车金融｜北汽汽金｜北汽（北汽汽金·CN）", region: "east-asia", line: "lease", legalName: "北汽汽车金融（杭州）有限公司", code: "N0027H233010001", licenseKindLabel: "汽车金融", source: "nfraBankCorp" },
 ];
 
+/** 金管总局名录·金融租赁公司（法人名单抽取；截至2025-06-30） */
+const NFRA_FIN_LEASE_HOLDERS: OfficialLicenseHolder[] = [
+  { group: "邦银金融租赁｜邦银金租｜邦银金租（邦银金租·CN）", region: "east-asia", line: "lease", legalName: "邦银金融租赁股份有限公司", code: "M0027H241010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "北部湾金融租赁｜北部湾金租｜北部湾金租（北部湾金租·CN）", region: "east-asia", line: "lease", legalName: "北部湾金融租赁有限公司", code: "M0025H245010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "北银金融租赁｜北银金租｜北银金租（北银金租·CN）", region: "east-asia", line: "lease", legalName: "北银金融租赁有限公司", code: "M0028H211000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "长城国兴金融租赁｜长城国兴金租｜长城国兴金租（长城国兴金租·CN）", region: "east-asia", line: "lease", legalName: "长城国兴金融租赁有限公司", code: "M0014H265010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "长江联合金融租赁｜长江联合金租｜长江联合金租（长江联合金租·CN）", region: "east-asia", line: "lease", legalName: "长江联合金融租赁有限公司", code: "M0042H231000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "重庆鈊渝金融租赁｜重庆鈊渝金租｜重庆鈊渝金租（重庆鈊渝金租·CN）", region: "east-asia", line: "lease", legalName: "重庆鈊渝金融租赁股份有限公司", code: "M0068H250000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "佛山海晟金融租赁｜佛山海晟金租｜佛山海晟金租（佛山海晟金租·CN）", region: "east-asia", line: "lease", legalName: "佛山海晟金融租赁股份有限公司", code: "M0056H344060001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "福建海西金融租赁｜福建海西金租｜福建海西金租（福建海西金租·CN）", region: "east-asia", line: "lease", legalName: "福建海西金融租赁有限责任公司", code: "M0059H335050001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "甘肃兰银金融租赁｜甘肃兰银金租｜甘肃兰银金租（甘肃兰银金租·CN）", region: "east-asia", line: "lease", legalName: "甘肃兰银金融租赁股份有限公司", code: "M0064H262010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "工银金融租赁｜工银金租｜工银金租（工银金租·CN）", region: "east-asia", line: "lease", legalName: "工银金融租赁有限公司", code: "M0011H212000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "光大金融租赁｜光大金租｜光大金租（光大金租·CN）", region: "east-asia", line: "lease", legalName: "光大金融租赁股份有限公司", code: "M0018H242010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "广东粤财金融租赁｜广东粤财金租｜广东粤财金租（广东粤财金租·CN）", region: "east-asia", line: "lease", legalName: "广东粤财金融租赁股份有限公司", code: "M0071H244010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "广融达金融租赁｜广融达金租｜广融达金租（广融达金租·CN）", region: "east-asia", line: "lease", legalName: "广融达金融租赁有限公司", code: "M0055H231000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "贵阳贵银金融租赁｜贵阳贵银金租｜贵阳贵银金租（贵阳贵银金租·CN）", region: "east-asia", line: "lease", legalName: "贵阳贵银金融租赁有限责任公司", code: "M0058H252010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "国银金融租赁｜国银金租｜国银金租（国银金租·CN）", region: "east-asia", line: "lease", legalName: "国银金融租赁股份有限公司", code: "M0017H244030001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "哈银金融租赁｜哈银金租｜哈银金租（哈银金租·CN）", region: "east-asia", line: "lease", legalName: "哈银金融租赁有限责任公司", code: "M0029H223010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "航天科工金融租赁｜航天科工金租｜航天科工金租（航天科工金租·CN）", region: "east-asia", line: "lease", legalName: "航天科工金融租赁有限公司", code: "M0069H242010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "河北省金融租赁｜河北省金租｜河北省金租（河北省金租·CN）", region: "east-asia", line: "lease", legalName: "河北省金融租赁有限公司", code: "M0002H213010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "河南九鼎金融租赁｜河南九鼎金租｜河南九鼎金租（河南九鼎金租·CN）", region: "east-asia", line: "lease", legalName: "河南九鼎金融租赁股份有限公司", code: "M0053H241010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "横琴华通金融租赁｜横琴华通金租｜横琴华通金租（横琴华通金租·CN）", region: "east-asia", line: "lease", legalName: "横琴华通金融租赁有限公司", code: "M0047H344040001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "湖北金融租赁｜湖北金租｜湖北金租（湖北金租·CN）", region: "east-asia", line: "lease", legalName: "湖北金融租赁股份有限公司", code: "M0043H242010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "华融航运金融租赁｜华融航运金租｜华融航运金租（华融航运金租·CN）", region: "east-asia", line: "lease", legalName: "华融航运金融租赁有限公司", code: "M0045H231000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "华融金融租赁｜华融金租｜华融金租（华融金租·CN）", region: "east-asia", line: "lease", legalName: "华融金融租赁股份有限公司", code: "M0010H233010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "华夏金融租赁｜华夏金租｜华夏金租（华夏金租·CN）", region: "east-asia", line: "lease", legalName: "华夏金融租赁有限公司", code: "M0026H253010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "华运金融租赁｜华运金租｜华运金租（华运金租·CN）", region: "east-asia", line: "lease", legalName: "华运金融租赁股份有限公司", code: "M0036H212000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "徽银金融租赁｜徽银金租｜徽银金租（徽银金租·CN）", region: "east-asia", line: "lease", legalName: "徽银金融租赁有限公司", code: "M0037H234010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "冀银金融租赁｜冀银金租｜冀银金租（冀银金租·CN）", region: "east-asia", line: "lease", legalName: "冀银金融租赁股份有限公司", code: "M0052H213010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "吉林九银金融租赁｜吉林九银金租｜吉林九银金租（吉林九银金租·CN）", region: "east-asia", line: "lease", legalName: "吉林九银金融租赁股份有限公司", code: "M0066H222010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "建信金融租赁｜建信金租｜建信金租（建信金租·CN）", region: "east-asia", line: "lease", legalName: "建信金融租赁有限公司", code: "M0013H211000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "江南金融租赁｜江南金租｜江南金租（江南金租·CN）", region: "east-asia", line: "lease", legalName: "江南金融租赁股份有限公司", code: "M0076H332040001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "江苏金融租赁｜江苏金租｜江苏金租（江苏金租·CN）", region: "east-asia", line: "lease", legalName: "江苏金融租赁股份有限公司", code: "M0005H232010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "江西金融租赁｜江西金租｜江西金租（江西金租·CN）", region: "east-asia", line: "lease", legalName: "江西金融租赁股份有限公司", code: "M0048H236010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "交银航空航运金融租赁｜交银航空航运金租｜交银航空航运金租（交银航空航运金租·CN）", region: "east-asia", line: "lease", legalName: "交银航空航运金融租赁有限责任公司", code: "M0030H231000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "交银金融租赁｜交银金租｜交银金租（交银金租·CN）", region: "east-asia", line: "lease", legalName: "交银金融租赁有限责任公司", code: "M0012H231000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "锦银金融租赁｜锦银金租｜锦银金租（锦银金租·CN）", region: "east-asia", line: "lease", legalName: "锦银金融租赁有限责任公司", code: "M0049H221010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "昆仑金融租赁｜昆仑金租｜昆仑金租（昆仑金租·CN）", region: "east-asia", line: "lease", legalName: "昆仑金融租赁有限责任公司", code: "M0019H250000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "洛银金融租赁｜洛银金租｜洛银金租（洛银金租·CN）", region: "east-asia", line: "lease", legalName: "洛银金融租赁股份有限公司", code: "M0033H341030001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "民生金融租赁｜民生金租｜民生金租（民生金租·CN）", region: "east-asia", line: "lease", legalName: "民生金融租赁股份有限公司", code: "M0016H212000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "农银金融租赁｜农银金租｜农银金租（农银金租·CN）", region: "east-asia", line: "lease", legalName: "农银金融租赁有限公司", code: "M0021H231000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "浦银金融租赁｜浦银金租｜浦银金租（浦银金租·CN）", region: "east-asia", line: "lease", legalName: "浦银金融租赁股份有限公司", code: "M0024H231000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "前海兴邦金融租赁｜前海兴邦金租｜前海兴邦金租（前海兴邦金租·CN）", region: "east-asia", line: "lease", legalName: "前海兴邦金融租赁有限责任公司", code: "M0070H244030001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "青岛青银金融租赁｜青岛青银金租｜青岛青银金租（青岛青银金租·CN）", region: "east-asia", line: "lease", legalName: "青岛青银金融租赁有限公司", code: "M0067H237020001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "山东汇通金融租赁｜山东汇通金租｜山东汇通金租（山东汇通金租·CN）", region: "east-asia", line: "lease", legalName: "山东汇通金融租赁有限公司", code: "M0050H237010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "山东通达金融租赁｜山东通达金租｜山东通达金租（山东通达金租·CN）", region: "east-asia", line: "lease", legalName: "山东通达金融租赁有限公司", code: "M0054H237010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "山西金融租赁｜山西金租｜山西金租（山西金租·CN）", region: "east-asia", line: "lease", legalName: "山西金融租赁有限公司", code: "M0003H214010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "四川天府金融租赁｜四川天府金租｜四川天府金租（四川天府金租·CN）", region: "east-asia", line: "lease", legalName: "四川天府金融租赁股份有限公司", code: "M0063H251010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "苏银金融租赁｜苏银金租｜苏银金租（苏银金租·CN）", region: "east-asia", line: "lease", legalName: "苏银金融租赁股份有限公司", code: "M0038H232010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "苏州金融租赁｜苏州金租｜苏州金租（苏州金租·CN）", region: "east-asia", line: "lease", legalName: "苏州金融租赁股份有限公司", code: "M0051H332050001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "太平石化金融租赁｜太平石化金租｜太平石化金租（太平石化金租·CN）", region: "east-asia", line: "lease", legalName: "太平石化金融租赁有限责任公司", code: "M0031H231000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "天银金融租赁｜天银金租｜天银金租（天银金租·CN）", region: "east-asia", line: "lease", legalName: "天银金融租赁股份有限公司", code: "M0061H212000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "皖江金融租赁｜皖江金租｜皖江金租（皖江金租·CN）", region: "east-asia", line: "lease", legalName: "皖江金融租赁股份有限公司", code: "M0044H334020001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "信达金融租赁｜信达金租｜信达金租（信达金租·CN）", region: "east-asia", line: "lease", legalName: "信达金融租赁股份有限公司", code: "M0009H262010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "兴业金融租赁｜兴业金租｜兴业金租（兴业金租·CN）", region: "east-asia", line: "lease", legalName: "兴业金融租赁有限责任公司", code: "M0020H212000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "徐州恒鑫金融租赁｜徐州恒鑫金租｜徐州恒鑫金租（徐州恒鑫金租·CN）", region: "east-asia", line: "lease", legalName: "徐州恒鑫金融租赁股份有限公司", code: "M0062H332030001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "永赢金融租赁｜永赢金租｜永赢金租（永赢金租·CN）", region: "east-asia", line: "lease", legalName: "永赢金融租赁有限公司", code: "M0041H233020001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "渝农商金融租赁｜渝农商金租｜渝农商金租（渝农商金租·CN）", region: "east-asia", line: "lease", legalName: "渝农商金融租赁有限责任公司", code: "M0034H250000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "浙江稠州金融租赁｜浙江稠州金租｜浙江稠州金租（浙江稠州金租·CN）", region: "east-asia", line: "lease", legalName: "浙江稠州金融租赁有限公司", code: "M0060H233070001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "浙江浙银金融租赁｜浙江浙银金租｜浙江浙银金租（浙江浙银金租·CN）", region: "east-asia", line: "lease", legalName: "浙江浙银金融租赁股份有限公司", code: "M0065H233090001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "招银航空航运金融租赁｜招银航空航运金租｜招银航空航运金租（招银航空航运金租·CN）", region: "east-asia", line: "lease", legalName: "招银航空航运金融租赁有限公司", code: "M0046H231000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "招银金融租赁｜招银金租｜招银金租（招银金租·CN）", region: "east-asia", line: "lease", legalName: "招银金融租赁有限公司", code: "M0015H231000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "中国金融租赁｜中国金租｜中国金租（中国金租·CN）", region: "east-asia", line: "lease", legalName: "中国金融租赁有限公司", code: "M0022H212000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "中国外贸金融租赁｜中国外贸金租｜中国外贸金租（中国外贸金租·CN）", region: "east-asia", line: "lease", legalName: "中国外贸金融租赁有限公司", code: "M0001H211000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "中铁建金融租赁｜中铁建金租｜中铁建金租（中铁建金租·CN）", region: "east-asia", line: "lease", legalName: "中铁建金融租赁有限公司", code: "M0057H212000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "中信金融租赁｜中信金租｜中信金租（中信金租·CN）", region: "east-asia", line: "lease", legalName: "中信金融租赁有限公司", code: "M0035H212000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "珠江金融租赁｜珠江金租｜珠江金租（珠江金租·CN）", region: "east-asia", line: "lease", legalName: "珠江金融租赁有限公司", code: "M0032H244010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "天津国泰金融租赁｜天津国泰金租｜天津国泰金租（天津国泰金租·CN）", region: "east-asia", line: "lease", legalName: "天津国泰金融租赁有限责任公司", code: "M0073H212000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "中煤科工金融租赁｜中煤科工金租｜中煤科工金租（中煤科工金租·CN）", region: "east-asia", line: "lease", legalName: "中煤科工金融租赁股份有限公司", code: "M0072H212000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "厦门金融租赁｜厦门金租｜厦门金租（厦门金租·CN）", region: "east-asia", line: "lease", legalName: "厦门金融租赁有限公司", code: "M0074H235020001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "中银金融租赁｜中银金租｜中银金租（中银金租·CN）", region: "east-asia", line: "lease", legalName: "中银金融租赁有限公司", code: "M0077H250000001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+  { group: "江苏法巴农科设备金融租赁｜江苏法巴农科设备金租｜江苏法巴农科设备金租（江苏法巴农科设备金租·CN）", region: "east-asia", line: "lease", legalName: "江苏法巴农科设备金融租赁有限公司", code: "M0078H232010001", licenseKindLabel: "金融租赁", source: "nfraBankCorp" },
+];
+
+/** OJK/AFPI：印尼 LPBBTI 平台公开会员（OJK PDF 抓取被拒；以 AFPI members_data 交叉，待官方 PDF 复核） */
+const OJK_LPBBTI_HOLDERS: OfficialLicenseHolder[] = [
+  { group: "AdaKami｜AdaKami｜AdaKami（AdaKami·ID）", region: "se-asia", line: "cash", legalName: "AdaKami", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "AdaModal｜AdaModal｜AdaModal（AdaModal·ID）", region: "se-asia", line: "cash", legalName: "AdaModal", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Adapundi｜Adapundi｜Adapundi（Adapundi·ID）", region: "se-asia", line: "cash", legalName: "Adapundi", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Akseleran｜Akseleran｜Akseleran（Akseleran·ID）", region: "se-asia", line: "cash", legalName: "Akseleran", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Aktivaku｜Aktivaku｜Aktivaku（Aktivaku·ID）", region: "se-asia", line: "cash", legalName: "Aktivaku", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Alami Sharia｜Alami Sharia｜AlamiSharia（AlamiSharia·ID）", region: "se-asia", line: "cash", legalName: "Alami Sharia", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Amartha｜Amartha｜Amartha（Amartha·ID）", region: "se-asia", line: "cash", legalName: "Amartha", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Ammana｜Ammana｜Ammana（Ammana·ID）", region: "se-asia", line: "cash", legalName: "Ammana", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Asetku｜Asetku｜Asetku（Asetku·ID）", region: "se-asia", line: "cash", legalName: "Asetku", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Avantee｜Avantee｜Avantee（Avantee·ID）", region: "se-asia", line: "cash", legalName: "Avantee", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "AwanTunai｜AwanTunai｜AwanTunai（AwanTunai·ID）", region: "se-asia", line: "cash", legalName: "AwanTunai", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "BantuFazz｜BantuFazz｜BantuFazz（BantuFazz·ID）", region: "se-asia", line: "cash", legalName: "BantuFazz", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "BantuSaku｜BantuSaku｜BantuSaku（BantuSaku·ID）", region: "se-asia", line: "cash", legalName: "BantuSaku", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Batumbu｜Batumbu｜Batumbu（Batumbu·ID）", region: "se-asia", line: "cash", legalName: "Batumbu", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Boost｜Boost｜Boost（Boost·ID）", region: "se-asia", line: "cash", legalName: "Boost", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Cairin｜Cairin｜Cairin（Cairin·ID）", region: "se-asia", line: "cash", legalName: "Cairin", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Cashcepat｜Cashcepat｜Cashcepat（Cashcepat·ID）", region: "se-asia", line: "cash", legalName: "Cashcepat", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "CICIL｜CICIL｜CICIL（CICIL·ID）", region: "se-asia", line: "cash", legalName: "CICIL", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Crowdo｜Crowdo｜Crowdo（Crowdo·ID）", region: "se-asia", line: "cash", legalName: "Crowdo", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Dana Syariah｜Dana Syariah｜DanaSyariah（DanaSyariah·ID）", region: "se-asia", line: "cash", legalName: "Dana Syariah", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "DanaBagus｜DanaBagus｜DanaBagus（DanaBagus·ID）", region: "se-asia", line: "cash", legalName: "DanaBagus", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Danabijak｜Danabijak｜Danabijak（Danabijak·ID）", region: "se-asia", line: "cash", legalName: "Danabijak", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Danacita｜Danacita｜Danacita（Danacita·ID）", region: "se-asia", line: "cash", legalName: "Danacita", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Danai.id｜Danai.id｜Danai.id（Danai.id·ID）", region: "se-asia", line: "cash", legalName: "Danai.id", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "DanaIn｜DanaIn｜DanaIn（DanaIn·ID）", region: "se-asia", line: "cash", legalName: "DanaIn", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "DanaKredi｜DanaKredi｜DanaKredi（DanaKredi·ID）", region: "se-asia", line: "cash", legalName: "DanaKredi", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Danaku｜Danaku｜Danaku（Danaku·ID）", region: "se-asia", line: "cash", legalName: "Danaku", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Danamas｜Danamas｜Danamas（Danamas·ID）", region: "se-asia", line: "cash", legalName: "Danamas", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Danamerdeka｜Danamerdeka｜Danamerdeka（Danamerdeka·ID）", region: "se-asia", line: "cash", legalName: "Danamerdeka", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Dompet Kilat｜Dompet Kilat｜DompetKilat（DompetKilat·ID）", region: "se-asia", line: "cash", legalName: "Dompet Kilat", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Duha Syariah｜Duha Syariah｜DuhaSyariah（DuhaSyariah·ID）", region: "se-asia", line: "cash", legalName: "Duha Syariah", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Dumi｜Dumi｜Dumi（Dumi·ID）", region: "se-asia", line: "cash", legalName: "Dumi", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Easycash｜Easycash｜Easycash（Easycash·ID）", region: "se-asia", line: "cash", legalName: "Easycash", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Edufund｜Edufund｜Edufund（Edufund·ID）", region: "se-asia", line: "cash", legalName: "Edufund", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Esta Kapital｜Esta Kapital｜EstaKapital（EstaKapital·ID）", region: "se-asia", line: "cash", legalName: "Esta Kapital", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Ethis｜Ethis｜Ethis（Ethis·ID）", region: "se-asia", line: "cash", legalName: "Ethis", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Findaya｜Findaya｜Findaya（Findaya·ID）", region: "se-asia", line: "cash", legalName: "Findaya", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Finmas｜Finmas｜Finmas（Finmas·ID）", region: "se-asia", line: "cash", legalName: "Finmas", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "FinPlus｜FinPlus｜FinPlus（FinPlus·ID）", region: "se-asia", line: "cash", legalName: "FinPlus", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "FINTAG｜FINTAG｜FINTAG（FINTAG·ID）", region: "se-asia", line: "cash", legalName: "FINTAG", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "GandengTangan｜GandengTangan｜GandengTangan（GandengTangan·ID）", region: "se-asia", line: "cash", legalName: "GandengTangan", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Gradana｜Gradana｜Gradana（Gradana·ID）", region: "se-asia", line: "cash", legalName: "Gradana", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "iGrow｜iGrow｜iGrow（iGrow·ID）", region: "se-asia", line: "cash", legalName: "iGrow", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Indodana｜Indodana｜Indodana（Indodana·ID）", region: "se-asia", line: "cash", legalName: "Indodana", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Indofund｜Indofund｜Indofund（Indofund·ID）", region: "se-asia", line: "cash", legalName: "Indofund", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Indosaku｜Indosaku｜Indosaku（Indosaku·ID）", region: "se-asia", line: "cash", legalName: "Indosaku", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Invoila｜Invoila｜Invoila（Invoila·ID）", region: "se-asia", line: "cash", legalName: "Invoila", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "IVOJI｜IVOJI｜IVOJI（IVOJI·ID）", region: "se-asia", line: "cash", legalName: "IVOJI", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "JULO｜JULO｜JULO（JULO·ID）", region: "se-asia", line: "cash", legalName: "JULO", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Kawan Cicil｜Kawan Cicil｜KawanCicil（KawanCicil·ID）", region: "se-asia", line: "cash", legalName: "Kawan Cicil", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Klik Kami｜Klik Kami｜KlikKami（KlikKami·ID）", region: "se-asia", line: "cash", legalName: "Klik Kami", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "KlikA2C｜KlikA2C｜KlikA2C（KlikA2C·ID）", region: "se-asia", line: "cash", legalName: "KlikA2C", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "KlikCair｜KlikCair｜KlikCair（KlikCair·ID）", region: "se-asia", line: "cash", legalName: "KlikCair", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "KlikUMKM｜KlikUMKM｜KlikUMKM（KlikUMKM·ID）", region: "se-asia", line: "cash", legalName: "KlikUMKM", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "KoinP2P｜KoinP2P｜KoinP2P（KoinP2P·ID）", region: "se-asia", line: "cash", legalName: "KoinP2P", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Komunal｜Komunal｜Komunal（Komunal·ID）", region: "se-asia", line: "cash", legalName: "Komunal", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "KrediFazz｜KrediFazz｜KrediFazz（KrediFazz·ID）", region: "se-asia", line: "cash", legalName: "KrediFazz", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Kredinesia｜Kredinesia｜Kredinesia（Kredinesia·ID）", region: "se-asia", line: "cash", legalName: "Kredinesia", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "KrediOne｜KrediOne｜KrediOne（KrediOne·ID）", region: "se-asia", line: "cash", legalName: "KrediOne", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Kredit Pintar｜Kredit Pintar｜KreditPintar（KreditPintar·ID）", region: "se-asia", line: "cash", legalName: "Kredit Pintar", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Kredito｜Kredito｜Kredito（Kredito·ID）", region: "se-asia", line: "cash", legalName: "Kredito", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "KreditOK｜KreditOK｜KreditOK（KreditOK·ID）", region: "se-asia", line: "cash", legalName: "KreditOK", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "KreditPro｜KreditPro｜KreditPro（KreditPro·ID）", region: "se-asia", line: "cash", legalName: "KreditPro", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "KTA Kilat｜KTA Kilat｜KTAKilat（KTAKilat·ID）", region: "se-asia", line: "cash", legalName: "KTA Kilat", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Lahan Sikam｜Lahan Sikam｜LahanSikam（LahanSikam·ID）", region: "se-asia", line: "cash", legalName: "Lahan Sikam", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Lumbung Dana｜Lumbung Dana｜LumbungDana（LumbungDana·ID）", region: "se-asia", line: "cash", legalName: "Lumbung Dana", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Mekar｜Mekar｜Mekar（Mekar·ID）", region: "se-asia", line: "cash", legalName: "Mekar", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Modal Nasional｜Modal Nasional｜ModalNasional（ModalNasional·ID）", region: "se-asia", line: "cash", legalName: "Modal Nasional", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Modal Rakyat｜Modal Rakyat｜ModalRakyat（ModalRakyat·ID）", region: "se-asia", line: "cash", legalName: "Modal Rakyat", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Modalku｜Modalku｜Modalku（Modalku·ID）", region: "se-asia", line: "cash", legalName: "Modalku", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "OVO Finansial｜OVO Finansial｜OVOFinansial（OVOFinansial·ID）", region: "se-asia", line: "cash", legalName: "OVO Finansial", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Papitupi Syariah｜Papitupi Syariah｜PapitupiSyariah（PapitupiSyariah·ID）", region: "se-asia", line: "cash", legalName: "Papitupi Syariah", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Pijar｜Pijar｜Pijar（Pijar·ID）", region: "se-asia", line: "cash", legalName: "Pijar", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Pinjam Gampang｜Pinjam Gampang｜PinjamGampang（PinjamGampang·ID）", region: "se-asia", line: "cash", legalName: "Pinjam Gampang", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Pinjam Modal｜Pinjam Modal｜PinjamModal（PinjamModal·ID）", region: "se-asia", line: "cash", legalName: "Pinjam Modal", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "PinjamanGo｜PinjamanGo｜PinjamanGo（PinjamanGo·ID）", region: "se-asia", line: "cash", legalName: "PinjamanGo", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "PinjamDuit｜PinjamDuit｜PinjamDuit（PinjamDuit·ID）", region: "se-asia", line: "cash", legalName: "PinjamDuit", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Pinjamin｜Pinjamin｜Pinjamin（Pinjamin·ID）", region: "se-asia", line: "cash", legalName: "Pinjamin", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "PinjamYuk｜PinjamYuk｜PinjamYuk（PinjamYuk·ID）", region: "se-asia", line: "cash", legalName: "PinjamYuk", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Pintek｜Pintek｜Pintek（Pintek·ID）", region: "se-asia", line: "cash", legalName: "Pintek", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Pohon Dana｜Pohon Dana｜PohonDana（PohonDana·ID）", region: "se-asia", line: "cash", legalName: "Pohon Dana", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Qazwa｜Qazwa｜Qazwa（Qazwa·ID）", region: "se-asia", line: "cash", legalName: "Qazwa", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Restock｜Restock｜Restock（Restock·ID）", region: "se-asia", line: "cash", legalName: "Restock", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "RUPIAH CEPAT｜RUPIAH CEPAT｜RUPIAHCEPAT（RUPIAHCEPAT·ID）", region: "se-asia", line: "cash", legalName: "RUPIAH CEPAT", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "SamaKita｜SamaKita｜SamaKita（SamaKita·ID）", region: "se-asia", line: "cash", legalName: "SamaKita", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Samir｜Samir｜Samir（Samir·ID）", region: "se-asia", line: "cash", legalName: "Samir", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Sanders One Stop Solution｜Sanders One Stop Solution｜SandersOneStopSolution（SandersOneStopSolution·ID）", region: "se-asia", line: "cash", legalName: "Sanders One Stop Solution", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "SINGA FINTECH｜SINGA FINTECH｜SINGAFINTECH（SINGAFINTECH·ID）", region: "se-asia", line: "cash", legalName: "SINGA FINTECH", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "Solusiku｜Solusiku｜Solusiku（Solusiku·ID）", region: "se-asia", line: "cash", legalName: "Solusiku", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "SPinjam｜SPinjam｜SPinjam（SPinjam·ID）", region: "se-asia", line: "cash", legalName: "SPinjam", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "tokomodal｜tokomodal｜tokomodal（tokomodal·ID）", region: "se-asia", line: "cash", legalName: "tokomodal", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+  { group: "UangMe｜UangMe｜UangMe（UangMe·ID）", region: "se-asia", line: "cash", legalName: "UangMe", code: "", licenseKindLabel: "LPBBTI/P2P", source: "ojkLpbbti", controller: "AFPI会员公开名·待OJK Direktori PDF交叉" },
+];
+
 /** PDIC/BSP：菲律宾投保数字银行 6 家 */
 const PH_DIGITAL_BANK_HOLDERS: OfficialLicenseHolder[] = [
   {
@@ -1456,10 +1909,54 @@ const PH_DIGITAL_BANK_HOLDERS: OfficialLicenseHolder[] = [
   },
 ];
 
+/** PH SEC Lending/Financing/OLP 交叉种子（JSON → OfficialLicenseHolder） */
+const PH_SEC_LENDING_HOLDERS: OfficialLicenseHolder[] = (
+  phSecLendingRoster.companies as {
+    brand: string;
+    legalName: string;
+    group: string;
+    kind: string;
+    line: "cash" | "bnpl";
+  }[]
+).map((c) => ({
+  group: c.group,
+  region: "se-asia" as const,
+  line: c.line,
+  legalName: c.legalName,
+  code: "",
+  licenseKindLabel: c.kind.includes("BNPL") || c.kind.includes("Financing") ? "SEC Financing/OLP" : "SEC Lending/OLP",
+  source: "secLendingPh" as const,
+  controller: `SEC PH 公开名录交叉·${c.brand}`,
+}));
+
+/** IN RBI NBFC 数字消费贷头部样本 */
+const IN_NBFC_DIGITAL_HOLDERS: OfficialLicenseHolder[] = (
+  inNbfcDigitalRoster.companies as {
+    brand: string;
+    legalName: string;
+    group: string;
+    kind: string;
+    line: "cash" | "bnpl";
+  }[]
+).map((c) => ({
+  group: c.group,
+  region: "south-asia" as const,
+  line: c.line,
+  legalName: c.legalName,
+  code: "",
+  licenseKindLabel: c.kind.includes("BNPL") ? "NBFC/BNPL" : "NBFC CoR",
+  source: "rbiNbfcDigital" as const,
+  controller: `RBI NBFC 名录交叉·${c.brand}`,
+}));
+
 const OFFICIAL_LICENSE_HOLDERS: OfficialLicenseHolder[] = [
   ...NFRA_CONSUMER_FINANCE_HOLDERS,
   ...NFRA_AUTO_FINANCE_HOLDERS,
+  ...NFRA_FIN_LEASE_HOLDERS,
   ...PH_DIGITAL_BANK_HOLDERS,
+  ...OJK_LPBBTI_HOLDERS,
+  ...PH_SEC_LENDING_HOLDERS,
+  ...IN_NBFC_DIGITAL_HOLDERS,
 ];
 
 const OFFICIAL_LICENSE_BY_GROUP: Record<string, OfficialLicenseHolder> = Object.fromEntries(
@@ -1469,23 +1966,42 @@ const OFFICIAL_LICENSE_BY_GROUP: Record<string, OfficialLicenseHolder> = Object.
 function formatOfficialLicenseReg(h: OfficialLicenseHolder): string {
   const src = REGULATORY_DIRECTORY_SOURCES[h.source];
   if (h.source === "nfraBankCorp") {
-    return `CN：${h.legalName}（${h.licenseKindLabel}；机构编码 ${h.code}；来源：${src}）`;
+    return `CN：${h.legalName}（${h.licenseKindLabel}；机构编码 ${h.code || "—"}；来源：${src}）`;
   }
   if (h.source === "pdicDigibank") {
     return `PH：${h.legalName}（${h.licenseKindLabel}；来源：${src}）`;
   }
+  if (h.source === "ojkLpbbti") {
+    return `ID：${h.legalName}（${h.licenseKindLabel}；来源：${src}）`;
+  }
+  if (h.source === "secLendingPh") {
+    return `PH：${h.legalName}（${h.licenseKindLabel}；来源：${src}）`;
+  }
+  if (h.source === "rbiNbfcDigital") {
+    return `IN：${h.legalName}（${h.licenseKindLabel}；来源：${src}）`;
+  }
   return `${h.legalName}（${h.licenseKindLabel}；来源：${src}）`;
 }
 
-function licensesForGeo(region: Region, country: CountryCode): RegLicenseDef[] {
-  const countries =
-    country !== "all"
-      ? [country]
-      : region === "all"
-        ? (Object.keys(COUNTRY_LABEL).filter((c) => c !== "all") as Exclude<CountryCode, "all">[])
-        : COUNTRIES_BY_REGION[region];
-  const set = new Set(countries);
-  return REGULATORY_LICENSE_CATALOG.filter((l) => set.has(l.country));
+function licensesForGeo(
+  region: Region,
+  country: CountryFilter,
+  licenseKind: LicenseKind | "all" = "all",
+): RegLicenseDef[] {
+  const n = normalizeCountryFilter(country);
+  // 必须点选具体国家/地区后再展示，避免「全部洲际/全部国家」时芯片刷屏
+  if (n === "all") return [];
+  const set = new Set(n);
+  return REGULATORY_LICENSE_CATALOG.filter((l) => {
+    if (!set.has(l.country)) return false;
+    if (licenseKind === "all") return true;
+    const kinds = inferLicenseKinds(l.name, l.id);
+    if (kinds.includes(licenseKind)) return true;
+    // 粗类「其他」：名称未命中四类主粗类时仍可落「其他」
+    if (licenseKind === "其他" && kinds.length === 0) return true;
+    if (licenseKind === "其他" && kinds.includes("其他")) return true;
+    return false;
+  });
 }
 
 function regulatorMatchesLicense(r: CreditRow, lic: RegLicenseDef): boolean {
@@ -1502,16 +2018,20 @@ function playerHoldsLicense(r: { licenseReg: string; licenses?: string; group: s
 
 /** 国家筛：组名含 ·XX / 国别简称，或 countries 字段含中文名/别名 */
 const COUNTRY_ALIASES: Record<Exclude<CountryCode, "all">, string[]> = {
-  CN: ["中国"],
+  CN: ["中国大陆", "中国"],
+  HK: ["中国香港", "香港", "Hong Kong"],
+  MO: ["中国澳门", "澳门", "Macau", "Macao"],
   TW: ["中国台湾", "台湾", "台灣", "Taiwan"],
   JP: ["日本"],
   KR: ["韩国"],
-  MN: ["外蒙古", "蒙古", "蒙古国"],
+  // 勿用裸「蒙古」：会误伤「内蒙古蒙商」等中国主体；外蒙古靠 ·MN / 外蒙古 / 蒙古国
+  MN: ["外蒙古", "蒙古国", "Mongolia"],
   ID: ["印度尼西亚", "印尼"],
   VN: ["越南"],
   MY: ["马来西亚", "马来"],
   TH: ["泰国"],
   PH: ["菲律宾"],
+  SG: ["新加坡", "Singapore"],
   IN: ["印度"],
   BD: ["孟加拉"],
   PK: ["巴基斯坦"],
@@ -1583,6 +2103,7 @@ const COUNTRY_ALIASES: Record<Exclude<CountryCode, "all">, string[]> = {
   SE: ["瑞典", "Sweden"],
   PL: ["波兰", "Poland"],
   IE: ["爱尔兰", "Ireland"],
+  RU: ["俄罗斯", "Russia", "俄国", "俄联邦"],
 };
 
 function matchesCountry(group: string, countries: string, country: CountryCode): boolean {
@@ -1598,6 +2119,9 @@ function matchesCountry(group: string, countries: string, country: CountryCode):
   }
   if (country === "CN") {
     if (group.includes("·TW") && !group.includes("·CN")) return false;
+    if (group.includes("·HK") || group.includes("·MO")) return false;
+    if (/中国香港|香港|Hong Kong|(?:^|[\s、;；,/])HK(?:$|[\s、;；,/])/i.test(blob) && !group.includes("·CN") && !/中国大陆/.test(blob)) return false;
+    if (/中国澳门|澳门|Macau|Macao|(?:^|[\s、;；,/])MO(?:$|[\s、;；,/])/i.test(blob) && !group.includes("·CN") && !/中国大陆/.test(blob)) return false;
     if (
       /中国台湾|台湾|台灣|(?:^|[\s、;；,/])TW(?:$|[\s、;；,/])/i.test(blob) &&
       !/中国(?!台湾)/.test(blob) &&
@@ -1605,9 +2129,30 @@ function matchesCountry(group: string, countries: string, country: CountryCode):
     ) {
       return false;
     }
+    // 中国内蒙古（蒙商消金等）归 CN，不因含「蒙古」串到外蒙古
+    if (/内蒙古/.test(blob) && !group.includes("·MN")) return true;
     if (group.includes("·CN") || /(?:^|[\s、;；,/])CN(?:$|[\s、;；,/])/.test(blob)) return true;
-    if (/中国(?!台湾)/.test(blob)) return true;
+    if (/中国大陆/.test(blob)) return true;
+    if (/中国(?!台湾|香港|澳门)/.test(blob)) return true;
     return false;
+  }
+  if (country === "HK") {
+    return (
+      /中国香港|香港|Hong Kong|(?:^|[\s、;；,/])HK(?:$|[\s、;；,/])/i.test(blob) ||
+      group.includes("·HK")
+    );
+  }
+  if (country === "MO") {
+    return (
+      /中国澳门|澳门|Macau|Macao|(?:^|[\s、;；,/])MO(?:$|[\s、;；,/])/i.test(blob) ||
+      group.includes("·MO")
+    );
+  }
+  if (country === "MN") {
+    // 外蒙古(MN) ≠ 中国内蒙古：有「内蒙古」且无 ·MN/外蒙古/蒙古国 则排除
+    if (/内蒙古/.test(blob) && !/·MN|外蒙古|蒙古国|Mongolia/i.test(blob)) return false;
+    if (group.includes("·MN") || /[·（(]MN[）)]/.test(group)) return true;
+    return COUNTRY_ALIASES.MN.some((a) => blob.includes(a));
   }
   if (group.includes(`·${country}`)) return true;
   if (new RegExp(`[·（(]${country}[）)]`).test(group)) return true;
@@ -1621,6 +2166,18 @@ function hasWorldwideCoverage(countries: string): boolean {
   if (/^Worldwide\b/i.test(t)) return true;
   if (/全球多国|多国办公室|欧洲及全球|全球及/.test(t)) return true;
   return false;
+}
+
+function matchesLanguageZoneFilter(
+  group: string,
+  countries: string,
+  langZone: LangZoneFilter,
+): boolean {
+  if (langZone === "all") return true;
+  if (hasWorldwideCoverage(countries)) return true;
+  return countriesInLanguageZone(langZone).some((c) =>
+    matchesCountry(group, countries, c as CountryCode),
+  );
 }
 
 const LINE_LABEL = {
@@ -1795,6 +2352,7 @@ const INSTITUTION_TYPE_ORDER: InstitutionType[] = [
   "监管",
   "资金参与机构",
   "风险参与机构",
+  "股权投资人",
   "风控服务方",
   "支付服务机构",
   "回收机构",
@@ -1826,7 +2384,7 @@ const INST_BUCKET_ORDER: InstBucket[] = [
 const INST_BUCKET_TYPES: Record<InstBucket, InstitutionType[]> = {
   用户端: ["玩家"],
   监管与合规中介: ["监管", "会计师事务所", "律师事务所", "评级机构"],
-  资本风险方: ["资金参与机构", "风险参与机构"],
+  资本风险方: ["资金参与机构", "风险参与机构", "股权投资人"],
   业务运营服务商: ["流量服务商", "回收机构", "权益服务商", "触达服务机构", "公关服务机构"],
   基础设施服务商: ["数据服务方", "风控服务方", "支付服务机构", "信托服务机构"],
 };
@@ -1847,6 +2405,7 @@ const INST_TYPE_TO_BUCKET: Record<InstitutionType, InstBucket> = {
   评级机构: "监管与合规中介",
   资金参与机构: "资本风险方",
   风险参与机构: "资本风险方",
+  股权投资人: "资本风险方",
   流量服务商: "业务运营服务商",
   回收机构: "业务运营服务商",
   权益服务商: "业务运营服务商",
@@ -1873,6 +2432,7 @@ const INSTITUTION_TYPE_LABEL: Record<InstitutionType, string> = {
   监管: "监管",
   资金参与机构: "资金参与机构",
   风险参与机构: "风险参与机构",
+  股权投资人: "股权投资人",
   风控服务方: "风控服务方",
   支付服务机构: "支付服务机构",
   回收机构: "回收机构",
@@ -1886,19 +2446,21 @@ const INSTITUTION_TYPE_LABEL: Record<InstitutionType, string> = {
 };
 const INSTITUTION_TYPE_BLURB: Record<InstitutionType, string> = {
   玩家: "下场展业主体；按场景原生 / 信贷原生浏览。",
-  流量服务商: "流量平台、代理商、贷超、代理运营。",
+  流量服务商: "流量服务商总类；细分需在下方单选（流量平台 / 代理商 / 贷超 / 代理运营）。",
   数据服务方: "征信、多头、替代数据等。",
   监管: "央行/行业监管名录；洲际→国家→法定牌照交叉筛选。",
   资金参与机构: "本地银行、代理、结构化、优先/夹层投资人。",
   风险参与机构: "保险等增信与风险分担。",
+  股权投资人: "PE / VC / 战略 / 银行财务投资人等股权侧投资人。",
   风控服务方: "信用评分、反欺诈、核验与风控决策等 B 端能力（非 To C 场景词条）。",
-  支付服务机构: "出金/入金/资金监管相关支付。",
-  回收机构: "贷后回收、委外催收与资产处置。",
+  支付服务机构:
+    "出金/入金/资金监管相关支付：官方支付基建、国民级支付机构、支付代理服务商。",
+  回收机构: "全国性/地方 AMC、NPL 投资与委外催收、资产处置服务商。",
   权益服务商: "会员权益、积分、搭售增值包。",
   触达服务机构: "短信、推送、外呼、即时消息。",
   公关服务机构: "品牌公关、危机传播、媒体关系。",
   信托服务机构: "信托计划、ABS/资产信托等受托服务。",
-  会计师事务所: "审计、验资、财务尽调。",
+  会计师事务所: "审计、验资、IPO/发债财务尽调与内控鉴证。",
   律师事务所: "金融法务、合规、争议解决。",
   评级机构: "主体/债项信用评级。",
 };
@@ -1910,6 +2472,7 @@ const ECO_ROLE_LABEL: Record<EcoRole, string> = {
   监管: INSTITUTION_TYPE_LABEL.监管,
   资金参与机构: INSTITUTION_TYPE_LABEL.资金参与机构,
   风险参与机构: INSTITUTION_TYPE_LABEL.风险参与机构,
+  股权投资人: INSTITUTION_TYPE_LABEL.股权投资人,
   风控服务方: INSTITUTION_TYPE_LABEL.风控服务方,
   支付服务机构: INSTITUTION_TYPE_LABEL.支付服务机构,
   回收机构: INSTITUTION_TYPE_LABEL.回收机构,
@@ -1941,7 +2504,7 @@ const FUND_KIND_BLURB: Record<FundParticipationKind, string> = {
   本地银行: "当地持牌银行直接出资/联合贷资金方。",
   本地银行代理: "代表或通道对接本地银行资金的代理方。",
   结构化服务商: "ABS/信托计划/结构化融资安排与服务。",
-  优先投资人: "结构化中优先层出资人。",
+  优先投资人: "结构化优先层/专项信贷出资人（如 Avenue、贝莱德等对照样本）。",
   夹层投资人: "结构化中夹层/次级等中间层出资人。",
 };
 
@@ -2216,6 +2779,33 @@ function resolveTrafficKinds(
   return [];
 }
 
+function resolvePaymentKinds(
+  institutionTypes: InstitutionType[],
+  draft?: PaymentKind[],
+): PaymentKind[] {
+  if (!institutionTypes.includes("支付服务机构")) return [];
+  if (draft?.length) return PAYMENT_KIND_ORDER.filter((k) => draft.includes(k));
+  return [];
+}
+
+function resolveEquityKinds(
+  institutionTypes: InstitutionType[],
+  draft?: EquityInvestorKind[],
+): EquityInvestorKind[] {
+  if (!institutionTypes.includes("股权投资人")) return [];
+  if (draft?.length) return EQUITY_KIND_ORDER.filter((k) => draft.includes(k));
+  return [];
+}
+
+/** CSV 名录命中的已有 group → 股权细分（用于打标，不建重档） */
+function equityKindsFromRosterMatch(group: string): EquityInvestorKind[] {
+  const found = new Set<EquityInvestorKind>();
+  for (const row of EQUITY_INVESTOR_ROSTER.rows) {
+    if (equityMatchGroup(row.name) === group) found.add(row.equityKind);
+  }
+  return EQUITY_KIND_ORDER.filter((k) => found.has(k));
+}
+
 const SOURCE_CHANNEL_ORDER: SourceChannel[] = ["流量源", "监管源", "经办认领"];
 
 /**
@@ -2323,67 +2913,52 @@ function normalizeLoginUsername(raw: string): string {
   return at >= 0 ? s.slice(0, at) : s;
 }
 
-/** 登录表单用非受控原生 input，避免中文输入法组合态与 canvas state 冲突乱码 */
-function LoginNativeField({
-  inputId,
-  type,
-  placeholder,
-  autoComplete,
-  defaultValue = "",
-}: {
-  inputId: string;
-  type: string;
-  placeholder: string;
-  autoComplete?: string;
-  defaultValue?: string;
-}) {
-  const theme = useHostTheme();
-  return (
-    <input
-      id={inputId}
-      name={inputId}
-      type={type}
-      placeholder={placeholder}
-      autoComplete={autoComplete}
-      defaultValue={defaultValue}
-      spellCheck={false}
-      style={{
-        width: "100%",
-        boxSizing: "border-box",
-        padding: "8px 10px",
-        borderRadius: 8,
-        border: `1px solid ${theme.stroke.tertiary}`,
-        background: theme.bg.editor,
-        color: theme.text.primary,
-        outline: "none",
-        fontSize: 13,
-      }}
-    />
-  );
+/**
+ * 登录输入：受控。
+ * - useCanvasState 保证画布重建后还能读回
+ * - globalThis 草稿作竞态缓冲（重建瞬间 state 可能短暂空，以更长的一侧为准）
+ * - 不用 defaultValue/非受控（重建必丢字）
+ */
+type LoginDraft = { email: string; pass: string };
+
+type SearchDraft = { q: string };
+function getSearchDraft(): SearchDraft {
+  const g = globalThis as unknown as { __crmAtlasSearchDraft?: SearchDraft };
+  if (!g.__crmAtlasSearchDraft) g.__crmAtlasSearchDraft = { q: "" };
+  return g.__crmAtlasSearchDraft;
 }
 
-function readLoginField(inputId: string): string {
-  const el = document.getElementById(inputId) as { value?: string } | null;
-  return (el?.value ?? "").trim();
+function getLoginDraft(): LoginDraft {
+  const g = globalThis as unknown as { __crmAtlasLoginDraft?: LoginDraft };
+  if (!g.__crmAtlasLoginDraft) g.__crmAtlasLoginDraft = { email: "", pass: "" };
+  return g.__crmAtlasLoginDraft;
 }
 
-function setLoginField(inputId: string, value: string) {
-  const el = document.getElementById(inputId) as { value?: string } | null;
-  if (el) el.value = value;
+function pickLoginValue(stateVal: string, draftVal: string): string {
+  if (draftVal.length > stateVal.length) return draftVal;
+  if (stateVal.length > draftVal.length) return stateVal;
+  return stateVal || draftVal;
 }
 
-function toggleLoginPasswordVisibility(inputId: string, show: boolean) {
-  const el = document.getElementById(inputId) as { type?: string } | null;
-  if (el) el.type = show ? "text" : "password";
+function applyPasteToValue(
+  value: string,
+  selectionStart: number | null | undefined,
+  selectionEnd: number | null | undefined,
+  pasted: string,
+): string {
+  const start = selectionStart ?? value.length;
+  const end = selectionEnd ?? value.length;
+  return value.slice(0, start) + pasted + value.slice(end);
 }
 
-/** 密码框：右侧框内小眼睛切换显示/隐藏 */
 function LoginPasswordField({
-  inputId,
+  value,
+  onChange,
   showPass,
   onToggle,
 }: {
-  inputId: string;
+  value: string;
+  onChange: (v: string) => void;
   showPass: boolean;
   onToggle: () => void;
 }) {
@@ -2400,13 +2975,26 @@ function LoginPasswordField({
       }}
     >
       <input
-        id={inputId}
-        name={inputId}
         type={showPass ? "text" : "password"}
         placeholder="密码"
-        autoComplete="off"
-        defaultValue=""
+        autoComplete={showPass ? "off" : "current-password"}
         spellCheck={false}
+        inputMode={showPass ? "text" : undefined}
+        value={value}
+        onChange={(e) => {
+          const t = e.currentTarget as unknown as { value?: string };
+          onChange(t.value ?? "");
+        }}
+        onPaste={(e) => {
+          const pasted = e.clipboardData?.getData("text") ?? "";
+          if (!pasted) return;
+          e.preventDefault();
+          const t = e.currentTarget as unknown as {
+            selectionStart?: number | null;
+            selectionEnd?: number | null;
+          };
+          onChange(applyPasteToValue(value, t.selectionStart, t.selectionEnd, pasted));
+        }}
         style={{
           width: "100%",
           boxSizing: "border-box",
@@ -2448,16 +3036,6 @@ function LoginPasswordField({
         {showPass ? (
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
             <path
-              d="M2 2l12 12M6.5 6.7A2.5 2.5 0 0 0 9.3 9.5M7.1 4.3A6.8 6.8 0 0 1 8 4.2c3.3 0 5.8 2.4 6.8 3.8-.4.5-1.1 1.3-2.1 2M4.2 4.9C3 5.7 2.2 6.7 1.8 8c1 1.4 3.5 3.8 6.8 3.8.5 0 1-.05 1.4-.14"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        ) : (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-            <path
               d="M1.8 8c1-1.4 3.5-3.8 6.8-3.8S13.8 6.6 14.8 8c-1 1.4-3.5 3.8-6.8 3.8S2.8 9.4 1.8 8Z"
               stroke="currentColor"
               strokeWidth="1.3"
@@ -2465,11 +3043,22 @@ function LoginPasswordField({
             />
             <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.3" />
           </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path
+              d="M2 2l12 12M6.5 6.7A2.5 2.5 0 0 0 9.3 9.5M7.1 4.3A6.8 6.8 0 0 1 8 4.2c3.3 0 5.8 2.4 6.8 3.8-.4.5-1.1 1.3-2.1 2M4.2 4.9C3 5.7 2.2 6.7 1.8 8c1 1.4 3.5 3.8 6.8 3.8.5 0 1-.05 1.4-.14"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         )}
       </button>
     </div>
   );
 }
+
 const SOURCE_CHANNEL_LABEL: Record<SourceChannel, string> = {
   流量源: "流量源（商店榜/点点/路飞/Sensor Tower/墨腾研报等）",
   监管源: "监管源（持牌名录/登记）",
@@ -2504,6 +3093,2348 @@ const MOTENG_LEARNED = {
     growthDrivers: "六国两位数增长；泰约+22%最快；频次驱动、客单价略下行",
   },
 } as const;
+
+/**
+ * Trading Economics · 国家/地区宏观长期信源。
+ * 入口：https://zh.tradingeconomics.com/{slug}/indicators
+ * 用途：选中国家/地区时展示信贷相关宏观（增长/通胀/政策利率/私营贷款或消费信贷等）；与监管/玩家交叉。
+ * 口径：聚合官方统计局/央行等；画布仅落可核验要点 + 时点，勿整页粘贴。
+ * @see https://zh.tradingeconomics.com/pakistan/indicators
+ */
+const TE_SLUG: Partial<Record<Exclude<CountryCode, "all">, string>> = {
+  CN: "china", HK: "hong-kong", MO: "macao", TW: "taiwan", JP: "japan", KR: "south-korea", MN: "mongolia",
+  ID: "indonesia", VN: "vietnam", MY: "malaysia", TH: "thailand", PH: "philippines", SG: "singapore",
+  IN: "india", BD: "bangladesh", PK: "pakistan", LK: "sri-lanka",
+  KZ: "kazakhstan", UZ: "uzbekistan", KG: "kyrgyzstan", TJ: "tajikistan", TM: "turkmenistan",
+  MX: "mexico", BR: "brazil", CO: "colombia", AR: "argentina", PE: "peru", CL: "chile",
+  EG: "egypt", MA: "morocco", DZ: "algeria", TN: "tunisia", LY: "libya", SD: "sudan",
+  SA: "saudi-arabia", AE: "united-arab-emirates", BH: "bahrain", QA: "qatar", KW: "kuwait",
+  OM: "oman", JO: "jordan", LB: "lebanon", IQ: "iraq", IL: "israel", PS: "palestine",
+  TR: "turkey", YE: "yemen", IR: "iran",
+  NG: "nigeria", KE: "kenya", GH: "ghana", ZA: "south-africa", TZ: "tanzania", UG: "uganda",
+  RW: "rwanda", ET: "ethiopia", CI: "ivory-coast", SN: "senegal", CM: "cameroon", AO: "angola",
+  MZ: "mozambique", ZM: "zambia", ZW: "zimbabwe", BW: "botswana", NA: "namibia", MU: "mauritius",
+  MG: "madagascar", BJ: "benin", BF: "burkina-faso", ML: "mali", CD: "congo", GA: "gabon",
+  US: "united-states", CA: "canada", GB: "united-kingdom", DE: "germany", FR: "france",
+  NL: "netherlands", ES: "spain", PT: "portugal", IT: "italy", SE: "sweden", PL: "poland", IE: "ireland",
+  RU: "russia",
+};
+
+type CountryMacroSnap = {
+  asOf: string;
+  gdpYoY?: string;
+  gdpUsdBn?: string;
+  /** 人均GDP现价美元 */
+  gdpPerCapitaUsd?: string;
+  /** 人均收入/可支配收入（名义或实际；注明） */
+  incomePerCapita?: string;
+  inflation?: string;
+  policyRate?: string;
+  unemployment?: string;
+  /** 总人口 */
+  population?: string;
+  /** 成年人口/年龄结构提示 */
+  ageStructure?: string;
+  /** 就业率或非正式就业提示 */
+  employmentNote?: string;
+  /**
+   * 第二行大数字：就业人口/总人口（可写「约45%（就业x/人口y）」）
+   */
+  employedToPop?: string;
+  /** 三产结构 */
+  sectorMix?: string;
+  /** 经常账户（顺逆差/占GDP） */
+  currentAccount?: string;
+  /** 外汇储备 */
+  fxReserves?: string;
+  /** 季度汇率走势提示 */
+  fxTrend?: string;
+  /** 年内汇率波动率（高低点/均价或年化波动；注明口径） */
+  fxVolInYear?: string;
+  privCreditOrConsumer?: string;
+  fxHint?: string;
+  debtToGdp?: string;
+  /** 居民杠杆：家庭债务/GDP（居民杠杆率） */
+  householdDebtToGdp?: string;
+  consumerConfidence?: string;
+  creditNote?: string;
+  /** 对照宏观阈值的简评（展示于国别卡片） */
+  cashLoanVerdict?: string;
+};
+
+/**
+ * 国别宏观因子框架（总表：指标-口径-含义；预警仅国别卡片）。
+ * 适用于各场景信贷资产判断，不限单一产品线。
+ * 完整表见总览页 MacroFactorFrameworkOverview / MACRO_FACTOR_GROUPS
+ */
+const CASH_LOAN_MACRO_FRAMEWORK = {
+  purpose: "服务国别准入与各场景信贷资产池判断；宏观定风险中枢，不替代微观风控",
+  groups: [
+    "经济基本面（GDP/人均GDP/收入/通胀/信心/三产）",
+    "人口与就业（总人口、18-45、就业率/非正式/青年失业）",
+    "信贷过热（家庭债务/GDP、DTI、信贷缺口、非银增速、NPL、多头）",
+    "外汇与跨境（经常账户、外储/短债、汇率波动、政策利率）",
+    "基建与监管（征信覆盖、智能机渗透、司法执行、利率上限/牌照、催收与数据法）",
+  ],
+  decisionOrder:
+    "①监管与基建，②外汇跨境可行性，③人口/收入/三产/就业，④信贷过热，⑤GDP/通胀/汇率投后压测",
+  alerts: {
+    gdpPerCapitaLowUsd: 2000,
+    gdpPerCapitaMatureUsd: 12000,
+    inflationHighPct: 12,
+    unemploymentHighPct: 8,
+    informalHighPct: 60,
+    youthUnempHighPct: 20,
+    age18to45LowPct: 35,
+    primarySectorHighPct: 30,
+    tertiarySectorHighPct: 65,
+    householdDebtEmergePct: "45–55",
+    dtiHighPct: 80,
+    creditGapHighPct: 5,
+    multiLoanHighPct: 30,
+    fxQoQDeprecPct: 10,
+    fxReserveShortDebtCover: 1,
+    creditBureauLowPct: 30,
+    smartphoneLowPct: 60,
+  },
+} as const;
+
+/** 已吸收宏观快照（TE 对照；字段对齐 MACRO_FACTOR_GROUPS 五组：基本面/人口就业/信贷过热/外汇跨境/基建监管待续；可续写）。 */
+const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSnap>> = {
+  CN: {
+    asOf: "2026-08对照·TE中国大陆",
+    gdpYoY: "4.3%（2026-06）",
+    gdpUsdBn: "约19.50万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约13793美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约20701美元（2021）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "0.5%（2026-07）",
+    policyRate: "3%（2026-07）",
+    unemployment: "5%（2026-06）；青年失业约14.9%（2026-06）",
+    population: "约14.05亿（2025-12）",
+    employedToPop: "7.33/14.09·就业亿人/人口亿人·世行就业人口比61.9%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项19581（2026-06）；制造250473；服务207592·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约3.7%（2025-12）；近季约1843亿美元（2026-03）·TE经常账户（美元·亿）",
+    fxReserves: "约34160亿美元（2026-06）",
+    fxTrend: "本币对美元约6.75（2026-08·TE货币）",
+    householdDebtToGdp: "约58%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±2.5%·年内高低相对均价粗算·Frankfurter USD/CNY·2024–2025",
+    privCreditOrConsumer: "私营部门贷款约829046亿元人民币（2026-06）·TE；贷款增长约5.2%（2026-06）",
+    fxHint: "约6.75（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约99.2%（2025-12）",
+    consumerConfidence: "约89.9（2026-05）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  TW: {
+    asOf: "2026-08对照·TE中国台湾",
+    gdpYoY: "12.92%（2026-06）",
+    gdpUsdBn: "约24亿美元（2026-06）",
+    incomePerCapita: "—·官方可支配收入待续采·可用人均GDP对照",
+    inflation: "2.6%（2026-06）",
+    policyRate: "2%（2026-08）",
+    unemployment: "3.33%（2026-06）；青年失业约11.57%（2026-06）",
+    population: "约2330万（2025-12）",
+    employedToPop: "0.115/0.234·就业亿人/人口亿人·台主计处量级约1150万就业(2024粗)·非世行",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项67569（2026-03）；制造2592463；服务3861164·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约17.4%（2025-12）；近季约62529百万美元（2026-03）",
+    fxReserves: "约5943亿美元（2026-07）·TE外汇储备",
+    fxTrend: "本币对美元约32.28（2026-08·TE货币）",
+    privCreditOrConsumer: "消费信贷约43997739TWD - 百万（2026-05）；私营部门贷款约18748139TWD - 百万（2026-06）",
+    fxHint: "约32.28（TE货币·2026-08）",
+    consumerConfidence: "约64.58（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约42.0%（2025）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±4.0%·USD/TWD·二级·待双端",
+    gdpPerCapitaUsd: "约36000美元（2025级）·二级·待双端",
+    debtToGdp: "政府债务/GDP约25%–30%（近年）·二级·待双端",
+  },
+  HK: {
+    asOf: "2026-08对照·TE中国香港",
+    gdpYoY: "4.3%（2026-06）；季环比折年约-0.6%（2026-06）；2025全年约3.5%",
+    gdpUsdBn: "约4270亿美元（2025-12）",
+    gdpPerCapitaUsd: "约46450美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约68725美元（2025-12）·TE GDP/人PPP·非住户可支配收入",
+    inflation: "2%（2026-06）",
+    policyRate: "4%（2026-07）·HKMA基本利率·联系汇率随美利率",
+    unemployment: "3.7%（2026-06）；青年失业约7.5%（2026-06）",
+    population: "约751万（2025-12）",
+    employedToPop: "0.036/0.075·就业亿人/人口亿人·就业约364.6万(2026-06)·劳动参与率约56.2%",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项265（2026-03）；制造7114；服务766168·港元百万·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约12.2%（2025-12）；近季约36443港元 - 百万（2026-03）",
+    fxReserves: "约4478亿美元（2026-07）",
+    fxTrend: "本币对美元约7.85（2026-08·TE货币）·联系汇率7.75–7.85兑换保证",
+    householdDebtToGdp: "约87.8%（2025-12）·家庭债务/GDP·TE Households Debt to GDP",
+    fxVolInYear: "±0.5%内·联系汇率窄幅·年内高低相对均价粗算·USD/HKD·2025",
+    privCreditOrConsumer: "私营部门贷款约10646152港元 - 百万（2026-05）；银行资产负债表量级约33140032港元 - 百万（2026-06）",
+    fxHint: "约7.85（TE货币·2026-08·联系汇率）",
+    debtToGdp: "政府债务/GDP约11.9%（2025-12）",
+    consumerConfidence: "约88.9（2026-03）",
+    creditNote: "信贷过热组：家庭债务水位偏高（近88%GDP）；MSO/SVF/银行牌照与HKMA/SFC监管续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值；家庭杠杆偏高、联系汇率随美利率。准入先过金钱服务经营者/银行牌照与利率上限评估（对照总表预警）。",
+  },
+  JP: {
+    asOf: "2026-08对照·TE日本",
+    gdpYoY: "0.6%（2026-03）",
+    gdpUsdBn: "约4.43万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约38619美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约50060美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "1.7%（2026-06）",
+    policyRate: "1%（2026-07）",
+    unemployment: "2.5%（2026-06）；青年失业约4.2%（2026-06）",
+    population: "约1.23亿（2025-12）",
+    employedToPop: "0.678/1.24·就业亿人/人口亿人·世行就业人口比61.7%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项5900（2024-12）；制造110990；服务24488·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约4.7%（2025-12）；近季约3968日元 - 十亿（2026-05）",
+    fxReserves: "约12875亿美元（2026-06）",
+    fxTrend: "本币对美元约158（2026-08·TE货币）",
+    householdDebtToGdp: "约61.1%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±6%·年内高低相对均价粗算·Frankfurter USD/JPY·2024–2025",
+    privCreditOrConsumer: "消费信贷约62267日元 - 十亿（2026-03）；私营部门贷款约596463日元 - 十亿（2026-06）",
+    fxHint: "约158（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约249%（2025-12）",
+    consumerConfidence: "约34.9（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  KR: {
+    asOf: "2026-08对照·TE韩国",
+    gdpYoY: "3.7%（2026-06）",
+    gdpUsdBn: "约1.87万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约37470美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约56424美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.8%（2026-07）",
+    policyRate: "2.75%（2026-07）",
+    unemployment: "2.7%（2026-06）；青年失业约7%（2026-06）",
+    population: "约5168万（2025-12）",
+    employedToPop: "0.29/0.518·就业亿人/人口亿人·世行就业人口比62.7%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项8116（2026-06）；制造167899；服务346974·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约6.6%（2025-12）；近季约49730百万美元（2026-06）",
+    fxReserves: "约4279亿美元（2026-07）",
+    fxTrend: "本币对美元约1420（2026-08·TE货币）",
+    householdDebtToGdp: "约88.6%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±4.5%·年内高低相对均价粗算·Frankfurter USD/KRW·2024–2025",
+    privCreditOrConsumer: "消费信贷约1993111KRW - 亿（2026-03）；私营部门贷款约1487408KRW - 亿（2026-05）",
+    fxHint: "约1420（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约49%（2025-12）",
+    consumerConfidence: "约107（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  MN: {
+    asOf: "2026-08对照·TE外蒙古",
+    gdpYoY: "7.9%（2026-03）",
+    gdpUsdBn: "约254亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4882美元（2025-12）",
+    incomePerCapita: "约17969美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "12%（2026-06）·破12%阈值",
+    policyRate: "12%（2026-06）",
+    unemployment: "5.7%（2026-03）",
+    population: "约359万（2025-12）",
+    employedToPop: "0.014/0.035·就业亿人/人口亿人·世行就业人口比57.2%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项261822（2026-03）；制造339138；服务2218696·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-8.6%（2025-12）；近季约-358百万美元（2026-05）",
+    fxReserves: "约76.6亿美元（2026-06）",
+    fxTrend: "本币对美元约3597（2026-08·TE货币）",
+    fxHint: "约3597（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约42%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "通胀破12%。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约10.0%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±6.0%·USD/MNT·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约45% GDP（近年）·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  ID: {
+    asOf: "2026-08对照·TE印尼",
+    gdpYoY: "5.29%（2026-06）",
+    gdpUsdBn: "约1.45万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4555美元（2025-12）",
+    incomePerCapita: "约14434美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.88%（2026-07）",
+    policyRate: "5.75%（2026-07）",
+    unemployment: "4.68%（2026-03）",
+    population: "约2.84亿（2025-12）",
+    employedToPop: "1.4/2.83·就业亿人/人口亿人·世行就业人口比65.7%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项42600（2026-06）；制造707500；服务537100·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-0.1%（2025-12）；近季约-4008百万美元（2026-03）",
+    fxReserves: "约1456亿美元（2026-06）",
+    fxTrend: "本币对美元约17916（2026-08·TE货币）",
+    fxVolInYear: "±2.6%·年内高低相对均价粗算·Frankfurter USD/IDR·2024–2025",
+    privCreditOrConsumer: "消费信贷约3609170IDR - 10亿（2026-05）；私营部门贷款约7591084IDR - 10亿（2026-05）",
+    fxHint: "约17916（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约41%（2025-12）",
+    householdDebtToGdp: "约15.5%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    consumerConfidence: "约118（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  VN: {
+    asOf: "2026-08对照·TE越南",
+    gdpYoY: "8.39%（2026-06）",
+    gdpUsdBn: "约5150亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4308美元（2025-12）",
+    incomePerCapita: "约15189美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "4.45%（2026-07）",
+    policyRate: "4.5%（2026-07）",
+    unemployment: "2.23%（2026-06）；青年失业约8.67%（2026-06）",
+    population: "约1.02亿（2025-12）",
+    employedToPop: "0.558/1.01·就业亿人/人口亿人·世行就业人口比72.0%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项297671（2026-06）；制造722523；服务1246493·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约6.4%（2025-12）；近季约2716百万美元（2026-03）",
+    fxReserves: "约831亿美元（2026-05）",
+    fxTrend: "本币对美元约26228（2026-08·TE货币）",
+    fxHint: "约26228（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约33.6%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约27.0%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±3.2%·VND管理浮动·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约125% GDP（近年）·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  MY: {
+    asOf: "2026-08对照·TE马来西亚",
+    gdpYoY: "5.8%（2026-06）",
+    gdpUsdBn: "约4720亿美元（2025-12）",
+    gdpPerCapitaUsd: "约12352美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约34062美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "1.9%（2026-06）",
+    policyRate: "2.75%（2026-07）",
+    unemployment: "3%（2026-05）",
+    population: "约3420万（2025-12）",
+    employedToPop: "0.177/0.356·就业亿人/人口亿人·世行就业人口比63.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项24957（2026-06）；制造104179；服务264819·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约1.5%（2025-12）；近季约15157MYR - 百万（2026-03）",
+    fxReserves: "约1326亿美元（2026-06）",
+    fxTrend: "本币对美元约4.09（2026-08·TE货币）",
+    householdDebtToGdp: "约69.8%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±5.4%·年内高低相对均价粗算·Frankfurter USD/MYR·2024–2025",
+    privCreditOrConsumer: "私营部门贷款约2643676MYR - 百万（2026-06）",
+    fxHint: "约4.09（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约65.3%（2025-12）",
+    consumerConfidence: "约135（2026-03）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  TH: {
+    asOf: "2026-08对照·TE泰国",
+    gdpYoY: "2.8%（2026-03）",
+    gdpUsdBn: "约5770亿美元（2025-12）",
+    gdpPerCapitaUsd: "约6783美元（2025-12）",
+    incomePerCapita: "约19572美元（2021）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "1.95%（2026-07）",
+    policyRate: "1%（2026-06）",
+    unemployment: "0.94%（2026-03）；青年失业约4.6%（2026-03）",
+    population: "约6581万（2025-12）",
+    employedToPop: "0.407/0.717·就业亿人/人口亿人·世行就业人口比66.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项186365（2026-03）；制造713282·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约2.8%（2025-12）；近季约-3474百万美元（2026-06）",
+    fxReserves: "约2792亿美元（2026-06）",
+    fxTrend: "本币对美元约33.06（2026-08·TE货币）",
+    householdDebtToGdp: "约87.5%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±5.7%·年内高低相对均价粗算·Frankfurter USD/THB·2024–2025",
+    privCreditOrConsumer: "消费信贷约5285734泰铢 - 百万（2025-06）；私营部门贷款约10553097泰铢 - 百万（2026-06）",
+    fxHint: "约33.06（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约65.64%（2025-12）",
+    consumerConfidence: "约50.7（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  PH: {
+    asOf: "2026-08对照·TE菲律宾",
+    gdpYoY: "2.8%（2026-03）",
+    gdpUsdBn: "约4870亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4066美元（2025-12）",
+    incomePerCapita: "约12312美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "6.2%（2026-07）",
+    policyRate: "4.75%（2026-06）",
+    unemployment: "4.9%（2026-06）",
+    population: "约1.14亿（2025-12）",
+    employedToPop: "0.502/1.16·就业亿人/人口亿人·世行就业人口比60.0%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项455741（2026-03）；制造1084678；服务3554330·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-3.3%（2025-12）；近季约-2691百万美元（2026-03）",
+    fxReserves: "约1048亿美元（2026-06）",
+    fxTrend: "本币对美元约60.67（2026-08·TE货币）",
+    fxVolInYear: "±3.5%·年内高低相对均价粗算·Frankfurter USD/PHP·2024–2025",
+    privCreditOrConsumer: "消费信贷约1229PHP - 10亿（2026-03）；私营部门贷款约12670379PHP - 百万（2026-05）",
+    fxHint: "约60.67（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约63.2%（2025-12）",
+    householdDebtToGdp: "约13.6%（2025-12）·家庭债务/GDP·CEIC转述",
+    consumerConfidence: "约-42（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  SG: {
+    asOf: "2026-08对照·TE新加坡",
+    householdDebtToGdp: "约44%（2025-Q4）·家庭债务/GDP·BIS/TE Households Debt to GDP",
+    fxVolInYear: "±4.2%·年内高低相对均价粗算·Frankfurter SGD·2025-07..2026-08",
+    cashLoanVerdict: "人均高、牌照严、经常账户顺差厚。准入先过MAS非银信贷/银行合作路径；政府债务/GDP口径特殊勿误读。",
+    gdpYoY: "5.7%（2026-06）",
+    gdpUsdBn: "约6040亿美元（2025-12）",
+    gdpPerCapitaUsd: "约70684美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约139593美元（2025-12）·人均GDP(PPP)·TE·非住户可支配收入",
+    inflation: "1.9%（2026-06）",
+    policyRate: "1.05%（2026-08）·SORA/政策利率口径·TE",
+    unemployment: "2%（2026-06）",
+    population: "约611万（2025-12）",
+    employedToPop: "0.041/0.061·就业亿人/人口亿人·TE就业约411.7万(2025-12)/人口611万",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；劳动力参与率约67.9%（2025-12）",
+    sectorMix: "制造约34064；服务约100143（2026-06·SGDmn不变价分项）·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约16.7%（2025-12）；近季约41094SGD - 百万（2026-03）",
+    fxReserves: "约5493亿SGD（2026-07）·TE外汇储备",
+    fxTrend: "本币对美元约1.28（2026-08·TE货币）",
+    fxHint: "约1.28（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约171%（2025-12）·含MAS特殊结构·不宜简单对照新兴市场阈值",
+    privCreditOrConsumer: "私人部门信贷约742123SGD - 百万（2026-06）",
+    consumerConfidence: "约54.1（2026-07）",
+    creditNote: "信贷过热组：家庭债务约44%GDP；非银增速/NPL/多头以MAS与征信续核；此处为TE可核验水位。",
+  },
+  IN: {
+    asOf: "2026-08对照·TE印度",
+    gdpYoY: "7.8%（2026-03）",
+    gdpUsdBn: "约3.96万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约2523美元（2025-12）",
+    incomePerCapita: "约9910美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "4.38%（2026-06）",
+    policyRate: "5.25%（2026-08）",
+    unemployment: "5.5%（2026-06）",
+    population: "约14.21亿（2025-12）",
+    employedToPop: "5.83/14.51·就业亿人/人口亿人·世行就业人口比53.3%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项14832（2026-03）；制造13529·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-0.6%（2025-12）；近季约7081百万美元（2026-03）",
+    fxReserves: "约6824亿美元（2026-07）",
+    fxTrend: "本币对美元约95.16（2026-08·TE货币）",
+    fxVolInYear: "±3.8%·年内高低相对均价粗算·Frankfurter USD/INR·2024–2025",
+    privCreditOrConsumer: "消费信贷约5600000INR - 亿（家庭/零售信贷粗算·BIS杠杆×GDP量级待RBI复核）；私营部门贷款约16800000INR - 亿（私营信贷粗算·世行%GDP反推待核）；贷款增长约17.7%（2026-07）",
+    fxHint: "约95.16（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约81.92%（2024-12）",
+    householdDebtToGdp: "约47.8%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    consumerConfidence: "约88.3（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  BD: {
+    asOf: "2026-08对照·TE孟加拉",
+    gdpYoY: "3.49%（2025-06）",
+    gdpUsdBn: "约4560亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1985美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约9153美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "9.16%（2026-06）",
+    policyRate: "9.5%（2026-07）",
+    unemployment: "3.8%（2025-12）",
+    population: "约1.81亿（2025-12）",
+    employedToPop: "0.709/1.74·就业亿人/人口亿人·世行就业人口比56.8%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项3686（2025-06）；制造8422；服务17401·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约0%（2025-12）；近季约737十亿 - BDT（2026-03）",
+    fxReserves: "约376亿美元（2026-06）",
+    fxTrend: "本币对美元约124（2026-08·TE货币）",
+    privCreditOrConsumer: "消费信贷约24550BDT - 10亿（2026-05）；私营部门贷款约17499BDT - 10亿（2026-05）",
+    fxHint: "约124（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约32.2%（2024-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约11.0%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±4.5%·USD/BDT·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  PK: {
+    asOf: "2026-08对照·TE巴基斯坦",
+    gdpYoY: "4%（2026-03）",
+    gdpUsdBn: "约4070亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1669美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约5692美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "9.2%（2026-07）",
+    policyRate: "11.5%（2026-07）",
+    unemployment: "5.4%（2025-12）",
+    population: "约2.55亿（2025-12）",
+    employedToPop: "0.786/2.51·就业亿人/人口亿人·世行就业人口比49.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项2471566（2026-03）；制造1378853；服务6307500·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约0.5%（2025-06）；近季约-425百万美元（2026-06）",
+    fxReserves: "约224亿美元（2026-07）",
+    fxTrend: "本币对美元约277（2026-08·TE货币）",
+    privCreditOrConsumer: "消费信贷约1547944PKR - 百万（2026-06）；私营部门贷款约9600037PKR - 百万（2026-06）",
+    fxHint: "约277（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约83%（2025-12）",
+    consumerConfidence: "约36.1（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约3.5%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±7.5%·USD/PKR·二级·待双端",
+  },
+  LK: {
+    asOf: "2026-08对照·TE斯里兰卡",
+    gdpYoY: "5.1%（2026-03）",
+    gdpUsdBn: "约1090亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4439美元（2025-12）",
+    incomePerCapita: "约14291美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "7.3%（2026-07）",
+    policyRate: "8.75%（2026-07）",
+    unemployment: "3.7%（2026-03）；青年失业约18.7%（2025-12）",
+    population: "约2203万（2025-12）",
+    employedToPop: "0.08/0.219·就业亿人/人口亿人·世行就业人口比46.5%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项232115（2026-03）；制造1049104；服务2105235·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约1.6%（2025-12）；近季约623百万美元（2026-03）",
+    fxReserves: "约64.6亿美元（2026-06）",
+    fxTrend: "本币对美元约335（2026-08·TE货币）",
+    privCreditOrConsumer: "私人部门信贷约11791113LKR - 百万（2026-06）",
+    fxHint: "约335（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约91.6%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约12.0%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±8.0%·USD/LKR·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  KZ: {
+    asOf: "2026-08对照·TE哈萨克斯坦",
+    gdpYoY: "3%（2026-03）",
+    gdpUsdBn: "约3060亿美元（2025-12）",
+    gdpPerCapitaUsd: "约12492美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约34286美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "10.2%（2026-07）",
+    policyRate: "16.75%（2026-07）",
+    unemployment: "4.5%（2026-03）；青年失业约3%（2026-03）",
+    population: "约2050万（2025-12）",
+    employedToPop: "0.098/0.206·就业亿人/人口亿人·世行就业人口比67.2%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项690436（2026-03）；制造5193494；服务19938928·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约4.1%（2025-12）；近季约-1791百万美元（2026-03）",
+    fxReserves: "约622亿美元（2026-06）",
+    fxTrend: "本币对美元约471（2026-08·TE货币）",
+    privCreditOrConsumer: "消费信贷约25846428腾格 - 百万（2026-06）",
+    fxHint: "约471（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约24.6%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±8.0%·USD/KZT·二级·待双端",
+    householdDebtToGdp: "约67.2%（2026-Q1）·家庭债务/GDP·CEIC转述",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  UZ: {
+    asOf: "2026-08对照·TE乌兹别克斯坦",
+    gdpYoY: "8.7%（2026-03）",
+    gdpUsdBn: "约1470亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4733美元（2025-12）",
+    incomePerCapita: "约9748美元（2021）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "6.4%（2026-07）",
+    policyRate: "14%（2026-07）",
+    unemployment: "4.5%（2024-12）",
+    population: "约3754万（2025-12）",
+    employedToPop: "0.138/0.364·就业亿人/人口亿人·世行就业人口比55.1%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项306294（2025-12）；制造472730；服务215494·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-3.9%（2025-12）；近季约-5793百万美元（2026-03）",
+    fxReserves: "约638亿美元（2026-06）",
+    fxTrend: "本币对美元约11870（2026-08·TE货币）",
+    fxHint: "约11870（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约35%（2024-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±5.0%·USD/UZS·二级·待双端",
+    householdDebtToGdp: "约12.2%（2024）·家庭债务/GDP·央行个人贷款/GDP·Kun.uz转述",
+    privCreditOrConsumer: "国内私营信贷约40% GDP（近年）·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  KG: {
+    asOf: "2026-08对照·TE吉尔吉斯斯坦",
+    gdpYoY: "10.1%（2026-03）",
+    gdpUsdBn: "约226亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1555美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约8966美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "11%（2026-06）",
+    policyRate: "12%（2026-07）",
+    unemployment: "1.4%（2026-04）",
+    population: "约740万（2025-12）",
+    employedToPop: "0.027/0.072·就业亿人/人口亿人·世行就业人口比55.5%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约-18.8%（2025-12）；近季约-1470百万美元（2026-03）",
+    fxReserves: "约79.2亿美元（2026-06）",
+    fxTrend: "本币对美元约87.45（2026-08·TE货币）",
+    fxHint: "约87.45（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约26%（2025-12）",
+    consumerConfidence: "约46.2（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约12.6%（2026-Q2）·家庭债务/GDP·CEIC转述",
+    privCreditOrConsumer: "国内私营信贷约25% GDP（近年）·二级·待双端",
+    fxVolInYear: "±12%·通胀中高汇率波·二级·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+  },
+  TJ: {
+    asOf: "2026-08对照·TE塔吉克斯坦",
+    gdpYoY: "8%（2026-03）",
+    gdpUsdBn: "约177亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1593美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约10615美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "4.1%（2026-06）",
+    policyRate: "7%（2026-06）",
+    unemployment: "6.9%（2025-12）",
+    population: "约1072万（2025-12）",
+    employedToPop: "0.024/0.106·就业亿人/人口亿人·世行就业人口比35.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项38820（2025-12）；制造28632；服务33619·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约6.2%（2024-12）；近季约820189千美元（2026-03）",
+    fxTrend: "本币对美元约9.22（2026-08·TE货币）",
+    fxHint: "约9.22（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约28.4%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约8%（2024）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约15% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    fxReserves: "约38.1亿美元（2025）·IMF/FRED央行总储备·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  TM: {
+    asOf: "2026-08对照·TE土库曼斯坦",
+    gdpYoY: "6.3%（2025-12）",
+    gdpUsdBn: "约498亿美元（2025-12）",
+    gdpPerCapitaUsd: "约8605美元（2025-12）",
+    incomePerCapita: "约15904美元（2021）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "5.5%（2025-12）",
+    unemployment: "4.3%（2024-12）",
+    population: "约762万（2025-12）",
+    employedToPop: "0.021/0.075·就业亿人/人口亿人·世行就业人口比40.5%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约2.3%（2025-12）；近季约2.59百万美元（2024-12）",
+    fxTrend: "本币对美元约3.5（2026-08·TE货币）",
+    fxHint: "约3.5（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约4.6%（2024-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约3%（2023）·家庭债务/GDP·二级·待双端",
+    policyRate: "—·马纳特强管理汇率/利率不透明·待双端",
+    fxVolInYear: "±3%·官方管理低波·二级·待双端",
+    privCreditOrConsumer: "正规零售信贷深度低·二级·待双端",
+    fxReserves: "外储与汇率不透明·官方马纳特管理·勿假装有官方外储数字·待双端",
+    sectorMix: "油气主导·三产占比待官方续拆·待双端·2026-08补录",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  MX: {
+    asOf: "2026-08对照·TE墨西哥",
+    gdpYoY: "2.2%（2026-06）",
+    gdpUsdBn: "约1.83万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约10257美元（2025-12）",
+    incomePerCapita: "约22157美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "3.37%（2026-06）",
+    policyRate: "6.5%（2026-06）",
+    unemployment: "2.9%（2026-06）",
+    population: "约1.32亿（2025-12）",
+    employedToPop: "0.593/1.31·就业亿人/人口亿人·世行就业人口比60.0%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项797676（2026-03）；制造5073454；服务15134330·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-0.4%（2025-12）；近季约-15878百万美元（2026-03）",
+    fxReserves: "约2555亿美元（2026-07）",
+    fxTrend: "本币对美元约17.25（2026-08·TE货币）",
+    fxVolInYear: "±8%·年内高低相对均价粗算·Frankfurter USD/MXN·2024–2025",
+    privCreditOrConsumer: "消费信贷约2389228MXN - 百万（2026-03）；私营部门贷款约3969419049MXN千（2026-06）",
+    fxHint: "约17.25（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约45.4%（2025-12）",
+    householdDebtToGdp: "约17.4%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    consumerConfidence: "约45（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  BR: {
+    asOf: "2026-08对照·TE巴西",
+    gdpYoY: "1.8%（2026-03）",
+    gdpUsdBn: "约2.28万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约9748美元（2025-12）",
+    incomePerCapita: "约19212美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "4.64%（2026-06）",
+    policyRate: "14%（2026-08）",
+    unemployment: "5.4%（2026-06）",
+    population: "约2.13亿（2025-12）",
+    employedToPop: "1.01/2.12·就业亿人/人口亿人·世行就业人口比59.0%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项33593（2026-03）；制造28145；服务206101·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-3.02%（2025-12）；近季约-2330百万美元（2026-06）",
+    fxReserves: "约3689亿美元（2026-07）",
+    fxTrend: "本币对美元约5.14（2026-08·TE货币）",
+    householdDebtToGdp: "约37.6%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±8.5%·年内高低相对均价粗算·Frankfurter USD/BRL·2024–2025",
+    privCreditOrConsumer: "消费信贷约4606800BRL - 百万（2026-06）；私营部门贷款约1114054BRL - 百万（2026-05）",
+    fxHint: "约5.14（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约78.64%（2025-12）",
+    consumerConfidence: "约88.3（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  CO: {
+    asOf: "2026-08对照·TE哥伦比亚",
+    gdpYoY: "2.2%（2026-03）",
+    gdpUsdBn: "约4570亿美元（2025-12）",
+    gdpPerCapitaUsd: "约6976美元（2025-12）",
+    incomePerCapita: "约19071美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "6.14%（2026-06）",
+    policyRate: "12%（2026-07）",
+    unemployment: "8%（2026-06）",
+    population: "约5306万（2025-12）",
+    employedToPop: "0.242/0.529·就业亿人/人口亿人·世行就业人口比57.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项15163（2026-03）；制造27613·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-2.4%（2025-12）；近季约-1573百万美元（2026-03）",
+    fxReserves: "约670亿美元（2026-06）",
+    fxTrend: "本币对美元约3183（2026-08·TE货币）",
+    householdDebtToGdp: "约25.5%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    privCreditOrConsumer: "消费信贷约22354410亿COP -（2026-05）；私人部门信贷约470665COP - 百万（2026-06）",
+    fxHint: "约3183（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约59.9%（2025-12）",
+    consumerConfidence: "约24.3（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±11.5%·USD/COP·二级·待双端",
+  },
+  AR: {
+    asOf: "2026-08对照·TE阿根廷",
+    gdpYoY: "2.3%（2026-03）",
+    gdpUsdBn: "约6830亿美元（2025-12）",
+    gdpPerCapitaUsd: "约13287美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约27594美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "33.5%（2026-06）·破12%阈值",
+    policyRate: "29%（2026-07）",
+    unemployment: "7.8%（2026-03）",
+    population: "约4639万（2025-12）",
+    employedToPop: "0.206/0.457·就业亿人/人口亿人·世行就业人口比57.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项21953（2026-03）；制造92415；服务85391·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约1.2%（2025-12）；近季约-1651百万美元（2026-03）",
+    fxReserves: "约367亿美元（2026-06）",
+    fxTrend: "本币对美元约1496（2026-08·TE货币）",
+    householdDebtToGdp: "约5.7%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxHint: "约1496（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约78.4%（2025-12）",
+    consumerConfidence: "约40.67（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值；通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±35.0%·USD/ARS高波·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约14% GDP（近年）·二级·待双端",
+  },
+  PE: {
+    asOf: "2026-08对照·TE秘鲁",
+    gdpYoY: "3.5%（2026-03）",
+    gdpUsdBn: "约3350亿美元（2025-12）",
+    gdpPerCapitaUsd: "约6891美元（2025-12）",
+    incomePerCapita: "约15938美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "4.07%（2026-07）",
+    policyRate: "4.25%（2026-07）",
+    unemployment: "4.9%（2026-06）",
+    population: "约3458万（2025-12）",
+    employedToPop: "0.18/0.342·就业亿人/人口亿人·世行就业人口比69.0%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项7935（2026-03）；制造16648；服务14719·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约3%（2025-12）；近季约4463百万美元（2026-03）",
+    fxReserves: "约970亿美元（2026-07）",
+    fxTrend: "本币对美元约3.38（2026-08·TE货币）",
+    privCreditOrConsumer: "消费信贷约114292PEN - 百万（2026-06）；私营部门贷款约263616PEN - 百万（2026-06）",
+    fxHint: "约3.38（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约30.2%（2025-12）",
+    consumerConfidence: "约48.1（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±5.8%·USD/PEN·二级·待双端",
+    householdDebtToGdp: "约14.8%（2026-Q1）·家庭债务/GDP·CEIC转述",
+  },
+  CL: {
+    asOf: "2026-08对照·TE智利",
+    gdpYoY: "-0.5%（2026-03）",
+    gdpUsdBn: "约3570亿美元（2025-12）",
+    gdpPerCapitaUsd: "约14905美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约29817美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "4.3%（2026-06）",
+    policyRate: "4.5%（2026-07）",
+    unemployment: "9.4%（2026-06）",
+    population: "约2020万（2025-12）",
+    employedToPop: "0.093/0.198·就业亿人/人口亿人·世行就业人口比56.9%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项2629（2026-03）；制造4953；服务5151·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-1.2%（2025-12）；近季约1883百万美元（2026-03）",
+    fxReserves: "约519亿美元（2026-06）",
+    fxTrend: "本币对美元约914（2026-08·TE货币）",
+    householdDebtToGdp: "约43.8%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    privCreditOrConsumer: "消费信贷约32858CLP - 10亿（2026-05）；私营部门贷款约147635CLP - 10亿（2026-05）",
+    fxHint: "约914（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约41.5%（2025-12）",
+    consumerConfidence: "约30.7（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±9.5%·USD/CLP·二级·待双端",
+  },
+  EG: {
+    asOf: "2026-08对照·TE埃及",
+    gdpYoY: "5%（2026-03）",
+    gdpUsdBn: "约3650亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4253美元（2025-12）",
+    incomePerCapita: "约15877美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "14.3%（2026-06）·破12%阈值",
+    policyRate: "19%（2026-07）",
+    unemployment: "6%（2026-03）",
+    population: "约1.08亿（2025-12）",
+    employedToPop: "0.329/1.17·就业亿人/人口亿人·世行就业人口比41.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项835939（2026-03）；制造860710·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-4.2%（2025-12）；近季约-5117百万美元（2026-03）",
+    fxReserves: "约563亿美元（2026-07）",
+    fxTrend: "本币对美元约49.82（2026-08·TE货币）",
+    privCreditOrConsumer: "消费信贷约1600146EGP - 百万（2026-06）；私营部门贷款约3661837EGP - 百万（2026-06）",
+    fxHint: "约49.82（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约83.8%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约8.0%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±18.0%·USD/EGP高波·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  MA: {
+    asOf: "2026-08对照·TE摩洛哥",
+    gdpYoY: "4.6%（2026-03）",
+    gdpUsdBn: "约1820亿美元（2025-12）",
+    gdpPerCapitaUsd: "约3644美元（2025-12）",
+    incomePerCapita: "约9727美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "0.3%（2026-06）",
+    policyRate: "2.25%（2026-08）",
+    unemployment: "9.5%（2026-06）；青年失业约22.9%（2026-06）·破20%阈值",
+    population: "约3771万（2025-12）",
+    employedToPop: "0.114/0.381·就业亿人/人口亿人·世行就业人口比40.1%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项33406（2026-03）；制造45476；服务196440·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-2.3%（2025-12）；近季约-5028MAD - 百万（2026-03）",
+    fxReserves: "约4968亿MAD（2026-07）·TE外汇储备（MAD百万）·约合500亿美元级",
+    fxTrend: "本币对美元约9.31（2026-08·TE货币）",
+    fxHint: "约9.31（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约67.1%（2025-12）",
+    consumerConfidence: "约60.1（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±5.5%·USD/MAD·二级·待双端",
+    householdDebtToGdp: "约21.2%（2025）·家庭债务/GDP·CEIC转述",
+    privCreditOrConsumer: "国内私营信贷约65% GDP（近年）·二级·待双端",
+  },
+  DZ: {
+    asOf: "2026-08对照·TE阿尔及利亚",
+    gdpYoY: "3.9%（2025-06）",
+    gdpUsdBn: "约2870亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4883美元（2025-12）",
+    incomePerCapita: "约15908美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "8.36%（2026-05）",
+    policyRate: "2.5%（2026-07）",
+    unemployment: "11.63%（2025-12）",
+    population: "约4744万（2025-12）",
+    employedToPop: "0.119/0.468·就业亿人/人口亿人·世行就业人口比36.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项1418472（2025-06）；制造994423；服务4092916·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-7.7%（2025-12）；近季约-2.38十亿美元（2024-12）",
+    fxTrend: "本币对美元约133（2026-08·TE货币）",
+    fxHint: "约133（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约54.1%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±5.0%·USD/DZD·二级·待双端",
+    householdDebtToGdp: "约8%（2024）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约18.5% GDP（近年）·二级·待双端",
+    fxReserves: "约645.7亿美元（2024-Q1）·TE外汇储备·阿尔及利亚央行·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  TN: {
+    asOf: "2026-08对照·TE突尼斯",
+    gdpYoY: "2.6%（2026-03）",
+    gdpUsdBn: "约575亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4082美元（2025-12）",
+    incomePerCapita: "约13250美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "5.1%（2026-07）",
+    policyRate: "7%（2026-07）",
+    unemployment: "15%（2026-03）",
+    population: "约1197万（2024-12）",
+    employedToPop: "0.036/0.123·就业亿人/人口亿人·世行就业人口比38.5%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项2333（2026-03）·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-2.5%（2025-12）；近季约-1834TND - 百万（2026-03）",
+    fxReserves: "27354129 TND千（2026-06）",
+    fxTrend: "本币对美元约2.93（2026-08·TE货币）",
+    fxHint: "约2.93（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约82.9%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±6.0%·USD/TND·二级·待双端",
+    householdDebtToGdp: "约18.5%（2024）·家庭债务/GDP·BCT银行对个人贷款/GDP",
+    privCreditOrConsumer: "国内私营信贷约60.6% GDP（近年）·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  LY: {
+    asOf: "2026-08对照·TE利比亚",
+    gdpYoY: "6.9%（2025-12）",
+    gdpUsdBn: "约481亿美元（2025-12）",
+    gdpPerCapitaUsd: "约8634美元（2025-12）",
+    incomePerCapita: "约12668美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "12.7%（2026-06）·破12%阈值",
+    policyRate: "3%（2026-07）",
+    unemployment: "18.8%（2025-12）",
+    population: "约746万（2025-12）",
+    employedToPop: "0.021/0.074·就业亿人/人口亿人·世行就业人口比39.1%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约-2.6%（2024-12）；近季约853百万LYD（2025-12）·TE经常账户",
+    fxTrend: "本币对美元约6.36（2026-08·TE货币）",
+    fxHint: "约6.36（TE货币·2026-08）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "通胀破12%。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约3%（2023）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约15% GDP（近年）·二级·待双端",
+    fxVolInYear: "±12%·通胀中高汇率波·二级·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    debtToGdp: "政府债务/GDP口径战时不规则·待双端",
+    fxReserves: "约104.7亿美元（2025）·世行总储备(含黄金)·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  SD: {
+    asOf: "2026-08对照·TE苏丹",
+    gdpYoY: "-28%（2024-12）",
+    gdpUsdBn: "约602亿美元（2025-12）",
+    gdpPerCapitaUsd: "约582美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约1879美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    unemployment: "20.8%（2023-12）",
+    population: "约5166万（2025-12）",
+    employedToPop: "0.104/0.504·就业亿人/人口亿人·世行就业人口比34.7%(2022)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约-7.9%（2025-12）；近季约-7.9%GDP（2025-12）",
+    fxTrend: "本币对美元约600（2026-08·TE货币）",
+    fxHint: "约600（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约188%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约2%（2023）·家庭债务/GDP·二级·待双端",
+    inflation: "68.15%（2025-12）·苏丹央行CPI同比·TheGlobalEconomy转述",
+    policyRate: "—·冲突期非常规/多重汇率·无稳定公开政策利率·待双端",
+    fxVolInYear: "±30%·高波·二级·待双端",
+    privCreditOrConsumer: "正规消费贷渗透极低·冲突扰动·二级·待双端",
+    fxReserves: "冲突期外储数据稀缺·勿假装有官方外储数字·待双端",
+    sectorMix: "农业与采掘主导、服务业受冲突冲击·三产占比待续拆·待双端·2026-08补录",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  SA: {
+    asOf: "2026-08对照·TE沙特",
+    gdpYoY: "-4.8%（2026-06）",
+    gdpUsdBn: "约1.28万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约25066美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约61805美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "1.8%（2026-06）",
+    policyRate: "4.25%（2026-07）",
+    unemployment: "3.1%（2026-03）；青年失业约11%（2026-03）",
+    population: "约3592万（2025-12）",
+    employedToPop: "0.169/0.353·就业亿人/人口亿人·世行就业人口比62.9%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项30178（2026-03）；制造210858·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-2.7%（2025-12）；近季约4114百万美元（2026-03）",
+    fxReserves: "约18546亿SAR（2026-06）·TE外汇储备·约合4946亿美元（SAR钉住）",
+    fxTrend: "本币对美元约3.76（2026-08·TE货币）",
+    householdDebtToGdp: "约31.7%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    privCreditOrConsumer: "私营部门贷款约3265964百万SAR（2026-06）；私人部门信贷约481091百万SAR（2026-03）·TE",
+    fxHint: "约3.76（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约31.7%（2025-12）",
+    consumerConfidence: "约114（2026-03）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±0.3%·美元钉住窄幅·二级·待双端",
+  },
+  AE: {
+    asOf: "2026-08对照·TE阿联酋",
+    gdpYoY: "3%（2026-03）",
+    gdpUsdBn: "约5520亿美元（2024-12）",
+    gdpPerCapitaUsd: "约41605美元（2024-12）·过12000成熟阈值",
+    incomePerCapita: "约84671美元（2023）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.04%（2025-12）",
+    policyRate: "3.65%（2026-07）",
+    unemployment: "2.17%（2025-12）",
+    population: "约1124万（2025-12）",
+    employedToPop: "0.071/0.11·就业亿人/人口亿人·世行就业人口比76.8%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项2409（2025-12）；制造43438；服务63710·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约13.2%（2025-12）；近季约13.2%GDP（2025-12）",
+    fxReserves: "约9671亿AED（2026-05）·TE总对外资产（AED十亿）·约合2630亿美元（AED钉住）",
+    fxTrend: "本币对美元约3.67（2026-08·TE货币）",
+    privCreditOrConsumer: "消费信贷约598521AED - 百万（2026-03）；私营部门贷款约1553166AED - 百万（2026-05）",
+    fxHint: "约3.67（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约32.8%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约24.1%（2024）·家庭债务/GDP·CEIC转述",
+    fxVolInYear: "±0.3%·美元钉住窄幅·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  BH: {
+    asOf: "2026-08对照·TE巴林",
+    gdpYoY: "4.6%（2025-12）",
+    gdpUsdBn: "约490亿美元（2025-12）",
+    gdpPerCapitaUsd: "约26592美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约63513美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.3%（2026-06）",
+    policyRate: "4.5%（2026-06）",
+    unemployment: "6.3%（2024-12）",
+    population: "约162万（2025-12）",
+    employedToPop: "0.009/0.016·就业亿人/人口亿人·世行就业人口比69.8%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项12（2025-12）；制造660；服务2444·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约4.8%（2024-12）；近季约313BHD - 百万（2025-12）",
+    fxReserves: "约6.84亿BHD（2026-06）·TE外汇储备·约合18.1亿美元（BHD钉住）",
+    fxTrend: "本币对美元约0.38（2026-08·TE货币）",
+    privCreditOrConsumer: "消费信贷约6336BHD - 百万（2026-06）；私营部门贷款约5480BHD - 百万（2026-06）",
+    fxHint: "约0.38（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约148%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±0.3%·美元钉住窄幅·二级·待双端",
+    householdDebtToGdp: "约37%（2025）·家庭债务/GDP·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  QA: {
+    asOf: "2026-08对照·TE卡塔尔",
+    gdpYoY: "2%（2025-12）",
+    gdpUsdBn: "约2160亿美元（2025-12）",
+    gdpPerCapitaUsd: "约61735美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约115037美元（2021）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.21%（2026-06）",
+    policyRate: "4.35%（2026-06）",
+    unemployment: "0.1%（2025-12）",
+    population: "约321万（2025-12）",
+    employedToPop: "0.021/0.029·就业亿人/人口亿人·世行就业人口比87.1%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项560（2025-12）；制造13720；服务15900·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约14.8%（2025-12）；近季约18133QAR - 百万（2025-12）",
+    fxReserves: "约2621亿QAR（2026-05）·TE外汇储备·约合720亿美元（QAR钉住）",
+    fxTrend: "本币对美元约3.65（2026-08·TE货币）",
+    privCreditOrConsumer: "私人部门信贷约941685QAR - 百万（2026-06）；贷款增长约1.63%（2026-05）",
+    fxHint: "约3.65（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约41.4%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±0.3%·美元钉住窄幅·二级·待双端",
+    householdDebtToGdp: "约25%（2021）·家庭债务/GDP·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  KW: {
+    asOf: "2026-08对照·TE科威特",
+    gdpYoY: "2.41%（2025-12）",
+    gdpUsdBn: "约1570亿美元（2025-12）",
+    gdpPerCapitaUsd: "约24963美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约56107美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.19%（2026-06）",
+    policyRate: "3.5%（2026-06）",
+    unemployment: "2.2%（2025-12）",
+    population: "约498万（2025-12）",
+    employedToPop: "0.029/0.049·就业亿人/人口亿人·世行就业人口比72.0%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约26.5%（2025-12）；近季约2201KWD - 百万（2025-12）",
+    fxReserves: "约111亿美元（2026-06）",
+    fxTrend: "本币对美元约0.31（2026-08·TE货币）",
+    privCreditOrConsumer: "私营部门贷款约51812KWD - 百万（2026-06）；贷款增长约5.49%（2026-06）",
+    fxHint: "约0.31（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约14.6%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±1.5%·USD/KWD·二级·待双端",
+    householdDebtToGdp: "约39%（2024）·家庭债务/GDP·二级·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  OM: {
+    asOf: "2026-08对照·TE阿曼",
+    gdpYoY: "2.6%（2026-03）",
+    gdpUsdBn: "约1100亿美元（2025-12）",
+    gdpPerCapitaUsd: "约17074美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约36390美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.8%（2026-06）",
+    policyRate: "4.25%（2026-07）",
+    unemployment: "3.3%（2025-12）",
+    population: "约536万（2025-12）",
+    employedToPop: "0.026/0.053·就业亿人/人口亿人·世行就业人口比66.1%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项338（2026-03）；制造869；服务4722·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约2.9%（2024-12）；近季约1180OMR - 百万（2024-12）",
+    fxReserves: "约75.9亿美元（2026-05）",
+    fxTrend: "本币对美元约0.39（2026-08·TE货币）",
+    privCreditOrConsumer: "私人部门信贷约23102OMR - 百万（2026-05）；贷款增长约11.8%（2026-05）",
+    fxHint: "约0.39（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约35.8%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±0.3%·美元钉住窄幅·二级·待双端",
+    householdDebtToGdp: "约41%（2023）·家庭债务/GDP·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  JO: {
+    asOf: "2026-08对照·TE约旦",
+    gdpYoY: "2.9%（2026-03）",
+    gdpUsdBn: "约616亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4579美元（2025-12）",
+    incomePerCapita: "约10011美元（2021）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.79%（2026-06）",
+    policyRate: "5.75%（2026-07）",
+    unemployment: "21.1%（2026-03）",
+    population: "约1194万（2025-12）",
+    employedToPop: "0.027/0.116·就业亿人/人口亿人·世行就业人口比33.3%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项608（2026-03）；制造1639；服务1928·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-5.6%（2025-12）；近季约-226约旦第纳尔 - 百万（2026-03）",
+    fxReserves: "约203亿美元（2026-06）",
+    fxTrend: "本币对美元约0.71（2026-08·TE货币）",
+    privCreditOrConsumer: "私营部门贷款约32737约旦第纳尔 - 百万（2026-06）",
+    fxHint: "约0.71（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约89.5%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±0.5%·美元钉住窄幅·二级·待双端",
+    householdDebtToGdp: "约69.5%（2026-Q1）·家庭债务/GDP·CEIC转述",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  LB: {
+    asOf: "2026-08对照·TE黎巴嫩",
+    gdpYoY: "-7.5%（2024-12）",
+    gdpUsdBn: "约260亿美元（2024-12）",
+    gdpPerCapitaUsd: "约5391美元（2024-12）",
+    incomePerCapita: "约10332美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "17.3%（2026-06）·破12%阈值",
+    policyRate: "25%（2026-06）",
+    unemployment: "11%（2023-12）",
+    population: "约585万（2025-12）",
+    employedToPop: "0.017/0.058·就业亿人/人口亿人·世行就业人口比38.7%(2023)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约-28.1%（2023-12）；近季约-349百万美元（2025-12）",
+    fxTrend: "本币对美元约89417（2026-08·TE货币）",
+    privCreditOrConsumer: "私人部门信贷约510825LBP - 10亿（2026-04）",
+    fxHint: "约89417（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约139%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约15%（2023）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±12%·通胀中高汇率波·二级·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    fxReserves: "黄金储备约287吨（2025-03·TE）·官方外储口径战时不规则·勿假装有独立外储数字·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  IQ: {
+    asOf: "2026-08对照·TE伊拉克",
+    gdpYoY: "-1.5%（2024-12）",
+    gdpUsdBn: "约2540亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4005美元（2025-12）",
+    incomePerCapita: "约11973美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "3%（2026-05）",
+    policyRate: "5.5%（2026-07）",
+    unemployment: "15.5%（2025-12）",
+    population: "约4702万（2025-12）",
+    employedToPop: "0.103/0.46·就业亿人/人口亿人·世行就业人口比35.2%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约-1.7%（2025-12）；近季约-244百万美元（2025-12）",
+    fxReserves: "111479 伊拉克第纳尔 - 10亿（2026-06）",
+    fxTrend: "本币对美元约1308（2026-08·TE货币）",
+    fxHint: "约1308（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约53.9%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    fxVolInYear: "±4.0%·USD/IQD·二级·待双端",
+    householdDebtToGdp: "约4%（2023）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约15% GDP（近年）·二级·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  IL: {
+    asOf: "2026-08对照·TE以色列",
+    gdpYoY: "1.7%（2026-03）",
+    gdpUsdBn: "约6110亿美元（2025-12）",
+    gdpPerCapitaUsd: "约42596美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约47468美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "1.6%（2026-06）",
+    policyRate: "3.5%（2026-07）",
+    unemployment: "2.9%（2026-06）",
+    population: "约1012万（2025-12）",
+    employedToPop: "0.046/0.1·就业亿人/人口亿人·世行就业人口比63.1%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项3802（2026-03）·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约1.5%（2025-12）；近季约-107百万美元（2026-03）",
+    fxReserves: "约2387亿美元（2026-06）",
+    fxTrend: "本币对美元约3.01（2026-08·TE货币）",
+    householdDebtToGdp: "约42.8%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±9.1%·年内高低相对均价粗算·Frankfurter USD/ILS·2024–2025",
+    privCreditOrConsumer: "消费信贷约918ILS - 10亿（2026-05）；私人部门信贷约1656ILS - 10亿（2026-05）",
+    fxHint: "约3.01（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约68.5%（2025-12）",
+    consumerConfidence: "约-18.56（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  PS: {
+    asOf: "2026-08对照·TE巴勒斯坦",
+    gdpYoY: "-4.8%（2026-03）",
+    gdpUsdBn: "约172亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4272美元（2025-12）",
+    incomePerCapita: "约4625美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "-40.04%（2026-06）·TE·战争冲击致价格/基期异常·待双端·2026-08补录",
+    unemployment: "29.5%（2026-03）；青年失业约40.3%（2026-03）·破20%阈值",
+    population: "约551万（2025-12）",
+    employedToPop: "0.011/0.053·就业亿人/人口亿人·世行就业人口比34.0%(2022)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项147（2026-03）；制造428；服务655·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-21.1%（2024-12）；近季约-337百万美元（2025-12）",
+    debtToGdp: "政府债务/GDP约27.9%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约12%（2023）·家庭债务/GDP·二级·待双端",
+    policyRate: "—·无独立央行政策利率·流通ILS/JOD·待双端",
+    fxTrend: "流通以色列新谢克尔/约旦第纳尔·无单一本币对美元官方牌价·待双端",
+    fxHint: "ILS/JOD流通（无单一本币）·待双端",
+    fxVolInYear: "±15%·冲突期汇率波·二级·待双端",
+    privCreditOrConsumer: "正规消费贷深度有限·冲突扰动·二级·待双端",
+    fxReserves: "无独立外储统计·流通ILS/JOD·勿假装有官方外储数字·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  TR: {
+    asOf: "2026-08对照·TE土耳其",
+    gdpYoY: "2.5%（2026-03）",
+    gdpUsdBn: "约1.60万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约15883美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约31665美元（2021）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "31.75%（2026-07）·破12%阈值",
+    policyRate: "37%（2026-07）",
+    unemployment: "7.6%（2026-06）；青年失业约12.8%（2026-06）",
+    population: "约8609万（2025-12）",
+    employedToPop: "0.332/0.855·就业亿人/人口亿人·世行就业人口比49.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项12969655（2026-03）；制造91131853；服务138614708·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-1%（2024-12）；近季约-1459百万美元（2026-05）",
+    fxReserves: "约624亿美元（2026-07）",
+    fxTrend: "本币对美元约47.59（2026-08·TE货币）",
+    householdDebtToGdp: "约10.1%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±9.7%·年内高低相对均价粗算·Frankfurter USD/TRY·2024–2025",
+    privCreditOrConsumer: "消费信贷约6478190524TRY千（2026-06）；私营部门贷款约14013059173TRY千（2026-06）",
+    fxHint: "约47.59（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约23.8%（2025-12）",
+    consumerConfidence: "约89.8（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值；通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  YE: {
+    asOf: "2026-08对照·TE也门",
+    gdpYoY: "-0.5%（2025-12）",
+    gdpUsdBn: "约191亿美元（2024-12）",
+    gdpPerCapitaUsd: "约821美元（2024-12）·低于2000美元阈值",
+    incomePerCapita: "约821美元（2024-12）·人均GDP近似下界·TE·非住户可支配收入",
+    unemployment: "17.3%（2025-12）",
+    population: "约4177万（2025-12）",
+    employedToPop: "0.066/0.406·就业亿人/人口亿人·世行就业人口比27.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    currentAccount: "近季约-2400百万美元（2023-12）",
+    fxTrend: "本币对美元约237（2026-08·TE货币）",
+    fxHint: "约237（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约71.2%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约2%（2023）·家庭债务/GDP·二级·待双端",
+    inflation: "约20.4%（2025-12）·IMF年率·二级·待双端·2026-08补录",
+    policyRate: "—·战时双轨/非常规货币政策·无单一政策利率·待双端",
+    sectorMix: "油气依赖高、农业与服务业碎片化·三产占比待官方续拆·待双端·2026-08补录",
+    fxReserves: "约12.5亿美元（2022）·世行总储备(含黄金)·待双端",
+    fxVolInYear: "±25%·也门里亚尔高波·二级·待双端",
+    privCreditOrConsumer: "正规消费贷渗透极低·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  IR: {
+    asOf: "2026-08对照·TE伊朗",
+    gdpYoY: "1.59%（2024-12）",
+    gdpUsdBn: "约3630亿美元（2025-12）",
+    gdpPerCapitaUsd: "约5617美元（2025-12）",
+    incomePerCapita: "约16077美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "87.9%（2026-07）·破12%阈值",
+    policyRate: "23%（2026-07）",
+    unemployment: "7.2%（2024-12）；青年失业约20.2%（2024-12）·破20%阈值",
+    population: "约8600万（2024-12）",
+    employedToPop: "0.269/0.916·就业亿人/人口亿人·世行就业人口比37.9%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项1534659（2024-12）；制造5281600；服务9684636·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约1.8%（2025-12）；近季约6326百万美元（2023-12）",
+    fxTrend: "本币对美元约1374305（2026-08·TE货币）",
+    fxHint: "约1374305（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约36.8%（2024-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约10%（2023）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约50% GDP（近年）·二级·待双端",
+    fxVolInYear: "±30%·高通胀汇率波·二级·待双端",
+    fxReserves: "制裁下外储口径不规则·勿假装有官方外储数字·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  NG: {
+    asOf: "2026-08对照·TE尼日利亚",
+    gdpYoY: "3.89%（2026-03）",
+    gdpUsdBn: "约2910亿美元（2025-12）",
+    gdpPerCapitaUsd: "约2369美元（2025-12）",
+    incomePerCapita: "约7482美元（2021）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "15.91%（2026-06）·破12%阈值",
+    policyRate: "26.5%（2026-07）",
+    unemployment: "4.9%（2024-12）",
+    population: "约2.38亿（2025-12）",
+    employedToPop: "1.1/2.33·就业亿人/人口亿人·世行就业人口比80.1%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项11872704（2026-03）；制造4905644；服务29594541·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约5.1%（2025-12）；近季约4981百万美元（2026-03）",
+    fxReserves: "约519亿美元（2026-07）",
+    fxTrend: "本币对美元约1362（2026-08·TE货币）",
+    privCreditOrConsumer: "私人部门信贷约81041510NGN - 百万（2026-05）",
+    fxHint: "约1362（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约52.5%（2025-12）",
+    consumerConfidence: "约-14.6（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约2.5%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±22.0%·USD/NGN高波·二级·待双端",
+  },
+  KE: {
+    asOf: "2026-08对照·TE肯尼亚",
+    gdpYoY: "5.3%（2026-03）",
+    gdpUsdBn: "约1360亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1908美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约5863美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "6.5%（2026-07）",
+    policyRate: "8.75%（2026-06）",
+    unemployment: "5.4%（2025-12）",
+    population: "约5330万（2025-12）",
+    employedToPop: "0.227/0.564·就业亿人/人口亿人·世行就业人口比63.7%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项568027（2026-03）；制造230901；服务81559·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-2.1%（2025-12）；近季约-3631百万美元（2026-04）",
+    fxReserves: "约199亿美元（2026-04）",
+    fxTrend: "本币对美元约129（2026-08·TE货币）",
+    fxHint: "约129（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约67.8%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约5.0%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±7.0%·USD/KES·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约30% GDP（近年）·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  GH: {
+    asOf: "2026-08对照·TE加纳",
+    gdpYoY: "6.4%（2026-03）",
+    gdpUsdBn: "约1140亿美元（2025-12）",
+    gdpPerCapitaUsd: "约2261美元（2025-12）",
+    incomePerCapita: "约6783美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "5.3%（2026-06）",
+    policyRate: "14%（2026-07）",
+    unemployment: "3%（2025-12）",
+    population: "约3506万（2025-12）",
+    employedToPop: "0.127/0.344·就业亿人/人口亿人·世行就业人口比57.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项11924（2026-03）；制造7057；服务25200·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约4.4%（2024-12）；近季约3099百万美元（2026-03）",
+    fxReserves: "约139亿美元（2026-04）",
+    fxTrend: "本币对美元约11.71（2026-08·TE货币）",
+    fxHint: "约11.71（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约48.8%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约4.0%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±12.0%·USD/GHS·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约12% GDP（近年）·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  ZA: {
+    asOf: "2026-08对照·TE南非",
+    gdpYoY: "1.9%（2026-03）",
+    gdpUsdBn: "约4270亿美元（2025-12）",
+    gdpPerCapitaUsd: "约5713美元（2025-12）",
+    incomePerCapita: "约13036美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "5%（2026-06）",
+    policyRate: "7%（2026-07）",
+    unemployment: "32.7%（2026-03）；青年失业约60.9%（2026-03）·破20%阈值",
+    population: "约6310万（2025-12）",
+    employedToPop: "0.179/0.64·就业亿人/人口亿人·世行就业人口比37.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项141820（2026-03）；制造512313；服务1183046·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-0.5%（2025-12）；近季约190700ZAR - 百万（2026-03）",
+    fxReserves: "约741亿美元（2026-06）",
+    fxTrend: "本币对美元约16.34（2026-08·TE货币）",
+    householdDebtToGdp: "约33.5%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±8.9%·年内高低相对均价粗算·Frankfurter USD/ZAR·2024–2025",
+    privCreditOrConsumer: "私营部门贷款约5367759ZAR - 百万（2026-06）；私人部门信贷约7.8%（2026-06）",
+    fxHint: "约16.34（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约78.9%（2025-12）",
+    consumerConfidence: "约-19（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  TZ: {
+    asOf: "2026-08对照·TE坦桑尼亚",
+    gdpYoY: "6%（2026-03）",
+    gdpUsdBn: "约901亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1153美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约3830美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "4%（2026-06）",
+    policyRate: "6.25%（2026-07）",
+    unemployment: "6.2%（2024-12）",
+    population: "约6815万（2025-12）",
+    employedToPop: "0.325/0.686·就业亿人/人口亿人·世行就业人口比82.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项9962954（2026-03）；制造3331910；服务19271851·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-2.2%（2025-12）；近季约-949百万美元（2026-03）",
+    fxTrend: "本币对美元约2650（2026-08·TE货币）",
+    privCreditOrConsumer: "私人部门信贷约51923TZS 十亿（2026-06）",
+    fxHint: "约2650（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约49.7%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约5%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    fxReserves: "约61.7亿美元（2025-10）·BoT月报转述外储存量·约4.7个月进口覆盖·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  UG: {
+    asOf: "2026-08对照·TE乌干达",
+    gdpYoY: "5.8%（2026-03）",
+    gdpUsdBn: "约620亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1021美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约2815美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "4%（2026-07）",
+    policyRate: "9.75%（2026-06）",
+    unemployment: "2.7%（2025-12）",
+    population: "约4885万（2025-12）",
+    employedToPop: "0.22/0.5·就业亿人/人口亿人·世行就业人口比77.8%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项7563（2026-03）；制造6023；服务18895·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-5.18%（2025-12）；近季约-561百万美元（2026-03）",
+    fxReserves: "约61.2亿美元（2026-05）",
+    fxTrend: "本币对美元约3724（2026-08·TE货币）",
+    privCreditOrConsumer: "消费信贷约6790962UGX - 百万（2026-05）；私营部门贷款约29882UGX - 10亿（2026-05）",
+    fxHint: "约3724（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约54.2%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约4%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  RW: {
+    asOf: "2026-08对照·TE卢旺达",
+    gdpYoY: "-10%（2026-03）",
+    gdpUsdBn: "约164亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1116美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约3280美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "12.7%（2026-06）·破12%阈值",
+    policyRate: "8.25%（2026-06）",
+    unemployment: "13.4%（2026-05）；青年失业约15.7%（2026-05）",
+    population: "约1410万（2025-12）",
+    employedToPop: "0.05/0.143·就业亿人/人口亿人·世行就业人口比56.3%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项1095（2026-03）；制造486；服务2794·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-12.1%（2024-12）；近季约-479百万美元（2026-03）",
+    fxTrend: "本币对美元约1467（2026-08·TE货币）",
+    privCreditOrConsumer: "私人部门信贷约5671RWF - 10亿（2026-05）",
+    fxHint: "约1467（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约64.6%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值；通胀破12%。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约6%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±12%·通胀中高汇率波·二级·待双端",
+    fxReserves: "约23.2亿美元（2025-06）·NBR年报外储·约4.8个月进口覆盖·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  ET: {
+    asOf: "2026-08对照·TE埃塞俄比亚",
+    gdpYoY: "7.3%（2024-12）",
+    gdpUsdBn: "约1260亿美元（2025-12）",
+    gdpPerCapitaUsd: "约945美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约3130美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "13.9%（2026-06）·破12%阈值",
+    policyRate: "16%（2026-07）",
+    unemployment: "3.3%（2025-12）",
+    population: "约1.35亿（2025-12）",
+    employedToPop: "0.533/1.32·就业亿人/人口亿人·世行就业人口比66.2%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项889（2024-12）；制造857；服务1125·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-2.9%（2025-12）；近季约-1180百万美元（2024-12）",
+    fxTrend: "本币对美元约161（2026-08·TE货币）",
+    fxHint: "约161（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约41%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值；通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约3%（2023）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约17.7% GDP（近年）·二级·待双端",
+    fxVolInYear: "±12%·通胀中高汇率波·二级·待双端",
+    fxReserves: "约37.8亿美元（2024）·世行总储备(含黄金)·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  CI: {
+    asOf: "2026-08对照·TE科特迪瓦",
+    gdpYoY: "6.7%（2026-03）",
+    gdpUsdBn: "约998亿美元（2025-12）",
+    gdpPerCapitaUsd: "约2491美元（2025-12）",
+    incomePerCapita: "约6960美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "1.8%（2026-06）",
+    policyRate: "5%（2026-06）",
+    unemployment: "2.3%（2025-12）",
+    population: "约3250万（2025-12）",
+    employedToPop: "0.124/0.319·就业亿人/人口亿人·世行就业人口比65.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约-3%（2025-12）；近季约-518XOF - 10亿（2025-12）",
+    fxTrend: "本币对美元约568（2026-08·TE货币）",
+    fxHint: "约568（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约56.3%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约7%（2024）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约25% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  SN: {
+    asOf: "2026-08对照·TE塞内加尔",
+    gdpYoY: "5.8%（2026-03）",
+    gdpUsdBn: "约370亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1582美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约4565美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "0.4%（2026-06）",
+    policyRate: "5%（2026-07）",
+    unemployment: "22.9%（2026-03）",
+    population: "约1939万（2025-12）",
+    employedToPop: "0.058/0.185·就业亿人/人口亿人·世行就业人口比50.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项432（2026-03）·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-9.2%（2025-12）；近季约-1206XOF - 10亿（2025-12）",
+    fxTrend: "本币对美元约568（2026-08·TE货币）",
+    fxHint: "约568（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约111%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约8%（2024）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约29.2% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  CM: {
+    asOf: "2026-08对照·TE喀麦隆",
+    gdpYoY: "2.7%（2025-12）",
+    gdpUsdBn: "约589亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1489美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约4857美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.7%（2026-05）",
+    policyRate: "4.5%（2026-07）",
+    unemployment: "3.6%（2025-12）",
+    population: "约2990万（2025-12）",
+    employedToPop: "0.108/0.291·就业亿人/人口亿人·世行就业人口比63.2%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项296（2025-12）·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-3.9%（2025-12）；近季约-1038XAF - 十亿（2024-12）",
+    fxTrend: "本币对美元约568（2026-08·TE货币）",
+    fxHint: "约568（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约40.4%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约5%（2023）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约14.1% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    fxReserves: "约50.6亿美元（2024）·世行总储备(含黄金)·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  AO: {
+    asOf: "2026-08对照·TE安哥拉",
+    gdpYoY: "5.3%（2026-03）",
+    gdpUsdBn: "约1220亿美元（2025-12）",
+    gdpPerCapitaUsd: "约2801美元（2025-12）",
+    incomePerCapita: "约7878美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "10.11%（2026-06）",
+    policyRate: "15.75%（2026-07）",
+    unemployment: "21.3%（2026-03）；青年失业约40.7%（2026-03）·破20%阈值",
+    population: "约3751万（2025-12）",
+    employedToPop: "0.136/0.379·就业亿人/人口亿人·世行就业人口比64.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项591827（2026-03）；制造292743；服务687242·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约1.1%（2025-12）；近季约536百万美元（2025-12）",
+    fxReserves: "约149亿美元（2026-06）",
+    fxTrend: "本币对美元约919（2026-08·TE货币）",
+    privCreditOrConsumer: "私营部门贷款约7820532AOA - 百万（2026-06）",
+    fxHint: "约919（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约51.3%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约3%（2024）·家庭债务/GDP·二级·待双端",
+    fxVolInYear: "±12%·通胀中高汇率波·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  MZ: {
+    asOf: "2026-08对照·TE莫桑比克",
+    gdpYoY: "0.1%（2026-03）",
+    gdpUsdBn: "约223亿美元（2025-12）",
+    gdpPerCapitaUsd: "约586美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约1354美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "7.51%（2026-06）",
+    policyRate: "9.25%（2026-07）",
+    population: "约3316万（2025-12）",
+    employedToPop: "0.141/0.346·就业亿人/人口亿人·世行就业人口比73.5%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "就业/非正式就业待ILO与官方交叉",
+    sectorMix: "农业分项90365（2026-03）；制造16586；服务19749·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-13.3%（2025-12）；近季约-359百万美元（2026-03）",
+    fxReserves: "约35.0亿美元（2026-05）",
+    fxTrend: "本币对美元约63.6（2026-08·TE货币）",
+    fxHint: "约63.6（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约76.9%（2024-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约5%（2024）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约17.6% GDP（近年）·二级·待双端",
+    fxVolInYear: "±8%·汇率波·二级·待双端",
+    unemployment: "约3.5%（近年）·二级·ILO/公开转述·待双端·2026-08补录",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  ZM: {
+    asOf: "2026-08对照·TE赞比亚",
+    gdpYoY: "7.7%（2026-03）",
+    gdpUsdBn: "约289亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1356美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约3232美元（2021）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "6.5%（2026-07）",
+    policyRate: "13.25%（2026-05）",
+    unemployment: "12.9%（2024-12）",
+    population: "约2231万（2025-12）",
+    employedToPop: "0.073/0.213·就业亿人/人口亿人·世行就业人口比58.3%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项4179（2026-03）；制造3699；服务5861·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-5.1%（2025-12）；近季约396百万美元（2026-03）",
+    fxReserves: "约63.8亿美元（2026-04）",
+    fxTrend: "本币对美元约19.06（2026-08·TE货币）",
+    fxHint: "约19.06（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约60.9%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约4%（2024）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约12% GDP（近年）·二级·待双端",
+    fxVolInYear: "±8%·汇率波·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  ZW: {
+    asOf: "2026-08对照·TE津巴布韦",
+    gdpYoY: "8.2%（2025-12）",
+    gdpUsdBn: "约512亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1503美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约5145美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "3.2%（2026-07）",
+    policyRate: "30%（2026-07）",
+    unemployment: "9.3%（2025-12）",
+    population: "约1592万（2025-12）",
+    employedToPop: "0.06/0.166·就业亿人/人口亿人·世行就业人口比61.3%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约4.07%（2025-12）；近季约2126百万美元（2025-12）",
+    fxTrend: "本币对美元约26.63（2026-08·TE货币）",
+    fxHint: "约26.63（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约32.12%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约2%（2023）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约8% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    fxReserves: "多币种流通·官方外储口径不规则·勿假装有官方外储数字·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  BW: {
+    asOf: "2026-08对照·TE博茨瓦纳",
+    gdpYoY: "3.5%（2026-03）",
+    gdpUsdBn: "约199亿美元（2025-12）",
+    gdpPerCapitaUsd: "约6791美元（2025-12）",
+    incomePerCapita: "约17803美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "10.7%（2026-06）",
+    policyRate: "5.5%（2026-07）",
+    unemployment: "24.5%（2025-12）",
+    population: "约256万（2025-12）",
+    employedToPop: "0.009/0.025·就业亿人/人口亿人·世行就业人口比52.2%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项784（2026-03）；制造2713·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-4.3%（2025-12）；近季约-31.3BWP - 百万（2026-03）",
+    fxReserves: "约43.5亿美元（2026-04）",
+    fxTrend: "本币对美元约14.17（2026-08·TE货币）",
+    privCreditOrConsumer: "消费信贷约55024BWP - 百万（2026-05）；私营部门贷款约33149BWP - 百万（2026-05）",
+    fxHint: "约14.17（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约25.6%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约21.3%（2025-12）·家庭债务/GDP·CEIC转述",
+    fxVolInYear: "±12%·通胀中高汇率波·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  NA: {
+    asOf: "2026-08对照·TE纳米比亚",
+    gdpYoY: "2%（2026-03）",
+    gdpUsdBn: "约151亿美元（2025-12）",
+    gdpPerCapitaUsd: "约4019美元（2025-12）",
+    incomePerCapita: "约10536美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "4.4%（2026-06）",
+    policyRate: "6.75%（2026-07）",
+    unemployment: "19.3%（2025-12）",
+    population: "约273万（2025-12）",
+    employedToPop: "0.009/0.03·就业亿人/人口亿人·世行就业人口比47.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项1060（2026-03）；制造3499；服务4361·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-15.3%（2024-12）；近季约-9910NAD - 百万（2026-03）",
+    fxReserves: "约564.2亿NAD（2026-06）·TE外汇储备（NAD百万）·约合32亿美元级（ZAR/NAD）",
+    fxTrend: "本币对美元约16.33（2026-08·TE货币）",
+    fxHint: "约16.33（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约70.2%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约30.7%（2024）·家庭债务/GDP·BoN金融稳定报告",
+    privCreditOrConsumer: "国内私营信贷约55% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  MU: {
+    asOf: "2026-08对照·TE毛里求斯",
+    gdpYoY: "2%（2026-03）",
+    gdpUsdBn: "约162亿美元（2025-12）",
+    gdpPerCapitaUsd: "约12315美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约29003美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "3.7%（2026-06）",
+    policyRate: "4.75%（2026-07）",
+    unemployment: "5.7%（2026-03）",
+    population: "约124万（2025-12）",
+    employedToPop: "0.006/0.012·就业亿人/人口亿人·世行就业人口比55.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项7161（2026-03）；制造14950·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-6.4%（2024-12）；近季约-1112MUR - 百万（2026-03）",
+    fxReserves: "约110亿美元（2026-06）",
+    fxTrend: "本币对美元约46.93（2026-08·TE货币）",
+    fxHint: "约46.93（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约86.5%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约20.6%（2018-06）·家庭债务/GDP·CEIC转述·序列停更·待双端",
+    privCreditOrConsumer: "国内私营信贷约70% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  MG: {
+    asOf: "2026-08对照·TE马达加斯加",
+    gdpYoY: "4.3%（2024-12）",
+    gdpUsdBn: "约196亿美元（2025-12）",
+    gdpPerCapitaUsd: "约457美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约1658美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "8.6%（2026-05）",
+    policyRate: "12.5%（2026-08）",
+    unemployment: "3%（2025-12）",
+    population: "约3274万（2025-12）",
+    employedToPop: "0.161/0.32·就业亿人/人口亿人·世行就业人口比82.9%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约-6%（2025-12）；近季约-44.1MGA - 百万（2025-12）",
+    fxTrend: "本币对美元约4250（2026-08·TE货币）",
+    fxHint: "约4250（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约48.7%（2026-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约4%（2024）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约16.6% GDP（近年）·二级·待双端",
+    fxVolInYear: "±8%·汇率波·二级·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    fxReserves: "约27.8亿美元（2024）·世行总储备(含黄金)·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  BJ: {
+    asOf: "2026-08对照·TE贝宁",
+    gdpYoY: "6.4%（2026-03）",
+    gdpUsdBn: "约246亿美元（2025-12）",
+    gdpPerCapitaUsd: "约1398美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约4028美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "-0.4%（2026-06）",
+    policyRate: "5%（2026-07）",
+    unemployment: "1.6%（2025-12）",
+    population: "约1419万（2025-12）",
+    employedToPop: "0.063/0.145·就业亿人/人口亿人·世行就业人口比75.0%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项3103（2025-12）；制造1209；服务5841·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-5.6%（2025-12）；近季约-882XOF - 10亿（2024-12）",
+    fxTrend: "本币对美元约568（2026-08·TE货币）",
+    fxHint: "约568（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约52.5%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约4%（2024）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约20% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  BF: {
+    asOf: "2026-08对照·TE布基纳法索",
+    gdpYoY: "5.6%（2026-03）",
+    gdpUsdBn: "约276亿美元（2025-12）",
+    gdpPerCapitaUsd: "约787美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约2757美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "0.1%（2026-05）",
+    policyRate: "5%（2026-07）",
+    unemployment: "3.5%（2025-12）",
+    population: "约2410万（2025-12）",
+    employedToPop: "0.093/0.235·就业亿人/人口亿人·世行就业人口比67.7%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项398（2025-12）；制造283；服务1310·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-2.2%（2025-12）；近季约786XOF - 10亿（2025-12）",
+    fxTrend: "本币对美元约568（2026-08·TE货币）",
+    fxHint: "约568（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约53.1%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约3%（2024）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约25% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  ML: {
+    asOf: "2026-08对照·TE马里",
+    gdpYoY: "7.2%（2025-12）",
+    gdpUsdBn: "约301亿美元（2025-12）",
+    gdpPerCapitaUsd: "约934美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约2891美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2%（2026-06）",
+    policyRate: "5%（2026-07）",
+    unemployment: "2.8%（2025-12）",
+    population: "约2520万（2025-12）",
+    employedToPop: "0.086/0.245·就业亿人/人口亿人·世行就业人口比65.2%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约-7.44%（2024-12）；近季约-637XOF - 10亿（2024-12）",
+    fxTrend: "本币对美元约568（2026-08·TE货币）",
+    fxHint: "约568（TE货币·2026-08）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约3%（2024）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约22% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    debtToGdp: "政府债务/GDP约53%级（近年）·二级·待双端",
+    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  CD: {
+    asOf: "2026-08对照·TE刚果（金）",
+    gdpYoY: "6.7%（2024-12）",
+    gdpUsdBn: "约910亿美元（2025-12）",
+    gdpPerCapitaUsd: "约568美元（2025-12）·低于2000美元阈值",
+    incomePerCapita: "约1239美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.6%（2026-06）",
+    policyRate: "13.5%（2026-07）",
+    population: "约1.13亿（2025-12）",
+    employedToPop: "0.363/1.093·就业亿人/人口亿人·世行就业人口比61.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "就业/非正式就业待ILO与官方交叉",
+    sectorMix: "农业分项2150（2024-12）；制造1512；服务5676·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-3.3%（2025-12）；近季约-2719百万美元（2024-12）",
+    fxReserves: "约81.8亿美元（2026-06）",
+    fxTrend: "本币对美元约2290（2026-08·TE货币）",
+    fxHint: "约2290（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约20.2%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约1.5%（2023）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约8% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    unemployment: "约4.5%（近年）·二级·ILO/公开转述·非正式就业高·待双端·2026-08补录",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  GA: {
+    asOf: "2026-08对照·TE加蓬",
+    gdpYoY: "2.7%（2025-12）",
+    gdpUsdBn: "约214亿美元（2025-12）",
+    gdpPerCapitaUsd: "约6641美元（2025-12）",
+    incomePerCapita: "约16784美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.1%（2025-09）",
+    policyRate: "4.5%（2026-07）",
+    unemployment: "20.2%（2025-12）",
+    population: "约259万（2025-12）",
+    employedToPop: "0.007/0.025·就业亿人/人口亿人·世行就业人口比41.0%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    currentAccount: "CA/GDP约1.8%（2025-12）；近季约992XAF - 十亿（2024-12）",
+    fxTrend: "本币对美元约568（2026-08·TE货币）",
+    fxHint: "约568（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约78.9%（2025-12）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    householdDebtToGdp: "约5%（2023）·家庭债务/GDP·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约12% GDP（近年）·二级·待双端",
+    fxVolInYear: "±5%·汇率波·二级·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    fxReserves: "中非经货共同体(BEAC)共同外储池·联盟外汇约6377亿XAF/约97亿欧元（2025末·BEAC转述）·国别拆分待续核·待双端",
+    consumerConfidence: "—·TE无消费者信心序列",
+  },
+  US: {
+    asOf: "2026-08对照·TE美国",
+    gdpYoY: "2.1%（2026-06）",
+    gdpUsdBn: "约30.77万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约67946美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约75332美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "3.5%（2026-06）",
+    policyRate: "3.75%（2026-07）",
+    unemployment: "4.2%（2026-06）；青年失业约9.2%（2026-06）",
+    population: "约3.42亿（2025-12）",
+    employedToPop: "1.67/3.4·就业亿人/人口亿人·世行就业人口比59.5%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项208（2026-03）；制造2449；服务17665·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-3.6%（2025-12）；近季约-227十亿美元（2026-03）",
+    fxReserves: "约378亿美元（2026-06）",
+    fxTrend: "本币对美元约99.73（2026-08·TE货币）",
+    householdDebtToGdp: "约68.1%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±0%·本币即美元·波动示意0",
+    privCreditOrConsumer: "消费信贷约-0.18十亿美元（2026-05）；私营部门贷款约2895十亿美元（2026-06）",
+    fxHint: "约99.73（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约123%（2025-12）",
+    consumerConfidence: "约55.2（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  CA: {
+    asOf: "2026-08对照·TE加拿大",
+    gdpYoY: "-0.1%（2026-03）",
+    gdpUsdBn: "约2.32万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约45418美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约56432美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.8%（2026-06）",
+    policyRate: "2.25%（2026-07）",
+    unemployment: "6.5%（2026-06）；青年失业约12.7%（2026-06）",
+    population: "约4165万（2025-12）",
+    employedToPop: "0.212/0.413·就业亿人/人口亿人·世行就业人口比60.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项44461（2026-05）；制造199607；服务1770490·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-1.4%（2025-12）；近季约-7184CAD - 百万（2026-03）",
+    fxReserves: "约1264亿美元（2026-06）",
+    fxTrend: "本币对美元约1.4（2026-08·TE货币）",
+    householdDebtToGdp: "约100.6%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±3.9%·年内高低相对均价粗算·Frankfurter USD/CAD·2024–2025",
+    privCreditOrConsumer: "消费信贷约827701CAD - 百万（2026-05）；私营部门贷款约745025CAD - 百万（2026-05）",
+    fxHint: "约1.4（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约114%（2025-12）",
+    consumerConfidence: "约47.6（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  GB: {
+    asOf: "2026-08对照·TE英国",
+    gdpYoY: "0.9%（2026-03）",
+    gdpUsdBn: "约4.00万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约48422美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约52643美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.6%（2026-06）",
+    policyRate: "3.75%（2026-07）",
+    unemployment: "4.9%（2026-05）；青年失业约14.8%（2026-05）",
+    population: "约6949万（2025-12）",
+    employedToPop: "0.338/0.693·就业亿人/人口亿人·世行就业人口比58.9%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项4379（2026-03）；制造56610；服务517345·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-2.4%（2025-12）；近季约-22134英镑 - 百万（2026-03）",
+    fxReserves: "约2258亿美元（2026-06）",
+    fxTrend: "本币对美元约1.35（2026-08·TE货币）",
+    householdDebtToGdp: "约73.6%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±6.5%·年内高低相对均价粗算·Frankfurter USD/GBP·2024–2025",
+    privCreditOrConsumer: "消费信贷约1807英镑 - 百万（2026-06）；私营部门贷款约2927812英镑 - 百万（2026-03）",
+    fxHint: "约1.35（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约94.3%（2025-12）",
+    consumerConfidence: "约-17（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  DE: {
+    asOf: "2026-08对照·TE德国",
+    gdpYoY: "0.9%（2026-06）",
+    gdpUsdBn: "约5.05万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约44147美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约65564美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.8%（2026-07）",
+    policyRate: "2.4%（2026-07）",
+    unemployment: "6.4%（2026-07）；青年失业约7.1%（2026-06）",
+    population: "约8350万（2025-12）",
+    employedToPop: "0.423/0.835·就业亿人/人口亿人·世行就业人口比58.8%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项6.84（2026-03）；制造168；服务138·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约4.5%（2025-12）；近季约10368欧元 - 百万（2026-05）",
+    fxReserves: "约4694亿美元（2026-06）",
+    fxTrend: "本币对美元约1.15（2026-08·TE货币）",
+    householdDebtToGdp: "约48.9%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±7.7%·年内高低相对均价粗算·Frankfurter USD/EUR·2024–2025",
+    privCreditOrConsumer: "消费信贷约236859欧元 - 百万（2026-03）；私营部门贷款约1986欧元 - 10亿（2026-03）",
+    fxHint: "约1.15（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约63.5%（2025-12）",
+    consumerConfidence: "约-29.6（2026-08）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  FR: {
+    asOf: "2026-08对照·TE法国",
+    gdpYoY: "0.7%（2026-06）",
+    gdpUsdBn: "约3.37万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约39919美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约55091美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.1%（2026-07）",
+    policyRate: "2.4%（2026-07）",
+    unemployment: "8.1%（2026-03）；青年失业约21.1%（2026-06）·破20%阈值",
+    population: "约6908万（2025-12）",
+    employedToPop: "0.295/0.686·就业亿人/人口亿人·世行就业人口比51.5%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项8127（2026-06）；制造63696；服务351800·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-0.4%（2025-12）；近季约-100欧元 - 百万（2026-05）",
+    fxReserves: "355 欧元 - 10亿（2026-06）",
+    fxTrend: "本币对美元约1.15（2026-08·TE货币）",
+    householdDebtToGdp: "约59.7%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±7.7%·年内高低相对均价粗算·Frankfurter USD/EUR·2024–2025",
+    privCreditOrConsumer: "消费信贷约1741547欧元 - 百万（2026-05）；私营部门贷款约3183795欧元 - 百万（2026-05）",
+    fxHint: "约1.15（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约116%（2025-12）",
+    consumerConfidence: "约86（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  NL: {
+    asOf: "2026-08对照·TE荷兰",
+    gdpYoY: "1.3%（2026-06）",
+    gdpUsdBn: "约1.33万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约51817美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约70745美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "3.1%（2026-07）",
+    policyRate: "2.4%（2026-07）",
+    unemployment: "3.8%（2026-06）；青年失业约8.5%（2026-06）",
+    population: "约1813万（2026-12）",
+    employedToPop: "0.099/0.18·就业亿人/人口亿人·世行就业人口比65.0%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项3657（2026-03）；制造25875；服务44078·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约7.6%（2025-12）；近季约26276欧元 - 百万（2026-03）",
+    fxReserves: "约994亿美元（2026-06）",
+    fxTrend: "本币对美元约1.15（2026-08·TE货币）",
+    householdDebtToGdp: "约93.8%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±7.7%·年内高低相对均价粗算·Frankfurter USD/EUR·2024–2025",
+    privCreditOrConsumer: "消费信贷约6701欧元 - 百万（2026-06）；私营部门贷款约406926欧元 - 百万（2026-06）",
+    fxHint: "约1.15（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约44.4%（2025-12）",
+    consumerConfidence: "约-35（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  ES: {
+    asOf: "2026-08对照·TE西班牙",
+    gdpYoY: "2.7%（2026-06）",
+    gdpUsdBn: "约1.91万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约29763美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约48454美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "3.5%（2026-07）",
+    policyRate: "2.4%（2026-07）",
+    unemployment: "9.87%（2026-06）；青年失业约23.4%（2026-06）·破20%阈值",
+    population: "约4957万（2025-12）",
+    employedToPop: "0.218/0.488·就业亿人/人口亿人·世行就业人口比51.2%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项11774（2026-06）；制造47230；服务301559·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约2.9%（2025-12）；近季约1840欧元 - 百万（2026-05）",
+    fxReserves: "约10795亿美元（2026-06）",
+    fxTrend: "本币对美元约1.15（2026-08·TE货币）",
+    householdDebtToGdp: "约42.8%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±7.7%·年内高低相对均价粗算·Frankfurter USD/EUR·2024–2025",
+    privCreditOrConsumer: "消费信贷约667114欧元 - 百万（2026-03）；私营部门贷款约477789欧元 - 百万（2026-06）",
+    fxHint: "约1.15（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约101%（2025-12）",
+    consumerConfidence: "约81.2（2026-06）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  PT: {
+    asOf: "2026-08对照·TE葡萄牙",
+    gdpYoY: "2.5%（2026-06）",
+    gdpUsdBn: "约3470亿美元（2025-12）",
+    gdpPerCapitaUsd: "约22851美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约43133美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "3.03%（2026-07）",
+    policyRate: "2.4%（2026-07）",
+    unemployment: "5.6%（2026-06）；青年失业约18.9%（2026-06）",
+    population: "约1142万（2025-12）",
+    employedToPop: "0.051/0.107·就业亿人/人口亿人·世行就业人口比54.6%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项992（2026-03）；制造7332；服务9622·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约1.2%（2025-12）；近季约-633欧元 - 百万（2026-05）",
+    fxReserves: "约563亿美元（2026-06）",
+    fxTrend: "本币对美元约1.15（2026-08·TE货币）",
+    householdDebtToGdp: "约53.9%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±7.7%·年内高低相对均价粗算·Frankfurter USD/EUR·2024–2025",
+    privCreditOrConsumer: "消费信贷约150817欧元 - 百万（2026-05）；私营部门贷款约77549欧元 - 百万（2026-06）",
+    fxHint: "约1.15（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约89.7%（2025-12）",
+    consumerConfidence: "约-22.6（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  IT: {
+    asOf: "2026-08对照·TE意大利",
+    gdpYoY: "1%（2026-06）",
+    gdpUsdBn: "约2.55万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约34716美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约53971美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "2.8%（2026-07）",
+    policyRate: "2.4%（2026-07）",
+    unemployment: "5.7%（2026-06）；青年失业约18.4%（2026-06）",
+    population: "约5894万（2026-12）",
+    employedToPop: "0.241/0.59·就业亿人/人口亿人·世行就业人口比46.4%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项8006（2026-03）；制造71481；服务321091·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约1.1%（2025-12）；近季约594欧元 - 百万（2026-05）",
+    fxReserves: "约3621亿美元（2026-06）",
+    fxTrend: "本币对美元约1.15（2026-08·TE货币）",
+    householdDebtToGdp: "约35.8%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±7.7%·年内高低相对均价粗算·Frankfurter USD/EUR·2024–2025",
+    privCreditOrConsumer: "消费信贷约92617欧元 - 百万（2026-05）；私营部门贷款约613077欧元 - 百万（2026-05）",
+    fxHint: "约1.15（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约137%（2025-12）",
+    consumerConfidence: "约94.2（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  SE: {
+    asOf: "2026-08对照·TE瑞典",
+    gdpYoY: "2.8%（2026-06）",
+    gdpUsdBn: "约6690亿美元（2025-12）",
+    gdpPerCapitaUsd: "约55014美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约65118美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "0.7%（2026-06）",
+    policyRate: "1.75%（2026-07）",
+    unemployment: "9.9%（2026-06）；青年失业约25.9%（2026-06）·破20%阈值",
+    population: "约1061万（2026-12）",
+    employedToPop: "0.047/0.106·就业亿人/人口亿人·世行就业人口比59.3%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率破8%阈值；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项25918（2026-03）；制造204711；服务806942·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约6.7%（2025-12）；近季约93.9SEK - 10亿（2026-03）",
+    fxReserves: "约7208亿美元（2026-07）",
+    fxTrend: "本币对美元约9.49（2026-08·TE货币）",
+    householdDebtToGdp: "约82.1%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±10.8%·年内高低相对均价粗算·Frankfurter USD/SEK·2024–2025",
+    privCreditOrConsumer: "私营部门贷款约1775140SEK - 百万（2026-06）；私人部门信贷约3.2%（2026-06）",
+    fxHint: "约9.49（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约35.1%（2025-12）",
+    consumerConfidence: "约97.1（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  PL: {
+    asOf: "2026-08对照·TE波兰",
+    gdpYoY: "3.5%（2026-03）",
+    gdpUsdBn: "约1.03万亿美元（2025-12）",
+    gdpPerCapitaUsd: "约18707美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约44439美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "3%（2026-07）",
+    policyRate: "3.75%（2026-07）",
+    unemployment: "5.8%（2026-06）；青年失业约12.6%（2026-06）",
+    population: "约3633万（2026-12）",
+    employedToPop: "0.156/0.366·就业亿人/人口亿人·世行就业人口比57.0%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项24552（2026-03）；制造176910·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约-0.9%（2025-12）；近季约-1071欧元 - 百万（2026-05）",
+    fxReserves: "约2935亿美元（2026-06）",
+    fxTrend: "本币对美元约3.72（2026-08·TE货币）",
+    householdDebtToGdp: "约22.1%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±8.2%·年内高低相对均价粗算·Frankfurter USD/PLN·2024–2025",
+    privCreditOrConsumer: "消费信贷约861477PLN - 百万（2026-06）；私营部门贷款约467203PLN - 百万（2026-06）",
+    fxHint: "约3.72（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约59.7%（2025-12）",
+    consumerConfidence: "约-10.2（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  IE: {
+    asOf: "2026-08对照·TE爱尔兰",
+    gdpYoY: "-1.6%（2026-06）",
+    gdpUsdBn: "约7220亿美元（2025-12）",
+    gdpPerCapitaUsd: "约104417美元（2025-12）·过12000成熟阈值",
+    incomePerCapita: "约88346美元（2024）·世行GNI/人PPP·OWID转载·非住户可支配收入",
+    inflation: "3.4%（2026-06）",
+    policyRate: "2.4%（2026-07）",
+    unemployment: "5%（2026-06）；青年失业约10.8%（2026-06）",
+    population: "约551万（2026-12）",
+    employedToPop: "0.025/0.054·就业亿人/人口亿人·世行就业人口比62.2%(2024)×15+人口",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率未破8%；非正式就业/青年失业待ILO交叉",
+    sectorMix: "农业分项1486（2026-03）；制造34812；服务32736·占GDP比重待续拆·对照三产阈值",
+    currentAccount: "CA/GDP约8.2%（2025-12）；近季约17442欧元 - 百万（2026-03）",
+    fxReserves: "约118亿美元（2026-06）",
+    fxTrend: "本币对美元约1.15（2026-08·TE货币）",
+    householdDebtToGdp: "约23.8%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
+    fxVolInYear: "±7.7%·年内高低相对均价粗算·Frankfurter USD/EUR·2024–2025",
+    privCreditOrConsumer: "消费信贷约14532欧元 - 百万（2026-06）；私营部门贷款约28615欧元 - 百万（2026-06）",
+    fxHint: "约1.15（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约32.9%（2025-12）",
+    consumerConfidence: "约61.6（2026-07）",
+    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+  },
+  RU: {
+    asOf: "2026-08对照·TE俄罗斯",
+    gdpYoY: "-0.2%（2026-03）；全年增长预期约0–1%（央行基线）",
+    gdpUsdBn: "约25610亿美元（2025-12）",
+    gdpPerCapitaUsd: "约17540美元（2025-12·名义GDP/人口粗算）·过12000成熟阈值",
+    incomePerCapita: "约42358美元（2025-12）·TE GDP/人PPP·非住户可支配收入",
+    inflation: "6%（2026-06）",
+    policyRate: "14%（2026-07）·俄央行关键利率",
+    unemployment: "2.2%（2026-06）",
+    population: "约1.46亿（2025-12）",
+    employedToPop: "0.748/1.46·就业亿人/人口亿人·就业约7480万(2026-06)·就业率约61.6%",
+    ageStructure: "18–45占成年人口·待联合国年龄结构续采",
+    employmentNote: "官方失业率极低；劳动力紧张与制裁下部门错配待ILO交叉",
+    sectorMix: "农业/制造/采矿分项待续拆·资源与军工权重高·对照三产阈值",
+    currentAccount: "CA/GDP约2%（2025-12）；近季约122亿美元（2026-03）",
+    fxReserves: "约7204亿美元（2026-06）",
+    fxTrend: "本币对美元约82.3（2026-08·TE货币）",
+    householdDebtToGdp: "约21.4%（2025-Q4）·家庭债务/GDP·TE/BIS",
+    fxVolInYear: "±18%·年内高低相对均价粗算·USD/RUB·2025–2026",
+    privCreditOrConsumer: "消费信贷约368286卢布 - 亿（2026-05）；对私贷款利率约17.2%（2026-05）",
+    fxHint: "约82.3（TE货币·2026-08）",
+    debtToGdp: "政府债务/GDP约18.3%（2025-12）",
+    consumerConfidence: "约-13（2026-06）",
+    creditNote: "信贷过热组：家庭杠杆不高但政策利率高企；制裁/结算/合规与本地牌照续核；此处为TE可核验水位。",
+    cashLoanVerdict: "人均GDP过成熟阈值，但高利率+制裁合规成本主导。准入先过本地牌照、结算通道与锁汇评估（对照总表预警）。",
+  },
+};
+
+function teIndicatorsUrl(code: Exclude<CountryCode, "all">): string | null {
+  const slug = TE_SLUG[code];
+  if (!slug) return null;
+  return `https://zh.tradingeconomics.com/${slug}/indicators`;
+}
+
+/**
+ * 中国货币网（中国外汇交易中心）· 国内债券/本币市场长期信源。
+ * 用途：核验银行间债券发行、流通上市、付息兑付、评级、ABN/债务融资工具披露；与交易所ABS交叉。
+ * 全文检索示例：大兴安岭 → /chinese/qwjsn/?searchValue=（双 encodeURI）
+ * @see https://www.chinamoney.com.cn/chinese/qwjsn/?searchValue=%25E5%25A4%25A7%25E5%2585%25B4%25E5%25AE%2589%25E7%258E%25B2
+ * @see https://www.chinamoney.org.cn/chinese/lszqfxlm/
+ */
+const CHINAMONEY_BOND = {
+  name: "中国货币网（ChinaMoney / CFETS）",
+  home: "https://www.chinamoney.com.cn/chinese/",
+  homeAlt: "https://www.chinamoney.org.cn/chinese/",
+  searchPath: "/chinese/qwjsn/?searchValue=",
+  menus: {
+    issue: "https://www.chinamoney.org.cn/chinese/lszqfxlm/",
+    listing: "https://www.chinamoney.org.cn/chinese/lsltsslm/",
+    coupon: "https://www.chinamoney.org.cn/chinese/lsfxdflm/",
+    rating: "https://www.chinamoney.org.cn/chinese/lspjbglm/",
+  },
+  note:
+    "银行间市场债券信息披露主站；部分全文检索/明细需登录。CN 侧 ABS·ABN·企业债与债务融资工具优先在此与中登/交易所交叉。勿粘贴付费终端全文。",
+  learned: [
+    {
+      query: "大兴安岭",
+      issuer: "大兴安岭林业集团公司",
+      bond: "2012年大兴安岭林业集团公司企业债券（12兴林业 / 12兴安林业债）",
+      size: "13亿元",
+      tenor: "7年",
+      coupon: "固定利率7.08%",
+      codes: "上交所122508；银行间1280342",
+      useOfProceeds: "大兴安岭重点国有林区2011年棚户区改造",
+      status: "已到期/提前兑付路径（2017年起分次提前偿还；非消费贷ABS）",
+      sources: "上交所债券年报/持有人会议公告；中国货币网检索交叉",
+      atlasNote: "示例：货币网全文检索可落到发行人历史企业债；消费场景信贷ABS/ABN须另按系列名检索，勿与地方企业债混同。",
+    },
+  ],
+} as const;
+
+function chinamoneySearchUrl(keyword: string): string {
+  const enc = encodeURIComponent(encodeURIComponent(keyword));
+  return `https://www.chinamoney.com.cn/chinese/qwjsn/?searchValue=${enc}`;
+}
+
 
 function resolveEcoRoles(
   line: CreditRow["line"],
@@ -2921,6 +5852,12 @@ const SCENE_TAGS_BY_GROUP: Record<string, SceneTag[]> = {
   "Payme（Payme·UZ）": ["支付钱包"],
   "inDrive（inDrive·KZ）": ["出行"],
   "LendMN（LendMN·MN）": ["支付钱包"],
+  "Hipay（Hipay·MN）": ["支付钱包"],
+  "Pocket/InvesCore（Pocket·MN）": ["支付钱包"],
+  "Ard App/Ard Credit（Ard·MN）": ["支付钱包"],
+  "Shoppy.mn（Shoppy·MN）": ["电商"],
+  "Storepay（Storepay·MN）": ["电商", "支付钱包"],
+  "Simple（Simple·MN）": ["电商", "支付钱包"],
   "Mercado Libre/Mercado Libre（美卡多·LATAM）": ["电商", "支付钱包", "信用管理"],
   "Rappi/Rappi（Rappi·LATAM）": ["外卖", "支付钱包"],
   "Safaricom/M-Pesa（M-Pesa·KE）": ["支付钱包"],
@@ -3633,7 +6570,13 @@ const sceneCrmSeedTuples: [Exclude<Region, "all">, string, string, string][] = [
   ["central-asia", "Click（Click·UZ）", "支付钱包", "派生：信贷合作待核实"],
   ["central-asia", "Payme（Payme·UZ）", "支付钱包", "派生：信贷合作待核实"],
   ["central-asia", "inDrive（inDrive·KZ）", "出行", "派生：司机侧金融合作待核实"],
-  ["east-asia", "LendMN（LendMN·MN）", "支付钱包+信贷入口", "派生：蒙古数字贷款/钱包"],
+  ["east-asia", "LendMN（LendMN·MN）", "支付钱包+信贷入口", "派生：外蒙古数字贷款/钱包/LendDy BNPL"],
+  ["east-asia", "Hipay（Hipay·MN）", "支付钱包", "派生：贷款/保险/投资入口（外蒙古）"],
+  ["east-asia", "Pocket/InvesCore（Pocket·MN）", "支付钱包", "派生：在线现金贷/Pocket Zero分期"],
+  ["east-asia", "Ard App/Ard Credit（Ard·MN）", "支付钱包+信贷入口", "派生：Ard贷/ArdPay（外蒙古）"],
+  ["east-asia", "Shoppy.mn（Shoppy·MN）", "电商", "派生：与本地银行/信贷合作分期待核实"],
+  ["east-asia", "Storepay（Storepay·MN）", "电商+支付", "派生：外蒙古BNPL分期（Storepay）"],
+  ["east-asia", "Simple（Simple·MN）", "零售分期入口", "派生：Simple Buy BNPL/消费贷"],
   ["mena", "赤子城科技/MICO（赤子城·MENA）", "直播+社交", "派生：社交电商/创新业务；信贷合作待核实"],
   ["africa", "Jumia（·非洲）", "电商", "派生：JumiaPay/分期"],
   ["mena", "Noon（·MENA）", "电商", "派生：Noon Pay/分期"],
@@ -3677,6 +6620,19 @@ const creditCrmSeedTuples: [Exclude<Region, "all">, "cash" | "bnpl" | "lease" | 
   ["east-asia", "cash", "桔子数字（桔子数字·CN）"],
   ["east-asia", "agent", "水滴信贷导流（水滴信贷导流·CN）"],
   ["east-asia", "cash", "中国邮政｜中邮消费｜中国邮政（中邮·CN）"],
+  // 外蒙古(MN)·信贷原生（≠中国内蒙古蒙商消金）
+  ["east-asia", "cash", "LendMN/LendMN（LendMN·MN）"],
+  ["east-asia", "cash", "Pocket/InvesCore Wallet（Pocket·MN）"],
+  ["east-asia", "cash", "Ard Credit/Ard App（Ard·MN）"],
+  ["east-asia", "cash", "Simple（Simple·MN）"],
+  ["east-asia", "cash", "M Credit/Solomon（M Credit·MN）"],
+  ["east-asia", "cash", "Hipay Loan/Hipay（Hipay·MN）"],
+  ["east-asia", "cash", "M Bank数字贷/M Bank（M Bank·MN）"],
+  ["east-asia", "cash", "Khan Bank数字贷/Khan Bank（Khan Bank·MN）"],
+  ["east-asia", "bnpl", "Storepay（Storepay·MN）"],
+  ["east-asia", "bnpl", "LendMN/LendDy（LendDy·MN）"],
+  ["east-asia", "bnpl", "Simple Buy/Simple（Simple Buy·MN）"],
+  ["east-asia", "bnpl", "Pocket Zero/Pocket（Pocket Zero·MN）"],
   ["se-asia", "cash", "AdaKami/FinVolution（信也·ID）"],
   ["se-asia", "cash", "Easycash/Fintopia（洋钱罐·ID）"],
   ["se-asia", "cash", "Akulaku Finance/Akulaku（阿卡拉克·SEA）"],
@@ -4457,6 +7413,7 @@ function expandSceneSeeds(seeds: SceneSeed[]): SceneDraft[] {
     const hint = `${s.sceneType} ${s.creditAttach}`;
     const subTags = resolveSceneSubTags(s.group, hint);
     const tags = resolveSceneTags(s.group, hint);
+    const isMn = /·MN[）)]/.test(s.group) || s.group.includes("·MN）");
     return {
       region: s.region,
       group: s.group,
@@ -4464,8 +7421,8 @@ function expandSceneSeeds(seeds: SceneSeed[]): SceneDraft[] {
       subTags,
       sceneType: formatSceneTags(tags, subTags),
       apps: s.group,
-      countries: REGION_COUNTRY[s.region],
-      languages: "待核实",
+      countries: isMn ? "外蒙古" : REGION_COUNTRY[s.region],
+      languages: isMn ? "蒙古语/英语" : "待核实",
       mau: "待核实",
       registered: "待核实",
       share: "待核实",
@@ -4473,7 +7430,9 @@ function expandSceneSeeds(seeds: SceneSeed[]): SceneDraft[] {
       diandian: "CRM扩表·点点/路飞位次待补",
       controller: "待核实",
       equity: "待核实",
-      licenseReg: "待双端：监管名录未逐条核验",
+      licenseReg: isMn
+        ? "外蒙古：FRC NBFI/电子支付等（非银行吸储；待名录逐条核验）"
+        : "待双端：监管名录未逐条核验",
       trafficRank: "待双端：GP/Apple/点点/路飞待补",
       verify: "待双端" as const,
     };
@@ -4539,25 +7498,44 @@ function expandCreditSeeds(seeds: CreditSeed[], source: "crm" | "luffy" = "crm")
     const fromLuffy = source === "luffy" || s.group.includes("路飞");
     const official = OFFICIAL_LICENSE_BY_GROUP[s.group];
     const fromOjk = !official && (s.group.includes("·ID）") || s.group.includes("OJK"));
+    const isMn = /·MN[）)]/.test(s.group) || s.group.includes("·MN）");
     return {
       region: s.region,
       line: s.line,
       tier: "腰部" as const,
       group: s.group,
       brands: official?.legalName ?? s.group,
-      countries: REGION_COUNTRY[s.region],
-      languages: "待核实",
+      countries: official
+        ? official.source === "ojkLpbbti"
+          ? "印尼"
+          : official.source === "pdicDigibank"
+            ? "菲律宾"
+            : "中国"
+        : isMn
+          ? "外蒙古"
+          : REGION_COUNTRY[s.region],
+      languages: isMn ? "蒙古语/英语" : "待核实",
       licenses: official
         ? official.source === "pdicDigibank"
           ? "PH：BSP数字银行（PDIC投保目录交叉）"
-          : `中国：${official.licenseKindLabel}（金管总局法人名单）`
-        : licenseByRegionLine[s.region][s.line],
+          : official.source === "ojkLpbbti"
+            ? "ID：OJK LPBBTI/P2P（AFPI会员交叉）"
+            : `中国：${official.licenseKindLabel}（金管总局法人名单）`
+        : isMn
+          ? s.line === "bnpl"
+            ? "外蒙古：FRC NBFI/消费分期或银行合作BNPL（非吸储）"
+            : "外蒙古：FRC NBFI 非银放贷/电子支付（非吸储银行）"
+          : licenseByRegionLine[s.region][s.line],
       timing: "待核实",
       regulators: official
         ? official.source === "pdicDigibank"
           ? "BSP / PDIC"
-          : "金管总局/属地金融监管局"
-        : "待核实",
+          : official.source === "ojkLpbbti"
+            ? "OJK / AFPI"
+            : "金管总局/属地金融监管局"
+        : isMn
+          ? "蒙古金融监管委员会(FRC) / 蒙古银行(BoM)"
+          : "待核实",
       traffic: s.line === "agent" ? "贷超/比价/导流获客" : "投放/App/门店",
       volume: "待核实",
       users: "待核实",
@@ -4567,7 +7545,9 @@ function expandCreditSeeds(seeds: CreditSeed[], source: "crm" | "luffy" = "crm")
           ? REGULATORY_DIRECTORY_SOURCES[official.source]
           : fromOjk
             ? "OJK LPBBTI 官网名录交叉建档（2025公开名单）"
-            : "点点位次待补；优先以监管官网持牌名单交叉",
+            : isMn
+              ? "外蒙古公开市场建档；优先以FRC NBFI名录交叉"
+              : "点点位次待补；优先以监管官网持牌名单交叉",
       note: s.line === "agent"
         ? "生态角色·流量（中介/比价/贷超）：非下场放贷玩家；偏撮合/导流"
         : fromLuffy
@@ -4576,7 +7556,9 @@ function expandCreditSeeds(seeds: CreditSeed[], source: "crm" | "luffy" = "crm")
             ? `来源：${REGULATORY_DIRECTORY_SOURCES[official.source]}；法定名 ${official.legalName}`
             : fromOjk
               ? "来源：OJK LPBBTI 持牌名录；法定公司名见 brands/group"
-              : "CRM扩表；须完成流量榜×监管名录双端校验",
+              : isMn
+                ? "外蒙古(MN)信贷玩家；≠中国内蒙古蒙商消金"
+                : "CRM扩表；须完成流量榜×监管名录双端校验",
       controller: official?.controller ?? "待核实",
       equity: "待核实",
       licenseReg: fromLuffy
@@ -4585,14 +7567,18 @@ function expandCreditSeeds(seeds: CreditSeed[], source: "crm" | "luffy" = "crm")
           ? formatOfficialLicenseReg(official)
           : fromOjk
             ? "ID：OJK LPBBTI 持牌（官网名录交叉）"
-            : "待核：持牌实体法定名/登记号/名录条目",
+            : isMn
+              ? "MN：FRC NBFI/相关许可（待官网名录逐条核验登记号）"
+              : "待核：持牌实体法定名/登记号/名录条目",
       trafficRank: fromLuffy
         ? "路飞·GP财务免费榜借款类（第三方；非官方商店API）"
         : official
           ? `监管源·${official.licenseKindLabel}`
           : fromOjk
             ? "监管源·OJK LPBBTI 名录"
-            : "待核：GP/Apple/FB/点点位次",
+            : isMn
+              ? "外蒙古App Store/GP金融类；点点出海榜覆盖弱"
+              : "待核：GP/Apple/FB/点点位次",
       verify: fromLuffy
         ? ("仅流量" as const)
         : official || fromOjk
@@ -4605,7 +7591,7 @@ function expandCreditSeeds(seeds: CreditSeed[], source: "crm" | "luffy" = "crm")
 /** 按集团名补丁：实控人 / 股权 / 牌照登记 / 流量排名 / 校验态（覆盖默认） */
 const SCENE_KYC: Record<
   string,
-  Partial<Pick<SceneRow, "controller" | "equity" | "licenseReg" | "trafficRank" | "verify">>
+  Partial<Pick<SceneRow, "controller" | "equity" | "licenseReg" | "trafficRank" | "verify" | "mau" | "share">>
 > = {
   "蚂蚁集团/支付宝（蚂蚁·CN）": {
     controller: "蚂蚁集团（软银/阿里等历史股东结构；上市进程以最新公告为准）",
@@ -4854,11 +7840,56 @@ const SCENE_KYC: Record<
     trafficRank: "US支付对照",
     verify: "仅监管",
   },
+  "LendMN（LendMN·MN）": {
+    controller: "LendMN NBFI JSC（MSE:LEND）",
+    licenseReg: "MN：FRC NBFI；钱包+信贷入口",
+    mau: "总用户约8.1万（2025Q3；capitalmarkets.mn Lend Teaser）",
+    share: "贷款组合约₮3031亿（2025Q3）；净贷款约₮2765亿同比约+38%（同teaser）",
+    trafficRank: "外蒙古数字信贷头部",
+    verify: "待双端",
+  },
+  "Storepay（Storepay·MN）": {
+    controller: "Storepay",
+    mau: "官网50万+；2023末媒体约45万+用户（ikon.mn）",
+    share: "GMV 2022同比+276%（RBI访谈；绝对额未披露）",
+    trafficRank: "外蒙古BNPL先发",
+    verify: "待双端",
+  },
+  "Ard App/Ard Credit（Ard·MN）": {
+    controller: "Ard Credit / Ard Financial Group",
+    mau: "官网展示约140万+用户（时点未标；抓取2026-08）",
+    share: "官网展示放贷约₮1560亿（时点未标）",
+    verify: "待双端",
+  },
+  "Pocket/InvesCore（Pocket·MN）": {
+    controller: "InvesCore Wallet NBFI LLC",
+    mau: "集团客户约11.66万（2022末；ADB 56156，非仅Pocket App）",
+    share: "集团总资产约₮3563亿（2022末；ADB）；Pocket单列待拆",
+    verify: "待双端",
+  },
+  "Hipay（Hipay·MN）": {
+    controller: "Hipay Mongolia",
+    mau: "公开MAU未查到",
+    share: "公开规模未查到",
+    verify: "待双端",
+  },
+  "Shoppy.mn（Shoppy·MN）": {
+    controller: "Shoppy.mn",
+    mau: "公开MAU未查到",
+    share: "公开GMV未查到；银行合作分期待核实",
+    verify: "待双端",
+  },
+  "Simple（Simple·MN）": {
+    controller: "Simple",
+    mau: "公开用户数未查到",
+    share: "公开GMV未查到",
+    verify: "待双端",
+  },
 };
 
 const CREDIT_KYC: Record<
   string,
-  Partial<Pick<CreditRow, "controller" | "equity" | "licenseReg" | "trafficRank" | "verify" | "note">>
+  Partial<Pick<CreditRow, "controller" | "equity" | "licenseReg" | "trafficRank" | "verify" | "note" | "volume" | "users">>
 > = {
   "奇富科技/奇富借条/Qfin（奇富·CN）": {
     controller: "奇富科技（原360数科路径；公开披露以年报/招股为准）",
@@ -4920,6 +7951,124 @@ const CREDIT_KYC: Record<
     licenseReg: "CN：中邮消费金融（消金牌照）",
     verify: "仅监管",
     note: "母公司为境内央企/邮政体系，不按横向境外展业收录",
+  },
+  "内蒙古蒙商消费金融｜蒙商消金｜蒙商（蒙商消金·CN）": {
+    controller: "中国内蒙古自治区持牌消金；≠外蒙古(MN)/蒙古国机构",
+    licenseReg: "CN：内蒙古蒙商消费金融（金管总局消金法人名单）",
+    verify: "仅监管",
+    note: "属地=中国内蒙古；筛选国家选「外蒙古」时不应出现本条",
+  },
+  "LendMN/LendMN（LendMN·MN）": {
+    controller: "LendMN NBFI JSC（外蒙古；MSE:LEND）",
+    licenseReg: "MN：FRC NBFI；数字消费贷/企业贷/LendDy BNPL",
+    trafficRank: "外蒙古数字信贷头部App（公开投行材料口径）",
+    verify: "待双端",
+    volume:
+      "净贷款约₮2765亿（2025Q3）；同比约+38%（较2024Q3的₮2008亿）。贷款组合约₮3031亿（2025Q3），自2023Q3约₮1004亿起约74% CAGR（资本市场teaser口径）",
+    users:
+      "总用户约8.1万（2025Q3；teaser口径，约7% CAGR）。注：部分早期材料口径不同，以最新teaser为准",
+    note:
+      "外蒙古(MN)；≠中国内蒙古蒙商消金。出处：capitalmarkets.mn《Lend Teaser_2025Q3》；公司站投资者财务信息页交叉",
+  },
+  "LendMN/LendDy（LendDy·MN）": {
+    controller: "LendMN NBFI JSC（LendDy=BNPL产品线）",
+    licenseReg: "MN：挂LendMN信贷额度的商户分期（LendDy）",
+    volume: "见LendMN母体贷款组合（2025Q3 teaser）；BNPL单列GMV未在该材料拆分",
+    users: "需已开通LendMN消费贷额度用户（产品页口径）",
+    note: "出处：lend.mn/en/loan/bnpl/（产品条款）；规模归母体LendMN",
+    verify: "待双端",
+  },
+  "Pocket/InvesCore Wallet（Pocket·MN）": {
+    controller: "InvesCore Wallet NBFI LLC（Invescore集团fintech臂；外蒙古）",
+    licenseReg: "MN：FRC NBFI（公开：2019-11-25 第327号令叙事）",
+    verify: "待双端",
+    volume:
+      "集团Invescore：总资产约₮3563亿（2022末）；2017–2022资产CAGR约78.5%；MSME贷款约₮828亿/1050户（2022末）。Pocket为数字贷/钱包产品线，单列规模待拆",
+    users:
+      "Invescore集团客户约11.66万（2022末，ADB项目文件口径；含分支，非仅Pocket App）",
+    note:
+      "出处：ADB RRP 56156-001（Invescore MSME Financing，引用2022末数）。Pocket产品页未给独立最新用户数",
+  },
+  "Pocket Zero/Pocket（Pocket Zero·MN）": {
+    controller: "InvesCore Wallet / Pocket（BNPL子产品）",
+    licenseReg: "MN：Pocket Zero商户分期",
+    volume: "见Pocket/Invescore母体；Zero分期单列GMV未公开",
+    users: "见Pocket母体",
+    note: "出处：Pocket应用说明（Aptoide/应用商店文案）；量化待补",
+    verify: "待双端",
+  },
+  "Ard Credit/Ard App（Ard·MN）": {
+    controller: "Ard Credit / Ard Financial Group（外蒙古）",
+    licenseReg: "MN：银行/非银/支付等牌照组合（Ard生态公开口径）",
+    verify: "待双端",
+    volume: "放贷约₮1560亿（官网首页展示数；未标注报表日，待年报交叉）",
+    users: "用户约140万+；Lender约9.4万+（官网首页展示数；时点未标）",
+    note: "出处：ardcredit.com/en 首页指标条（抓取时点2026-08；请以最新披露为准）",
+  },
+  "Storepay（Storepay·MN）": {
+    controller: "Storepay（外蒙古BNPL先发；新加坡总部叙事）",
+    licenseReg: "MN：BNPL/非银路径待核FRC登记号",
+    trafficRank: "外蒙古BNPL公开口径先发玩家",
+    verify: "待双端",
+    volume:
+      "GMV：2022年较2021年+276%（CEO访谈，未给绝对额）。另有材料称累计销售超约$3600万（约2023口径，Business Age侧记）",
+    users:
+      "官网展示50万+；访谈称超50万蒙古用户。2023末媒体：用户约45万+、商户约4000（ikon.mn）。2022-10稿：注册约40万/活跃约22万（Yahoo/GlobeNewswire）",
+    note:
+      "出处：Retail Banker International·Storepay CEO访谈；ikon.mn 2023奖项稿；storepay.mn；Yahoo·LBank上市稿2022-10",
+  },
+  "Simple（Simple·MN）": {
+    controller: "Simple（外蒙古零售分期/现金贷App）",
+    licenseReg: "MN：消费贷/BNPL路径待核",
+    volume: "公开绝对规模未查到；产品页给分期期限/额度区间",
+    users: "公开用户数未查到",
+    note: "出处缺口：simple.mn产品页仅条款；规模/用户待监管或年报",
+    verify: "待双端",
+  },
+  "Simple Buy/Simple（Simple Buy·MN）": {
+    controller: "Simple（Simple Buy=购买分期）",
+    volume: "见Simple母体；Buy单列GMV未公开",
+    users: "公开用户数未查到",
+    note: "出处：simple.mn/simple-buy；量化待补",
+    verify: "待双端",
+  },
+  "M Credit/Solomon（M Credit·MN）": {
+    controller: "Solomon Investments NBFC LLC / M Credit（公开OpenFinance文案）",
+    licenseReg: "MN：非银放贷/消费贷+BNPL；Magic Card叙事",
+    volume: "单笔现金贷公开区间约₮5万–300万；全国21省覆盖（产品文案，非余额规模）",
+    users: "公开用户/在贷余额未查到",
+    note: "出处：openfinance-lab.com/m-credit.html（产品与覆盖描述；非经审计报表）",
+    verify: "待双端",
+  },
+  "Hipay Loan/Hipay（Hipay·MN）": {
+    controller: "Hipay Mongolia（钱包+贷款/保险/投资入口叙事）",
+    licenseReg: "MN：支付/信贷合作路径待核",
+    volume: "公开贷款余额/GMV未查到",
+    users: "公开用户数未查到",
+    note: "出处缺口：行业综述提及Hipay为钱包对手方；量化待官网/FRC名录交叉",
+    verify: "待双端",
+  },
+  "M Bank数字贷/M Bank（M Bank·MN）": {
+    controller: "M bank（MCS集团；外蒙古无网点数字银行）",
+    licenseReg: "MN：商业银行牌（公开：2022-02获牌叙事）",
+    verify: "待双端",
+    volume:
+      "2025经营口径：总资产约₮3.2万亿、存款约₮1.6万亿、贷款组合约₮1.2万亿（m-bank.mn《2025 оны үйл ажиллагааны тайлан》）。更早：资产超约$2亿、借款人约4万（2023-12；IFC 2024-05稿）",
+    users:
+      "客户约64万（2025经营口径，官网年报页）。更早：零售优先客户约23万、对公857（2023；IFC稿）",
+    note:
+      "出处：m-bank.mn/annual-report-2025；IFC新闻稿2024-05-08（2023末截面）",
+  },
+  "Khan Bank数字贷/Khan Bank（Khan Bank·MN）": {
+    controller: "Khan Bank JSC（外蒙古系统重要性银行；MSE:KHAN）",
+    licenseReg: "MN：商业银行；数字贷/超App叙事",
+    verify: "待双端",
+    volume:
+      "银行业资产/存贷款份额均超约30%（资本市场Q4'25 teaser口径）。贷款组合2025H1较2024末约+14.9%，贷款市占约31.6%（2025-05截面；半年经营报告）",
+    users:
+      "客户约290万，约覆盖人口82%–83%（2025 teaser / Incofin访谈）。数字渠道交易约99%+；消费及小微贷线上办理约75%–85%（Euromoney 2025 / Incofin）",
+    note:
+      "出处：capitalmarkets.mn Khan Bank Q4 2025 teaser；mse.mn 2025半年经营报告；Incofin专访；Euromoney Awards 2025",
   },
   "数禾｜还呗｜数禾（数禾·CN）": {
     controller: "上海数禾科技（数禾）；还呗为APP名，不作单独玩家主名",
@@ -5412,11 +8561,11 @@ const CREDIT_KYC: Record<
     trafficRank: "点点MX现金贷活跃前排",
     verify: "仅流量",
   },
-  "MexiCash（快牛·MX）": {
-    controller: "快牛体系（用户口径）",
+  "快牛｜KN｜MexiCash（快牛·出海）": {
+    controller: "快牛智能 / KN（用户口径）",
     equity: "待核实",
-    licenseReg: "墨西哥本地放贷主体待核名录",
-    trafficRank: "点点MX榜常见",
+    licenseReg: "墨：SOFOM/金融公司路径待核；泰：本地非银信贷待牌照交叉",
+    trafficRank: "墨 MexiCash 点点2025Q3助贷前列；泰待补",
     verify: "仅流量",
   },
   "Aplazo（Aplazo·MX）": {
@@ -5526,9 +8675,9 @@ function finalizeScene(r: SceneDraft): SceneRow {
     apps: r.apps,
     countries: r.countries,
     languages: r.languages,
-    mau: r.mau,
+    mau: patch.mau ?? r.mau,
     registered: r.registered,
-    share: r.share,
+    share: patch.share ?? r.share,
     creditAttach: r.creditAttach,
     diandian: r.diandian,
     controller,
@@ -5585,6 +8734,8 @@ function finalizeCredit(r: CreditDraft): CreditRow {
   );
   const fundKinds = resolveFundKinds(institutionTypes, r.fundKinds);
   const trafficKinds = resolveTrafficKinds(institutionTypes, r.line, r.trafficKinds);
+  const paymentKinds = resolvePaymentKinds(institutionTypes, r.paymentKinds);
+  const equityKinds = resolveEquityKinds(institutionTypes, r.equityKinds);
   const orgDocNo = r.orgDocNo?.trim() || "待KYC·机构证件号";
   // 仅监管/牌照字段；品牌与集团名不参与（避免「银行合作」误判）
   const licenseKinds = resolveLicenseKinds(r.licenseKinds, licenseReg, r.licenses);
@@ -5597,6 +8748,8 @@ function finalizeCredit(r: CreditDraft): CreditRow {
     institutionTypes,
     fundKinds,
     trafficKinds,
+    paymentKinds,
+    equityKinds,
     brands: r.brands,
     countries: r.countries,
     languages: r.languages,
@@ -5605,8 +8758,8 @@ function finalizeCredit(r: CreditDraft): CreditRow {
     founded: r.founded?.trim() || "成立待核实",
     regulators: r.regulators,
     traffic: r.traffic,
-    volume: r.volume,
-    users: r.users,
+    volume: patch.volume ?? r.volume,
+    users: patch.users ?? r.users,
     employees: r.employees?.trim() || "员工待核实",
     diandian: r.diandian,
     note: patch.note ?? r.note,
@@ -5622,7 +8775,61 @@ function finalizeCredit(r: CreditDraft): CreditRow {
   };
 }
 
-const scenes: SceneRow[] = [...scenesCore, ...expandSceneSeeds(sceneCrmSeeds)].map(finalizeScene);
+/** 股权投资人名录：未命中 CRM 的新建；命中者仅打标 */
+const equityInvestorSeeds: CreditDraft[] = EQUITY_INVESTOR_ROSTER.rows
+  .filter((r) => !equityMatchGroup(r.name))
+  .map((r) => {
+    const short = r.name.split(/[,（(/]/)[0]?.trim() || r.name;
+    return {
+      region: r.region as Exclude<Region, "all">,
+      line: "agent" as const,
+      tier: (r.equityKind === "PE" || r.equityKind === "VC" ? "腰部" : "新兴") as CreditRow["tier"],
+      group: `${r.name}｜${short}｜${r.name}（股权投资人·${r.equityKind}·${r.locCode}）`,
+      brands: r.name,
+      countries: r.countries,
+      languages: "英语/当地语",
+      licenses: "投资人（股权侧）·非信贷持牌主体",
+      timing: "投资人对照",
+      regulators: "—",
+      traffic: "财务投资/战略投资",
+      volume: "—",
+      users: "被投企业",
+      diandian: "公开信息",
+      note: `股权投资人·${EQUITY_KIND_LABEL[r.equityKind]}${r.comment ? `；${r.comment}` : ""}`,
+      institutionTypes: ["股权投资人"] as InstitutionType[],
+      equityKinds: [r.equityKind],
+      verify: "待双端" as const,
+      licenseReg: "投资人对照·非放贷牌照",
+      trafficRank: "B端",
+      controller: r.name,
+    };
+  });
+
+function withEquityInvestorTagsOnCredit(row: CreditRow): CreditRow {
+  const matched = equityKindsFromRosterMatch(row.group);
+  if (!matched.length) return row;
+  const institutionTypes = INSTITUTION_TYPE_ORDER.filter(
+    (t) => row.institutionTypes.includes(t) || t === "股权投资人",
+  );
+  const equityKinds = EQUITY_KIND_ORDER.filter(
+    (k) => row.equityKinds.includes(k) || matched.includes(k),
+  );
+  const note = /投资人名录·打标/.test(row.note)
+    ? row.note
+    : `${row.note}｜投资人名录·打标`;
+  return { ...row, institutionTypes, equityKinds, note };
+}
+
+function withEquityInvestorTagsOnScene(row: SceneRow): SceneRow {
+  const matched = equityKindsFromRosterMatch(row.group);
+  if (!matched.length) return row;
+  const institutionTypes = INSTITUTION_TYPE_ORDER.filter(
+    (t) => row.institutionTypes.includes(t) || t === "股权投资人",
+  );
+  return { ...row, institutionTypes };
+}
+
+const scenes: SceneRow[] = [...scenesCore, ...expandSceneSeeds(sceneCrmSeeds)].map(finalizeScene).map(withEquityInvestorTagsOnScene);
 
 const creditsCore: CreditDraft[] = [
   // —— 现金贷 头部 ——
@@ -6465,18 +9672,18 @@ const creditsCore: CreditDraft[] = [
     region: "latam",
     line: "cash",
     tier: "头部",
-    group: "MexiCash（快牛·MX）",
-    brands: "MexiCash / 快牛",
-    countries: "墨西哥",
-    languages: "西",
-    licenses: "MX：金融公司/SOFOM等（待核SIPRES具体形态）",
+    group: "快牛｜KN｜MexiCash（快牛·出海）",
+    brands: "快牛 / KN / MexiCash",
+    countries: "墨西哥、泰国",
+    languages: "西/泰/中",
+    licenses: "MX：金融公司/SOFOM等（待核SIPRES）；TH：本地非银信贷（待牌照交叉）",
     timing: "中资出海·快牛智能",
-    regulators: "墨西哥本地",
+    regulators: "墨西哥/泰国本地金融监管",
     traffic: "App直获客",
-    volume: "待核实",
-    users: "点点2025Q3月活约72.89万",
-    diandian: "MX：点点2025Q3助贷五星第四（指数~7514）；MAU~72.89万，环比约+9.8%",
-    note: "点点公开校验建档·中资出海靠谱梯队",
+    volume: "已投设施见展业持仓（KNZN·墨/泰）",
+    users: "墨 MexiCash 点点2025Q3 MAU约72.89万",
+    diandian: "MX：点点2025Q3助贷五星第四（指数~7514）；MAU~72.89万，环比约+9.8%；泰榜待补",
+    note: "集团统一档：墨品牌 MexiCash；泰现金贷设施 KNZN-CL-THB；勿再拆第二条「仅墨」重复卡",
   },
   {
     region: "latam",
@@ -6902,17 +10109,25 @@ function creditBrandKey(group: string): string {
   const m = group.match(/（([^）]+)）\s*$/);
   if (!m) return group.trim();
   const inner = m[1].trim();
-  // 生态/监管括号多为「监管·ID」「流量服务商·…」定位标签，不能当去重键，否则同国监管会只剩第一家
+  // 生态/监管括号多为「监管·ID」「流量服务商·…」「支付·代理·CI」定位标签：
+  // 不能只用内层作键（同国监管会被吞），也不能只用简称（同洲跨国同品牌会被吞）。
   if (
-    /^(监管|流量服务商|数据服务方|资金参与|风险参与|风控|支付服务|回收|权益|触达|公关|信托|会计|律师|评级)/.test(
+    /^(监管|流量服务商|数据服务方|资金参与|风险参与|风控|支付服务|支付·|回收|权益|触达|公关|信托|会计|律师|评级)/.test(
       inner,
     )
   ) {
     const head = group.replace(/（[^）]+）\s*$/, "").trim();
     const pipes = head.split(/[｜|]/).map((s) => s.trim()).filter(Boolean);
     // Name｜Short｜Desc → 优先用简称（BI / OJK / SEC）
-    if (pipes.length >= 2 && pipes[1].length <= 24) return pipes[1];
-    return pipes[0] || head || group.trim();
+    const short =
+      pipes.length >= 2 && pipes[1].length <= 24 ? pipes[1] : pipes[0] || head;
+    const long = pipes[0] || head;
+    // 「目录入口」等角色词作简称时改用全名，避免 Meta/TikTok/Apple 伙伴目录互吞
+    const base = /^(目录入口|本地银行|银行联盟|Local Banks|本地PI|银行侧)$/i.test(short)
+      ? long
+      : short || long;
+    // 并入括号定位（含国别码），避免 Orange Money / M-Pesa / SEC 等同简称跨国被吞
+    return `${base || group.trim()}·${inner}`;
   }
   // 玩家常见键：信也·CN
   return inner;
@@ -6929,6 +10144,86 @@ function dedupeCreditRows(rows: CreditRow[]): CreditRow[] {
     out.push(r);
   }
   return out;
+}
+
+/** 玩家括号键「洋钱罐·CN」→ 家族茎「洋钱罐」；生态/监管复合键不折叠 */
+function creditBrandFamilyStem(group: string): string | null {
+  const key = creditBrandKey(group);
+  if (key.includes("|") || /流量服务商|监管|支付·|资金参与|风险参与/.test(key)) return null;
+  const idx = key.lastIndexOf("·");
+  if (idx <= 0) return null;
+  const loc = key.slice(idx + 1).trim();
+  // 国别/区域定位码；过长则多半是生态标签而非分国卡
+  if (
+    !/^(CN|ID|MX|PH|IN|TH|VN|MY|US|HK|TW|JP|KR|BD|PK|NG|KE|BR|CO|PE|CL|AR|AU|MN|SG|MM|KH|LA|NP|LK|ZA|EG|GH|TZ|UG|MZ|出海|SEA|LATAM|非洲|MEA|EU|UK|全球)$/i.test(
+      loc,
+    )
+  ) {
+    return null;
+  }
+  const stem = key.slice(0, idx).trim();
+  return stem || null;
+}
+
+/**
+ * 搜索结果：同品牌分国卡（洋钱罐·CN/ID/MX、信也·CN/ID/PH…）只留一张。
+ * 搜家族名 → 优先集团主档；搜 Easycash/Credmex 等本地名 → 优先该分国卡。
+ */
+function collapseCreditHitsByBrandFamily(rows: CreditRow[], q: string): CreditRow[] {
+  const needle = q.trim().toLowerCase();
+  if (!needle || rows.length <= 1) return rows;
+
+  const buckets = new Map<string, CreditRow[]>();
+  const order: string[] = [];
+  for (const r of rows) {
+    const stem = creditBrandFamilyStem(r.group) ?? `\0${creditBrandKey(r.group)}`;
+    if (!buckets.has(stem)) {
+      buckets.set(stem, []);
+      order.push(stem);
+    }
+    buckets.get(stem)!.push(r);
+  }
+
+  const pick = (list: CreditRow[], stem: string): CreditRow => {
+    const stemLc = stem.startsWith("\0") ? "" : stem.toLowerCase();
+    let best = list[0]!;
+    let bestScore = -1e9;
+    for (const r of list) {
+      const head = r.group.replace(/（[^）]+）\s*$/, "").trim().toLowerCase();
+      const headToks = head.split(/[/｜|、；;]/).map((s) => s.trim()).filter(Boolean);
+      const key = creditBrandKey(r.group);
+      const loc = key.includes("·") ? key.slice(key.lastIndexOf("·") + 1) : "";
+      const brands = (r.brands || "").toLowerCase();
+      let score = 0;
+      // 本地品牌名（Easycash）命中分国卡标题
+      if (headToks.some((t) => t === needle || t.startsWith(needle))) score += 120;
+      else if (head.includes(needle) && stemLc && !stemLc.includes(needle)) score += 80;
+      // 家族名命中集团主档标题（洋钱罐·CN）
+      if (stemLc && (stemLc === needle || stemLc.includes(needle) || needle.includes(stemLc))) {
+        if (headToks.some((t) => t.includes(stemLc))) score += 70;
+        if (loc === "CN" || loc === "出海") score += 25;
+      }
+      if (brands.includes(needle)) score += 8;
+      if ((r.countries || "").split(/[;；、,/]/).filter((s) => s.trim()).length >= 2) score += 12;
+      score -= keywordRelevanceRank(q, r.group, r.brands, r.controller, r.note) * 15;
+      if (score > bestScore) {
+        bestScore = score;
+        best = r;
+      }
+    }
+    return best;
+  };
+
+  const out: CreditRow[] = [];
+  for (const stem of order) {
+    const list = buckets.get(stem)!;
+    out.push(list.length === 1 ? list[0]! : pick(list, stem));
+  }
+  return out.sort(
+    (a, b) =>
+      keywordRelevanceRank(q, a.group, a.brands, a.controller, a.note) -
+      keywordRelevanceRank(q, b.group, b.brands, b.controller, b.note),
+  );
 }
 
 const ecoInstitutionSeeds: CreditDraft[] = [
@@ -10608,74 +13903,7 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     trafficRank: "B端",
     controller: "PEFINDO",
   },
-  // —— 支付服务机构 ——
-  {
-    region: "se-asia",
-    line: "agent",
-    tier: "头部",
-    group: "Xendit｜Xendit｜Xendit（支付服务机构·SEA）",
-    brands: "Xendit",
-    countries: "印尼/菲/越等",
-    languages: "英语/当地语",
-    licenses: "多国支付/电子货币路径",
-    timing: "运营中",
-    regulators: "各国支付监管",
-    traffic: "商户API/SDK",
-    volume: "公开融资与业务扩张叙事",
-    users: "商户",
-    diandian: "公开信息",
-    note: "公开信息建档·支付服务",
-    institutionTypes: ["支付服务机构"],
-    verify: "仅监管",
-    licenseReg: "SEA：支付/e-money 分国主体",
-    trafficRank: "偏B端",
-    controller: "Xendit",
-  },
-  {
-    region: "south-asia",
-    line: "agent",
-    tier: "头部",
-    group: "Razorpay｜Razorpay｜Razorpay（支付服务机构·IN）",
-    brands: "Razorpay",
-    countries: "印度",
-    languages: "英语",
-    licenses: "印度支付聚合等路径",
-    timing: "运营中",
-    regulators: "RBI相关",
-    traffic: "商户接入",
-    volume: "—",
-    users: "商户",
-    diandian: "公开信息",
-    note: "公开信息建档",
-    institutionTypes: ["支付服务机构"],
-    verify: "仅监管",
-    licenseReg: "IN：支付聚合等",
-    trafficRank: "偏B端",
-    controller: "Razorpay",
-  },
-  {
-    region: "latam",
-    line: "agent",
-    tier: "头部",
-    group: "dLocal｜dLocal｜dLocal（支付服务机构·LATAM）",
-    brands: "dLocal",
-    countries: "拉美等多国",
-    languages: "英语/西语",
-    licenses: "跨境支付/本地收单路径",
-    timing: "上市主体口径",
-    regulators: "多国",
-    traffic: "商户",
-    volume: "公开财报口径",
-    users: "商户",
-    diandian: "公开信息",
-    note: "公开信息建档",
-    institutionTypes: ["支付服务机构"],
-    verify: "仅监管",
-    licenseReg: "多国支付路径",
-    trafficRank: "偏B端",
-    equity: "NASDAQ: DLO",
-    controller: "dLocal",
-  },
+  // —— 支付服务机构：见 paymentServiceSeeds（官方基建 / 国民级 / 代理服务商） ——
   // —— 资金参与机构 ——
   {
     region: "east-asia",
@@ -10792,6 +14020,30 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     trafficRank: "B端",
     equity: "NYSE: BLK",
     controller: "BlackRock",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "Avenue Capital｜Avenue｜Avenue Capital Group（资金参与机构·优先投资人·US）",
+    brands: "Avenue Capital",
+    countries: "美国、欧洲、亚洲（纽约总部；欧亚多办公室）",
+    languages: "英语",
+    licenses: "私募信贷/特殊情况投资；优先层/专项放贷对照（非银行吸储）",
+    timing: "1995 成立；持续",
+    regulators: "SEC等（私募基金披露口径）",
+    traffic: "机构直投/专项信贷",
+    volume: "公开管理规模约 USD 92 亿（官网 Firm 页口径，时点待续核）",
+    users: "机构投资人",
+    diandian: "https://www.avenuecapital.com",
+    note: "优先投资人·官网建档：specialty lending / opportunistic credit / special situations；创始人 Marc Lasry、Sonia Gardner",
+    institutionTypes: ["资金参与机构"],
+    fundKinds: ["优先投资人"],
+    verify: "仅监管",
+    licenseReg: "私募信贷/另类投资（非银行牌照叙事）",
+    trafficRank: "B端·机构",
+    equity: "私人合伙；官网 avenuecapital.com",
+    controller: "Avenue Capital Group（Senior Principals: Marc Lasry / Sonia Gardner）",
   },
   {
     region: "west",
@@ -11091,46 +14343,311 @@ const ecoInstitutionSeeds: CreditDraft[] = [
   {
     region: "east-asia",
     line: "agent",
-    tier: "腰部",
+    tier: "头部",
     group: "东方资产｜东方资产｜东方资产（回收机构·CN）",
     brands: "中国东方资产管理",
     countries: "中国",
     languages: "中文",
-    licenses: "资产管理公司（不良/回收对照）",
-    timing: "持续",
-    regulators: "金融监管总局等",
-    traffic: "对公资产",
-    volume: "—",
-    users: "—",
-    diandian: "公开信息",
-    note: "公开信息建档·回收/不良资产对照",
+    licenses: "金融资产管理公司（全国性AMC）",
+    timing: "1999设立·持续运营",
+    founded: "1999",
+    regulators: "国家金融监督管理总局等",
+    traffic: "不良收购/处置/重组；对公与零售不良",
+    volume: "全国性AMC量级（公开披露口径）",
+    users: "银行/非银不良出让方；重组债务人",
+    diandian: "公开信息/监管披露",
+    note: "四大AMC之一；2025 财政部持股划转中央汇金后仍为国有控股金融机构。对照信贷贷后处置与批量不良转让。",
     institutionTypes: ["回收机构"],
     verify: "仅监管",
-    licenseReg: "CN：AMC",
+    licenseReg: "CN：金融资产管理公司（全国性AMC）",
     trafficRank: "非C端借贷榜",
-    controller: "中国东方资产管理股份有限公司",
+    controller: "中国东方资产管理股份有限公司（汇金控股口径）",
+    equity: "国有控股·汇金体系",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "头部",
+    group: "中国信达｜信达｜中国信达（回收机构·CN）",
+    brands: "中国信达 / Cinda",
+    countries: "中国；境外平台另计",
+    languages: "中文/英语",
+    licenses: "金融资产管理公司（全国性AMC）",
+    timing: "1999设立·HK上市",
+    founded: "1999",
+    regulators: "国家金融监督管理总局等",
+    traffic: "不良经营/投资/综合金融服务",
+    volume: "公开财报与不良经营披露",
+    users: "金融机构不良出让方",
+    diandian: "公开信息/港交所披露",
+    note: "四大AMC之一、港股上市（01359.HK）；2025 控股股东变更为中央汇金。常作银行不良批量转让对手方对照。",
+    institutionTypes: ["回收机构"],
+    verify: "仅监管",
+    licenseReg: "CN：金融资产管理公司（全国性AMC）",
+    trafficRank: "非C端借贷榜",
+    equity: "HKEX: 1359",
+    controller: "中国信达资产管理股份有限公司（汇金控股口径）",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "头部",
+    group: "中信金融资产｜中信金融资产｜中信金融资产（回收机构·CN）",
+    brands: "中信金融资产（原中国华融）",
+    countries: "中国；境外平台另计",
+    languages: "中文/英语",
+    licenses: "金融资产管理公司（全国性AMC）",
+    timing: "1999华融设立·2024更名",
+    founded: "1999",
+    regulators: "国家金融监督管理总局等",
+    traffic: "不良资产主业重整后的收购/处置",
+    volume: "公开财报口径（化险后主业收缩叙事）",
+    users: "金融机构不良出让方",
+    diandian: "公开信息/港交所披露",
+    note: "原中国华融；划入中信集团后更名中信金融资产。历史金租等牌照子公司与回收主业区分建档。",
+    institutionTypes: ["回收机构"],
+    verify: "仅监管",
+    licenseReg: "CN：金融资产管理公司（全国性AMC）",
+    trafficRank: "非C端借贷榜",
+    equity: "中信集团体系·港股披露主体对照",
+    controller: "中国中信金融资产管理股份有限公司",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "头部",
+    group: "长城资产｜长城资产｜长城资产（回收机构·CN）",
+    brands: "中国长城资产管理",
+    countries: "中国",
+    languages: "中文",
+    licenses: "金融资产管理公司（全国性AMC）",
+    timing: "1999设立·持续运营",
+    founded: "1999",
+    regulators: "国家金融监督管理总局等",
+    traffic: "不良收购/处置；旗下银行/证券等金融牌照另档",
+    volume: "全国性AMC量级（公开披露口径）",
+    users: "金融机构不良出让方",
+    diandian: "公开信息/监管披露",
+    note: "四大AMC之一；2025 股权划转中央汇金。不良主业与金租/银行等子公司牌照勿混同。",
+    institutionTypes: ["回收机构"],
+    verify: "仅监管",
+    licenseReg: "CN：金融资产管理公司（全国性AMC）",
+    trafficRank: "非C端借贷榜",
+    equity: "国有控股·汇金体系",
+    controller: "中国长城资产管理股份有限公司（汇金控股口径）",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "腰部",
+    group: "粤财资产｜粤财资产｜粤财资产（回收机构·地方AMC·CN）",
+    brands: "广东粤财资产管理",
+    countries: "中国（广东为主）",
+    languages: "中文",
+    licenses: "地方资产管理公司（地方AMC）",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "地方金融监管+金融监管总局相关规则",
+    traffic: "省内不良收购/纾困/处置",
+    volume: "地方AMC量级",
+    users: "地方金融机构与企业纾困对象",
+    diandian: "公开信息",
+    note: "地方AMC样本：对照省内批量不良与纾困处置；展业地域与全国性AMC区分。",
+    institutionTypes: ["回收机构"],
+    verify: "待双端",
+    licenseReg: "CN：地方资产管理公司",
+    trafficRank: "非C端借贷榜",
+    controller: "广东粤财资产管理有限公司（公开口径）",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "腰部",
+    group: "中原资产｜中原资产｜中原资产（回收机构·地方AMC·CN）",
+    brands: "河南中原资产管理",
+    countries: "中国（河南为主）",
+    languages: "中文",
+    licenses: "地方资产管理公司（地方AMC）",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "地方金融监管+金融监管总局相关规则",
+    traffic: "省内不良收购/处置",
+    volume: "地方AMC量级",
+    users: "地方金融机构",
+    diandian: "公开信息",
+    note: "地方AMC样本（华中）。与全国性AMC、委外催收公司分层对照。",
+    institutionTypes: ["回收机构"],
+    verify: "待双端",
+    licenseReg: "CN：地方资产管理公司",
+    trafficRank: "非C端借贷榜",
+    controller: "河南中原资产管理有限公司（公开口径）",
   },
   {
     region: "se-asia",
     line: "agent",
-    tier: "腰部",
+    tier: "头部",
     group: "Collectius｜Collectius｜Collectius（回收机构·SEA）",
     brands: "Collectius",
-    countries: "东南亚",
-    languages: "英语",
-    licenses: "债收/资产管理服务（公开叙事）",
-    timing: "运营中",
-    regulators: "分国",
-    traffic: "B端委外",
-    volume: "—",
-    users: "机构委托",
-    diandian: "公开信息",
-    note: "公开信息建档",
+    countries: "新加坡/马来/印尼/菲/泰/越/印度",
+    languages: "英语/当地语",
+    licenses: "NPL收购与债收服务（分国牌照/许可路径）",
+    timing: "2016起运营",
+    founded: "2016",
+    regulators: "分国金融/债收监管",
+    traffic: "购买不良组合+受托催收/重组",
+    volume: "公开叙事AUM约数十亿美元量级（时点以官网/新闻为准）",
+    users: "银行与持牌贷方委托；逾期借款人",
+    employees: "约1100+（公开叙事）",
+    diandian: "官网/行业新闻",
+    note: "东南亚数字化债收与NPL投资龙头样本；IFC等合作叙事。分国催收合规与数据本地化待核。",
     institutionTypes: ["回收机构"],
     verify: "仅流量",
-    licenseReg: "分国债收合规待核",
+    licenseReg: "SEA/IN：债收与不良资产管理·分国主体待核",
     trafficRank: "B端",
     controller: "Collectius",
+  },
+  {
+    region: "south-asia",
+    line: "agent",
+    tier: "头部",
+    group: "ARCIL｜ARCIL｜ARCIL（回收机构·IN）",
+    brands: "Asset Reconstruction Company (India) / ARCIL",
+    countries: "印度",
+    languages: "英语/印地语等",
+    licenses: "Asset Reconstruction Company（SARFAESI/RBI框架）",
+    timing: "2002设立·持续运营",
+    founded: "2002",
+    regulators: "RBI / SARFAESI相关",
+    traffic: "银行不良收购与重建/处置",
+    volume: "公开披露AUM与回收额（时点以年报为准）",
+    users: "银行/金融机构不良出让方",
+    employees: "约190+（公开口径）",
+    diandian: "官网/监管披露",
+    note: "印度首批ARC对照；零售与对公不良重建。与NBFC/银行不良出表链路相关。",
+    institutionTypes: ["回收机构"],
+    verify: "仅监管",
+    licenseReg: "IN：Asset Reconstruction Company",
+    trafficRank: "B端",
+    controller: "Asset Reconstruction Company (India) Limited",
+  },
+  {
+    region: "south-asia",
+    line: "agent",
+    tier: "腰部",
+    group: "Edelweiss ARC｜Edelweiss ARC｜Edelweiss ARC（回收机构·IN）",
+    brands: "Edelweiss Asset Reconstruction",
+    countries: "印度",
+    languages: "英语",
+    licenses: "Asset Reconstruction Company",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "RBI相关",
+    traffic: "不良收购与决议",
+    volume: "集团公开披露口径",
+    users: "银行/NBFC不良出让方",
+    diandian: "公开信息",
+    note: "印度市场化ARC样本（Edelweiss体系）。与ARCIL分层对照零售/对公不良。",
+    institutionTypes: ["回收机构"],
+    verify: "待双端",
+    licenseReg: "IN：Asset Reconstruction Company",
+    trafficRank: "B端",
+    controller: "Edelweiss Asset Reconstruction Company（公开口径）",
+    equity: "Edelweiss集团关联",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "Encore Capital｜Encore｜Encore Capital（回收机构·US）",
+    brands: "Encore Capital / Midland Credit Management",
+    countries: "美国；欧洲等市场另计",
+    languages: "英语",
+    licenses: "债务购买与催收服务（州级许可路径）",
+    timing: "上市运营",
+    founded: "成立待核实",
+    regulators: "CFPB/各州债收许可等",
+    traffic: "购买消费不良+自营催收品牌",
+    volume: "公开财报口径",
+    users: "金融机构债权出让方；逾期消费者",
+    diandian: "公开信息/SEC披露",
+    note: "美国消费不良购买龙头对照；CFPB合规与州许可敏感。Midland为主要运营品牌。",
+    institutionTypes: ["回收机构"],
+    verify: "仅监管",
+    licenseReg: "US：债务购买/催收·州许可",
+    trafficRank: "B端",
+    equity: "NASDAQ: ECPG",
+    controller: "Encore Capital Group",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "PRA Group｜PRA｜PRA Group（回收机构·US）",
+    brands: "PRA Group",
+    countries: "美国；欧洲等",
+    languages: "英语",
+    licenses: "债务购买与催收服务",
+    timing: "上市运营",
+    founded: "成立待核实",
+    regulators: "CFPB/各州等",
+    traffic: "消费不良购买与回收",
+    volume: "公开财报口径",
+    users: "金融机构债权出让方",
+    diandian: "公开信息/SEC披露",
+    note: "与Encore并列的美国消费债购买商对照样本。",
+    institutionTypes: ["回收机构"],
+    verify: "仅监管",
+    licenseReg: "US：债务购买/催收·州许可",
+    trafficRank: "B端",
+    equity: "NASDAQ: PRAA",
+    controller: "PRA Group, Inc.",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "Intrum｜Intrum｜Intrum（回收机构·EU）",
+    brands: "Intrum",
+    countries: "欧洲多国",
+    languages: "英语/当地语",
+    licenses: "信用管理与债收服务（分国许可）",
+    timing: "上市运营",
+    founded: "成立待核实",
+    regulators: "欧盟/各国债收与数据保护",
+    traffic: "受托催收+不良投资",
+    volume: "公开财报口径",
+    users: "银行与企业委托方",
+    diandian: "公开信息",
+    note: "欧洲信用管理/债收龙头对照；GDPR与分国催收规范敏感。",
+    institutionTypes: ["回收机构"],
+    verify: "仅监管",
+    licenseReg: "EU：信用管理/债收·分国",
+    trafficRank: "B端",
+    equity: "Nasdaq Stockholm: INTRUM",
+    controller: "Intrum AB",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "新兴",
+    group: "TrueAccord｜TrueAccord｜TrueAccord（回收机构·US）",
+    brands: "TrueAccord",
+    countries: "美国",
+    languages: "英语",
+    licenses: "数字化债收服务（州许可路径）",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "CFPB/各州债收规则",
+    traffic: "AI/数字化委外催收SaaS与服务",
+    volume: "—",
+    users: "金融与消费信贷委托方",
+    diandian: "公开信息/融资新闻",
+    note: "数字化委外催收样本：对照持牌贷方贷后触达合规，与传统债购买商分层。",
+    institutionTypes: ["回收机构"],
+    verify: "仅流量",
+    licenseReg: "US：数字化债收服务·州许可待核",
+    trafficRank: "B端",
+    controller: "TrueAccord",
   },
   // —— 权益服务商 ——
   {
@@ -11561,44 +15078,300 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     line: "agent",
     tier: "头部",
     group: "PwC｜普华永道｜PwC（会计师事务所·全球）",
-    brands: "普华永道",
-    countries: "全球",
-    languages: "英语等",
-    licenses: "审计/咨询执业",
-    timing: "运营中",
-    regulators: "各国会计监管",
-    traffic: "B端",
-    volume: "—",
-    users: "企业",
+    brands: "普华永道 / PwC",
+    countries: "全球（含中国内地/香港成员所）",
+    languages: "英语/当地语",
+    licenses: "注册会计师审计与鉴证；咨询另计",
+    timing: "全球网络持续运营",
+    founded: "成立待核实",
+    regulators: "各国会计/审计监管（PCAOB/FRC等对照）",
+    traffic: "B端：审计/IPO/发债尽调/内控",
+    volume: "全球网络公开收入口径",
+    users: "上市公司与金融机构",
     diandian: "公开信息",
-    note: "公开信息建档·审计与财务尽调对照",
+    note: "四大所。信贷/消金/持牌机构上市与发债财务尽调常用对照；中国内地与香港为分所主体。",
     institutionTypes: ["会计师事务所"],
     verify: "仅监管",
-    licenseReg: "会计师事务所",
+    licenseReg: "各国：注册会计师审计执业",
     trafficRank: "B端",
-    controller: "PwC network",
+    controller: "PwC network（分国成员所）",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "Deloitte｜德勤｜Deloitte（会计师事务所·全球）",
+    brands: "德勤 / Deloitte",
+    countries: "全球（含中国内地/香港成员所）",
+    languages: "英语/当地语",
+    licenses: "注册会计师审计与鉴证；咨询另计",
+    timing: "全球网络持续运营",
+    founded: "成立待核实",
+    regulators: "各国会计/审计监管",
+    traffic: "B端：审计/资本市场/风险咨询",
+    volume: "全球网络公开收入口径",
+    users: "上市公司与金融机构",
+    diandian: "公开信息",
+    note: "四大所。金融科技与持牌机构审计/内控尽调对照。",
+    institutionTypes: ["会计师事务所"],
+    verify: "仅监管",
+    licenseReg: "各国：注册会计师审计执业",
+    trafficRank: "B端",
+    controller: "Deloitte network（分国成员所）",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "EY｜安永｜EY（会计师事务所·全球）",
+    brands: "安永 / EY",
+    countries: "全球（含中国内地/香港成员所）",
+    languages: "英语/当地语",
+    licenses: "注册会计师审计与鉴证；咨询另计",
+    timing: "全球网络持续运营",
+    founded: "成立待核实",
+    regulators: "各国会计/审计监管",
+    traffic: "B端：审计/IPO/财务尽调",
+    volume: "全球网络公开收入口径",
+    users: "上市公司与金融机构",
+    diandian: "公开信息",
+    note: "四大所。跨境上市与Fintech融资轮财务尽调常用。",
+    institutionTypes: ["会计师事务所"],
+    verify: "仅监管",
+    licenseReg: "各国：注册会计师审计执业",
+    trafficRank: "B端",
+    controller: "EY network（分国成员所）",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "KPMG｜毕马威｜KPMG（会计师事务所·全球）",
+    brands: "毕马威 / KPMG",
+    countries: "全球（含中国内地/香港成员所）",
+    languages: "英语/当地语",
+    licenses: "注册会计师审计与鉴证；咨询另计",
+    timing: "全球网络持续运营",
+    founded: "成立待核实",
+    regulators: "各国会计/审计监管",
+    traffic: "B端：审计/监管合规咨询交叉",
+    volume: "全球网络公开收入口径",
+    users: "上市公司与金融机构",
+    diandian: "公开信息",
+    note: "四大所。银行/非银审计与监管报送相关鉴证对照。",
+    institutionTypes: ["会计师事务所"],
+    verify: "仅监管",
+    licenseReg: "各国：注册会计师审计执业",
+    trafficRank: "B端",
+    controller: "KPMG network（分国成员所）",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "头部",
+    group: "立信会计师事务所｜立信｜立信（会计师事务所·CN）",
+    brands: "立信 / BDO China Shu Lun Pan 关联口径另核",
+    countries: "中国",
+    languages: "中文",
+    licenses: "会计师事务所（证券资格等路径以中注协/证监会公示为准）",
+    timing: "国内综合所·持续运营",
+    founded: "成立待核实",
+    regulators: "财政部/中注协；证券业务看证监会备案",
+    traffic: "A股/债审计与验资",
+    volume: "国内综合所前列（公开排行口径）",
+    users: "上市公司与拟上市企业",
+    diandian: "公开信息/中注协",
+    note: "国内综合所头部样本。信贷系主体发债/IPO审计对照；国际网络加盟关系以当期公示为准。",
+    institutionTypes: ["会计师事务所"],
+    verify: "仅监管",
+    licenseReg: "CN：会计师事务所",
+    trafficRank: "B端",
+    controller: "立信会计师事务所（特殊普通合伙）",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "头部",
+    group: "天健会计师事务所｜天健｜天健（会计师事务所·CN）",
+    brands: "天健",
+    countries: "中国",
+    languages: "中文",
+    licenses: "会计师事务所（证券资格等路径以公示为准）",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "财政部/中注协；证券业务看证监会备案",
+    traffic: "A股审计高份额对照",
+    volume: "国内综合所前列（公开排行口径）",
+    users: "上市公司与拟上市企业",
+    diandian: "公开信息/中注协",
+    note: "国内综合所；A股审计市占常居前列。金融/消金发债审计对照。",
+    institutionTypes: ["会计师事务所"],
+    verify: "仅监管",
+    licenseReg: "CN：会计师事务所",
+    trafficRank: "B端",
+    controller: "天健会计师事务所（特殊普通合伙）",
   },
   {
     region: "east-asia",
     line: "agent",
     tier: "腰部",
-    group: "立信会计师事务所｜立信｜立信（会计师事务所·CN）",
-    brands: "立信",
+    group: "致同会计师事务所｜致同｜致同（会计师事务所·CN）",
+    brands: "致同 / Grant Thornton China",
     countries: "中国",
-    languages: "中文",
-    licenses: "审计执业",
+    languages: "中文/英语",
+    licenses: "会计师事务所",
     timing: "运营中",
+    founded: "成立待核实",
     regulators: "财政部/中注协等",
-    traffic: "B端",
-    volume: "—",
-    users: "企业",
+    traffic: "审计/税务/咨询",
+    volume: "国内综合所中上（公开排行口径）",
+    users: "企业与金融机构",
     diandian: "公开信息",
-    note: "公开信息建档·国内审计对照",
+    note: "Grant Thornton 中国成员所口径。跨境与民营金融主体审计对照。",
     institutionTypes: ["会计师事务所"],
     verify: "仅监管",
-    licenseReg: "会计师事务所",
+    licenseReg: "CN：会计师事务所",
     trafficRank: "B端",
-    controller: "立信",
+    controller: "致同会计师事务所（特殊普通合伙）",
+    equity: "Grant Thornton 国际网络成员（公开口径）",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "腰部",
+    group: "信永中和｜信永中和｜信永中和（会计师事务所·CN）",
+    brands: "信永中和",
+    countries: "中国；港澳等分支另计",
+    languages: "中文",
+    licenses: "会计师事务所",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "财政部/中注协等",
+    traffic: "审计与鉴证",
+    volume: "国内综合所中上（公开排行口径）",
+    users: "上市公司与企业",
+    diandian: "公开信息",
+    note: "国内综合所样本；金融与城投类审计常见对照。",
+    institutionTypes: ["会计师事务所"],
+    verify: "仅监管",
+    licenseReg: "CN：会计师事务所",
+    trafficRank: "B端",
+    controller: "信永中和会计师事务所（特殊普通合伙）",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "腰部",
+    group: "容诚会计师事务所｜容诚｜容诚（会计师事务所·CN）",
+    brands: "容诚",
+    countries: "中国",
+    languages: "中文",
+    licenses: "会计师事务所",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "财政部/中注协等",
+    traffic: "审计/IPO申报项目",
+    volume: "国内综合所（公开排行口径）",
+    users: "拟上市与上市公司",
+    diandian: "公开信息",
+    note: "国内综合所；近年IPO审计项目量对照样本。",
+    institutionTypes: ["会计师事务所"],
+    verify: "待双端",
+    licenseReg: "CN：会计师事务所",
+    trafficRank: "B端",
+    controller: "容诚会计师事务所（特殊普通合伙）",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "腰部",
+    group: "大华会计师事务所｜大华｜大华（会计师事务所·CN）",
+    brands: "大华",
+    countries: "中国",
+    languages: "中文",
+    licenses: "会计师事务所",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "财政部/中注协等",
+    traffic: "审计与验资",
+    volume: "国内综合所（公开排行口径）",
+    users: "企业与金融机构",
+    diandian: "公开信息",
+    note: "国内综合所样本；与金融租赁/非银发债审计链路可交叉。",
+    institutionTypes: ["会计师事务所"],
+    verify: "待双端",
+    licenseReg: "CN：会计师事务所",
+    trafficRank: "B端",
+    controller: "大华会计师事务所（特殊普通合伙）",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "腰部",
+    group: "BDO｜BDO｜BDO（会计师事务所·全球）",
+    brands: "BDO",
+    countries: "全球（分国成员所）",
+    languages: "英语/当地语",
+    licenses: "审计与鉴证（分国执业）",
+    timing: "全球网络持续运营",
+    founded: "成立待核实",
+    regulators: "各国会计监管",
+    traffic: "中型上市公司与成长型企业审计",
+    volume: "全球五大网络之一（公开口径）",
+    users: "企业与金融机构",
+    diandian: "公开信息",
+    note: "国际网络所；与国内立信等加盟关系按当期成员所名录核验，勿默认同一主体。",
+    institutionTypes: ["会计师事务所"],
+    verify: "仅监管",
+    licenseReg: "各国：注册会计师审计执业",
+    trafficRank: "B端",
+    controller: "BDO International（分国成员所）",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "腰部",
+    group: "RSM｜RSM｜RSM（会计师事务所·全球）",
+    brands: "RSM",
+    countries: "全球（分国成员所）",
+    languages: "英语/当地语",
+    licenses: "审计与鉴证（分国执业）",
+    timing: "全球网络持续运营",
+    founded: "成立待核实",
+    regulators: "各国会计监管",
+    traffic: "中型企业审计与咨询",
+    volume: "国际网络公开口径",
+    users: "成长型企业",
+    diandian: "公开信息",
+    note: "国际网络所样本；新兴市场Fintech审计备选对照。",
+    institutionTypes: ["会计师事务所"],
+    verify: "待双端",
+    licenseReg: "各国：注册会计师审计执业",
+    trafficRank: "B端",
+    controller: "RSM International（分国成员所）",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "腰部",
+    group: "Mazars｜玛泽｜Mazars（会计师事务所·全球）",
+    brands: "玛泽 / Mazars",
+    countries: "全球（含中国成员所口径）",
+    languages: "英语/当地语",
+    licenses: "审计与鉴证（分国执业）",
+    timing: "全球网络持续运营",
+    founded: "成立待核实",
+    regulators: "各国会计监管",
+    traffic: "审计/跨境报告",
+    volume: "国际网络公开口径",
+    users: "企业与金融机构",
+    diandian: "公开信息",
+    note: "国际网络所；欧洲与新兴市场跨境审计对照。",
+    institutionTypes: ["会计师事务所"],
+    verify: "待双端",
+    licenseReg: "各国：注册会计师审计执业",
+    trafficRank: "B端",
+    controller: "Mazars network（分国成员所）",
   },
   // —— 律师事务所 ——
   {
@@ -11606,44 +15379,138 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     line: "agent",
     tier: "头部",
     group: "金杜律师事务所｜金杜｜金杜（律师事务所·CN）",
-    brands: "金杜",
+    brands: "金杜 / King & Wood Mallesons",
+    countries: "中国/跨境（含澳洲等网络口径）",
+    languages: "中文/英语",
+    licenses: "律师执业",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "司法行政/律协",
+    traffic: "B端：金融/资本市场/争议解决",
+    volume: "国内红圈所量级（公开排名口径）",
+    users: "金融机构与企业",
+    diandian: "公开信息",
+    note: "红圈所。信贷/消金牌照申请、融资与争议解决对照。",
+    institutionTypes: ["律师事务所"],
+    verify: "仅监管",
+    licenseReg: "CN：律师事务所",
+    trafficRank: "B端",
+    controller: "金杜律师事务所",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "头部",
+    group: "中伦律师事务所｜中伦｜中伦（律师事务所·CN）",
+    brands: "中伦 / Zhong Lun",
     countries: "中国/跨境",
     languages: "中文/英语",
     licenses: "律师执业",
     timing: "运营中",
+    founded: "成立待核实",
     regulators: "司法行政/律协",
-    traffic: "B端",
-    volume: "—",
-    users: "企业",
+    traffic: "B端：金融与监管合规",
+    volume: "国内红圈所量级",
+    users: "金融机构与企业",
     diandian: "公开信息",
-    note: "公开信息建档·金融法务/合规对照",
+    note: "红圈所。持牌机构设立、股权融资与合规意见书对照。",
     institutionTypes: ["律师事务所"],
     verify: "仅监管",
-    licenseReg: "律师事务所",
+    licenseReg: "CN：律师事务所",
     trafficRank: "B端",
-    controller: "金杜",
+    controller: "北京市中伦律师事务所",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "头部",
+    group: "方达律师事务所｜方达｜方达（律师事务所·CN）",
+    brands: "方达 / Fangda Partners",
+    countries: "中国/跨境",
+    languages: "中文/英语",
+    licenses: "律师执业",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "司法行政/律协",
+    traffic: "B端：资本市场/私募与金融监管",
+    volume: "国内红圈所量级",
+    users: "金融机构与企业",
+    diandian: "公开信息",
+    note: "红圈所。跨境融资与金融监管事项对照。",
+    institutionTypes: ["律师事务所"],
+    verify: "仅监管",
+    licenseReg: "CN：律师事务所",
+    trafficRank: "B端",
+    controller: "方达律师事务所",
+  },
+  {
+    region: "east-asia",
+    line: "agent",
+    tier: "腰部",
+    group: "通力律师事务所｜通力｜通力（律师事务所·CN）",
+    brands: "通力 / Llinks",
+    countries: "中国",
+    languages: "中文/英语",
+    licenses: "律师执业",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "司法行政/律协",
+    traffic: "B端：银行与金融市场",
+    volume: "精品金融所口径",
+    users: "银行与非银",
+    diandian: "公开信息",
+    note: "金融精品所样本；银行间与非银融资文件对照。",
+    institutionTypes: ["律师事务所"],
+    verify: "待双端",
+    licenseReg: "CN：律师事务所",
+    trafficRank: "B端",
+    controller: "通力律师事务所",
   },
   {
     region: "west",
     line: "agent",
     tier: "头部",
     group: "Clifford Chance｜高伟绅｜Clifford Chance（律师事务所·全球）",
-    brands: "Clifford Chance",
+    brands: "Clifford Chance / 高伟绅",
     countries: "全球",
     languages: "英语等",
-    licenses: "律师执业",
+    licenses: "律师执业（分国）",
     timing: "运营中",
+    founded: "成立待核实",
     regulators: "各国律协",
-    traffic: "B端",
-    volume: "—",
-    users: "企业",
+    traffic: "B端：跨境金融与监管",
+    volume: "魔圈所量级",
+    users: "跨国金融机构",
     diandian: "公开信息",
-    note: "公开信息建档·跨境金融法务对照",
+    note: "国际魔圈所。跨境信贷、结构化与监管调查对照。",
     institutionTypes: ["律师事务所"],
     verify: "仅监管",
-    licenseReg: "律师事务所",
+    licenseReg: "各国：律师执业",
     trafficRank: "B端",
     controller: "Clifford Chance",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "Latham & Watkins｜瑞生｜Latham（律师事务所·全球）",
+    brands: "Latham & Watkins / 瑞生",
+    countries: "全球",
+    languages: "英语等",
+    licenses: "律师执业（分国）",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "各国律协",
+    traffic: "B端：融资/资本市场",
+    volume: "国际大所量级",
+    users: "跨国企业与金融机构",
+    diandian: "公开信息",
+    note: "国际大所；Fintech融资与跨境上市法律对照。",
+    institutionTypes: ["律师事务所"],
+    verify: "仅监管",
+    licenseReg: "各国：律师执业",
+    trafficRank: "B端",
+    controller: "Latham & Watkins",
   },
   // —— 评级机构 ——
   {
@@ -11693,13 +15560,41 @@ const ecoInstitutionSeeds: CreditDraft[] = [
   },
 ];
 
+const paymentServiceSeeds: CreditDraft[] = PAYMENT_SERVICE_ROSTER.companies.map((c) => ({
+  region: c.region as Exclude<Region, "all">,
+  line: "agent" as const,
+  tier: c.kind === "官方支付基建" ? ("头部" as const) : ("腰部" as const),
+  group: c.group,
+  brands: c.brands,
+  countries: c.countries,
+  languages: "当地语/英语",
+  licenses: c.licenses,
+  timing: "运营中",
+  regulators: c.regulators,
+  traffic: c.kind === "支付代理服务商" ? "商户API/收单" : "支付基建/钱包",
+  volume: "—",
+  users: c.kind === "支付代理服务商" ? "商户" : "公众/参与机构",
+  diandian: "公开信息",
+  note: `支付服务机构·${c.kind}·${PAYMENT_SERVICE_ROSTER.meta.as_of}样本；牌照待当地监管名录核验`,
+  institutionTypes: ["支付服务机构"] as InstitutionType[],
+  paymentKinds: [c.kind] as PaymentKind[],
+  verify: "仅监管" as const,
+  licenseReg: c.licenses,
+  trafficRank: c.kind === "支付代理服务商" ? "偏B端" : "基建/C端",
+  controller: c.controller,
+}));
+
 const credits: CreditRow[] = dedupeCreditRows(
   [
     ...creditsCore,
     ...expandCreditSeeds(creditCrmSeeds, "crm"),
     ...expandCreditSeeds(luffyCreditSeeds, "luffy"),
     ...ecoInstitutionSeeds,
-  ].map(finalizeCredit),
+    ...paymentServiceSeeds,
+    ...equityInvestorSeeds,
+  ]
+    .map(finalizeCredit)
+    .map(withEquityInvestorTagsOnCredit),
 );
 
 type VerifyFilter = "all" | VerifyStatus; // 仅用于信源核实展示态，不作筛选标签
@@ -11714,14 +15609,16 @@ function verifyTone(v: VerifyStatus): "success" | "warning" | "info" | "deleted"
 
 function filterScenes(
   region: Region,
-  country: CountryCode,
+  country: CountryFilter,
   sceneTag: SceneTag | "all",
   sceneSub: SceneSubTag | "all",
   licenseKind: LicenseKind | "all",
+  langZone: LangZoneFilter = "all",
 ): SceneRow[] {
   return scenes.filter((r) => {
     if (region !== "all" && r.region !== region) return false;
-    if (!matchesCountry(r.group, r.countries, country)) return false;
+    if (!matchesLanguageZoneFilter(r.group, r.countries, langZone)) return false;
+    if (!matchesCountryFilter(r.group, r.countries, country)) return false;
     if (sceneTag !== "all" && !r.tags.includes(sceneTag)) return false;
     if (sceneSub !== "all" && !r.subTags.includes(sceneSub)) return false;
     if (licenseKind !== "all" && !r.licenseKinds.includes(licenseKind)) return false;
@@ -11731,16 +15628,18 @@ function filterScenes(
 
 function filterCredits(
   region: Region,
-  country: CountryCode,
+  country: CountryFilter,
   creditL1: CreditProdL1,
   creditL2: CreditProdL2,
   creditL3: CreditProdL3,
   sceneTag: SceneTag | "all",
   licenseKind: LicenseKind | "all",
+  langZone: LangZoneFilter = "all",
 ): CreditRow[] {
   return credits.filter((r) => {
     if (region !== "all" && r.region !== region) return false;
-    if (!matchesCountry(r.group, r.countries, country)) return false;
+    if (!matchesLanguageZoneFilter(r.group, r.countries, langZone)) return false;
+    if (!matchesCountryFilter(r.group, r.countries, country)) return false;
     if (!matchesCreditProductTree(r, creditL1, creditL2, creditL3)) return false;
     // 信贷原生玩家也可按「涉足场景」筛：目前多数无场景标签，仅信用管理横切可命中（映射信贷「信用卡」标签）
     if (sceneTag !== "all") {
@@ -11757,7 +15656,7 @@ function filterCredits(
 
 /** 关键词检索：空格分词全命中；统一中文拼音首字母模糊（smy→萨摩耶、kn→快牛）+ 品牌别名 */
 const BRAND_SEARCH_ALIASES: Record<string, string[]> = {
-  快牛: ["kn", "kuaniu", "kua niu", "mexicash"],
+  快牛: ["kn", "kuaniu", "kua niu", "mexicash", "快牛智能", "knzn"],
   萨摩耶: ["smy", "samoye", "sa mo ye"],
   奇富: ["qf", "qfin", "360数科"],
   乐信: ["lx", "lexin", "fortaprest"],
@@ -11774,6 +15673,17 @@ const BRAND_SEARCH_ALIASES: Record<string, string[]> = {
   招联: ["zl"],
   数禾: ["sh", "还呗", "hb"],
   中科金: ["zkj"],
+  华融: ["中信金融资产", "citic financial assets", "hr"],
+  中信金融资产: ["华融", "citic amc"],
+  信达: ["cinda", "xd"],
+  东方资产: ["东方", "coamc"],
+  长城资产: ["长城", "gwamc"],
+  普华永道: ["pwc", "pwh"],
+  德勤: ["deloitte", "dq"],
+  安永: ["ey", "ernst"],
+  毕马威: ["kpmg", "bwm"],
+  立信: ["bdo立信", "lixin"],
+  天健: ["tianjian", "tj"],
 };
 
 /** 压缩表：汉字+首字母交替；覆盖本图谱全部用字 */
@@ -11852,12 +15762,34 @@ function matchesKeyword(q: string, ...fields: (string | undefined | null)[]): bo
   const iniBag = (hay.match(/__ini__:(.*)/)?.[1] ?? "").split("|").filter(Boolean);
   return tokens.every((t) => {
     if (hay.includes(t)) return true;
-    // 纯字母：按拼音首字母全等或前缀（smy / sm → 萨摩耶）
-    if (/^[a-z]{1,12}$/.test(t)) {
-      return iniBag.some((ini) => ini === t || ini.startsWith(t));
+    // 别名反查（精确）：搜 mexicash / knzn / 快牛智能 → 命中含「快牛」的主体
+    for (const [brand, aliases] of Object.entries(BRAND_SEARCH_ALIASES)) {
+      const keys = [brand.toLowerCase(), ...aliases.map((a) => a.toLowerCase())];
+      if (!keys.includes(t)) continue;
+      if (keys.some((k) => hay.includes(k))) return true;
+    }
+    // 纯字母：按拼音首字母全等或前缀（smy / sm → 萨摩耶）；单字母过宽，要求 ≥2
+    if (/^[a-z]{2,12}$/.test(t)) {
+      return iniBag.some((ini) => ini === t || (t.length >= 2 && ini.startsWith(t)));
     }
     return false;
   });
+}
+
+/** 搜索排序：越小越靠前。0=品牌/集团名首段精确，1=核心字段含子串，2=其它字段/别名命中 */
+function keywordRelevanceRank(q: string, ...fields: (string | undefined | null)[]): number {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return 9;
+  const core = fields
+    .slice(0, 3)
+    .filter(Boolean)
+    .join("\n")
+    .toLowerCase();
+  const head = (fields[0] || "").toString().split(/[｜|/]/)[0]?.trim().toLowerCase() || "";
+  if (head === needle || head.startsWith(needle)) return 0;
+  if (core.includes(needle)) return 1;
+  if (matchesKeyword(q, ...fields)) return 2;
+  return 9;
 }
 
 function sceneMatchesKeyword(r: SceneRow, q: string): boolean {
@@ -11892,8 +15824,31 @@ function creditMatchesKeyword(r: CreditRow, q: string): boolean {
     r.regulators,
     r.countries,
     r.line,
+    r.timing,
+    r.traffic,
+    r.users,
     ...r.tags,
     ...r.institutionTypes.map((t) => INSTITUTION_TYPE_LABEL[t]),
+    ...(r.fundKinds ?? []).map((k) => FUND_KIND_LABEL[k]),
+    ...(r.paymentKinds ?? []).map((k) => PAYMENT_KIND_LABEL[k]),
+    ...(r.equityKinds ?? []).map((k) => EQUITY_KIND_LABEL[k]),
+  );
+}
+
+/** 国别宏观：国名/别名/ISO 码 + 快照文案可检索 */
+function macroCountryMatchesKeyword(code: Exclude<CountryCode, "all">, q: string): boolean {
+  const snap = COUNTRY_MACRO[code];
+  return matchesKeyword(
+    q,
+    code,
+    COUNTRY_LABEL[code],
+    ...(COUNTRY_ALIASES[code] ?? []),
+    snap?.asOf,
+    snap?.gdpYoY,
+    snap?.policyRate,
+    snap?.inflation,
+    snap?.cashLoanVerdict,
+    snap?.creditNote,
   );
 }
 
@@ -12095,7 +16050,7 @@ function CursorStyleComposer({
   const theme = useHostTheme();
   const [menuOpen, setMenuOpen] = useCanvasState("cPlus1", false);
   const [linkVal, setLinkVal] = useCanvasState("cLink1", "");
-  const [atts, setAtts] = useCanvasState<ComposerAttach[]>("cAtt1", []);
+  const [atts, setAtts] = useCanvasState<ComposerAttach[]>("cAtt1", EMPTY_COMPOSER_ATTS);
   const [listening, setListening] = useCanvasState("cVoice1", false);
   const [status, setStatus] = useCanvasState("cStat1", "");
 
@@ -12146,7 +16101,7 @@ function CursorStyleComposer({
           value={value}
           onChange={onChange}
           placeholder="搜索机构；或写「创设…玩家名」建档（可附链接/文档/图片）"
-          type="search"
+          type="text"
           style={{
             width: "100%",
             background: "transparent",
@@ -12334,6 +16289,349 @@ function CursorStyleComposer({
     </Stack>
   );
 }
+
+
+/** 全球公开市场：线上场景信贷资产 ABS·ABN·ABT/资产支持计划（不限现金贷）
+ * 覆盖：现金贷、消费分期/BNPL、信用卡/分期、车贷、信用租赁、小微线上贷等（公募+私募公开可核验口径）
+ */
+type AbsSecNote = {
+  /** group 名子串匹配（任一命中即挂到该玩家详情） */
+  match: string[];
+  /** 资产大类标签（详情标题旁展示） */
+  kinds: string;
+  /** 详情文案：规模/产品线 + 时点 + 出处 */
+  text: string;
+};
+
+/**
+ * 市场背景（多资产）：
+ * ·中国2025消费贷ABS（含个人消费贷+信用卡分期ABS统计口径）：联合资信约4650.84亿元/+35%；交易所约2324.60亿、ABN约2003.47亿、信贷ABS约322.77亿。
+ * ·中国2025信贷ABS中：车贷ABS约1185.43亿元（联合资信《2025年ABS市场分析》）；信用卡分期ABS约9.39亿元（中国金融信息网发展报告口径）。
+ * ·中国2025 ABN：消费类约1935.27亿、小微贷约1039.30亿、融资租赁约739.48亿（同上）。
+ * ·美国：信用卡主信托公募连发；BNPL/分期与无抵押消费贷ABS见Affirm/SoFi/Upstart等。
+ * ·中国债券交叉：银行间ABN/债务融资工具披露优先核验中国货币网（CHINAMONEY_BOND）；与联合资信/交易所口径冲突时标「待双端」。
+ */
+
+const ABS_SECURITIZATION_NOTES: AbsSecNote[] = [
+  // —— 中国·消费分期/BNPL/场景消费贷（含花呗白条月付等，非仅现金贷）——
+  {
+    match: ["京东消金", "京东/白条", "京东集团/京东"],
+    kinds: "消费分期/BNPL·白条 + 消费贷ABS/ABN",
+    text:
+      "线上场景：京东白条/消费分期及关联消费贷为主要出表资产。2025年京东系约占国内消费贷ABS总发行规模33.36%；作为发起机构约527.95亿元/54单。ABN侧「京东系列」为头部供给。时点：2025。出处：联合资信《2025年消费贷ABS市场回顾与展望》；标普信评等亦列京东系列。",
+  },
+  {
+    match: ["蚂蚁消金", "蚂蚁/花呗", "蚂蚁集团/支付宝"],
+    kinds: "消费分期/BNPL·花呗 + 消费贷ABS/ABN/ABCP",
+    text:
+      "线上场景：花呗/借呗等分期与消费贷。2025年蚂蚁系约占消费贷ABS总规模18.53%；ABN「蚂蚁消金系列」发行活跃（标普信评等称ABN蚂蚁消金系列占比突出，有材料称约46.85%量级——以该报告口径为准）。时点：2025。出处：联合资信；惠誉博华ABN/ABCP观察；标普信评消费贷ABS观察。",
+  },
+  {
+    match: ["腾讯/分付", "腾讯控股/微信", "财付通"],
+    kinds: "消费分期·分付/信用卡合作 + 消费贷ABS/ABN",
+    text:
+      "线上场景：分付等分期/信贷入口及财付通小贷资产。2025年腾讯系约占消费贷ABS总规模13.93%；ABN「财付通小贷系列」为公开列示供给方。时点：2025。出处：联合资信；标普信评。",
+  },
+  {
+    match: ["美团/美团月付", "美团（美团·CN）"],
+    kinds: "消费分期/BNPL·月付 + 消费贷ABS/ABN",
+    text:
+      "线上场景：美团月付等本地生活分期。联合资信2025列「美团」为互联网资产供应方；ABN「美团系列」公开列示。单体亿元数待Wind逐单。时点：2025。出处：联合资信；标普信评。",
+  },
+  {
+    match: ["字节跳动/抖音月付", "抖音月付", "抖音（抖音·CN）"],
+    kinds: "消费分期/BNPL·月付",
+    text:
+      "线上场景：抖音月付等电商/直播分期。公开消费贷ABS供应方头部名单以京东/蚂蚁/腾讯为主，抖音月付是否独立系列以Wind/中登网逐单为准。时点：待补。出处：待Wind交叉。",
+  },
+  {
+    match: ["度小满", "有钱花"],
+    kinds: "消费贷/场景分期ABS/ABN",
+    text:
+      "线上信贷：度小满/有钱花。联合资信2025互联网资产方名单列示。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["奇富", "奇富小贷", "Qfin"],
+    kinds: "现金贷/助贷资产ABS/ABN",
+    text:
+      "线上现金贷/助贷资产经信托出表。联合资信2025列「奇富小贷」。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["唯品花", "唯品会"],
+    kinds: "电商分期/BNPL ABS",
+    text:
+      "线上电商分期（唯品花）。是否有独立ABS/ABN系列以交易所/Wind逐单为准；同属互联网消费分期资产池常见供给类型。时点：待补。出处：待Wind。",
+  },
+  {
+    match: ["苏宁任性付", "苏宁"],
+    kinds: "电商分期ABS",
+    text:
+      "线上电商分期（任性付）。历史有消费分期ABS实践；2024–2025新发以Wind为准。时点：待补。出处：待Wind/评级稿。",
+  },
+  {
+    match: ["携程拿去花", "携程"],
+    kinds: "场景分期（酒旅）ABS/ABN",
+    text:
+      "线上酒旅场景分期。联合资信2025名单列「携程」。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["桔子分期", "桔子数字"],
+    kinds: "消费分期ABS",
+    text:
+      "线上消费分期。历史多期交易所消费分期ABS；近年新发节奏以Wind为准。时点：待补最新单。出处：待Wind/中登网。",
+  },
+  {
+    match: ["乐信", "分期乐", "Lexin"],
+    kinds: "消费分期/助贷ABS/ABN",
+    text:
+      "线上分期乐等分期资产可经信托ABS/ABN。2025互联网供应前三为京东/蚂蚁/腾讯，乐信未进该报告前三行；逐单待Wind。时点：2025。出处：联合资信；待Wind。",
+  },
+  {
+    match: ["招联"],
+    kinds: "消金·消费贷/信用卡分期ABS",
+    text:
+      "持牌消金：银行间信贷ABS（消费贷；亦可含卡分期资产，视当期基础资产披露）。2025消金与商业银行合计主导信贷ABS消费贷档约323亿元量级。招联单体待央行名录交叉。时点：2025。出处：联合资信；标普信评。",
+  },
+  {
+    match: ["马上", "中科金（中科金·CN）"],
+    kinds: "消金·消费贷/分期ABS",
+    text:
+      "持牌消金「马上消金」：联合资信2025消金发行名单列示。银行间消费贷ABS。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["中原消费", "中原银行｜中原消费"],
+    kinds: "消金·消费贷ABS",
+    text:
+      "持牌消金「中原消金」：联合资信2025名单列示。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["海尔消金"],
+    kinds: "消金·消费贷/场景分期ABS",
+    text:
+      "持牌消金「海尔消金」：联合资信2025名单列示。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["众安"],
+    kinds: "互联网小贷·消费贷ABS",
+    text:
+      "2025新增「众安小贷」等发起机构叙事。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["宁银消金"],
+    kinds: "消金·消费贷ABS",
+    text: "联合资信2025消金名单列示「宁银消金」。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["南银法巴"],
+    kinds: "消金·消费贷ABS",
+    text: "联合资信2025消金名单列示「南银法巴消金」。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["温州银行"],
+    kinds: "银行·消费贷/信用卡分期ABS",
+    text:
+      "商业银行银行间消费贷ABS活跃发行人（2025）。信用卡分期ABS为银行间单独小品种（全市场约9.39亿元量级，中金信息网口径）。时点：2025。出处：标普信评；联合资信；中国金融信息网ABS发展报告。",
+  },
+  {
+    match: ["宁波银行"],
+    kinds: "银行·消费贷ABS",
+    text: "联合资信2025商业银行名单列示「宁波银行」。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["中信信托"],
+    kinds: "信托通道·消费分期/消费贷ABS/ABN",
+    text:
+      "通道：2025中信信托消费贷ABS约675.00亿元/66单（多为互联网分期与消费贷资产）。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["外贸信托", "中国对外经济贸易信托"],
+    kinds: "信托通道·消费贷/分期ABS/ABN",
+    text:
+      "通道：2025外贸信托为消费贷ABS头部信托承做人之一。时点：2025。出处：联合资信；标普信评。",
+  },
+
+  // —— 中国·车贷 / 汽车金融 ABS（线上申请+经销商场景常见）——
+  {
+    match: ["大众汽金", "大众汽车金融"],
+    kinds: "车贷ABS",
+    text:
+      "汽车金融公司：个人汽车贷款ABS为2025信贷ABS第一大品种（全市场车贷ABS约1185.43亿元）。主机厂/汽金为典型发起人；大众汽金等公开市场常发车贷ABS，单体以中债/Wind为准。时点：2025市场+持续项目。出处：联合资信《2025年ABS市场分析》；待Wind逐单。",
+  },
+  {
+    match: ["丰田汽金", "丰田汽车金融"],
+    kinds: "车贷ABS",
+    text:
+      "汽车金融·车贷ABS常发主体类型。2025全国车贷ABS约1185.43亿元。单体待Wind。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["奔驰汽金", "梅赛德斯-奔驰汽车金融"],
+    kinds: "车贷ABS",
+    text: "汽车金融·车贷ABS。市场背景：2025车贷ABS约1185.43亿元。单体待Wind。出处：联合资信。",
+  },
+  {
+    match: ["宝马汽金", "宝马汽车金融"],
+    kinds: "车贷ABS",
+    text: "汽车金融·车贷ABS。市场背景：2025车贷ABS约1185.43亿元。单体待Wind。出处：联合资信。",
+  },
+  {
+    match: ["上汽通用汽金", "上汽通用汽车金融"],
+    kinds: "车贷ABS",
+    text: "汽车金融·车贷ABS头部常客类型。2025全国车贷ABS约1185.43亿元。单体待Wind。出处：联合资信。",
+  },
+  {
+    match: ["比亚迪汽金", "比亚迪汽车金融"],
+    kinds: "车贷ABS（含新能源车贷）",
+    text:
+      "汽车金融·新能源车贷ABS供给上升叙事。2025全国车贷ABS约1185.43亿元。单体待Wind/中债。时点：2025。出处：联合资信。",
+  },
+  {
+    match: ["汽金·CN）", "汽车金融"],
+    kinds: "车贷ABS",
+    text:
+      "汽车金融公司：以个人汽车贷款为基础资产的信贷ABS。2025年车贷ABS发行约1185.43亿元（占信贷ABS约40.66%，同比约-8.58%）。时点：2025。出处：联合资信《2025年ABS市场分析》。",
+  },
+
+  // —— 中国·融资租赁 / 小微线上 ——
+  {
+    match: ["融资租赁", "信用租赁", "汽租", "融资租赁ABS"],
+    kinds: "融资租赁ABS/ABN",
+    text:
+      "信用租赁/融资租赁资产：2025年ABN融资租赁约739.48亿元（同比约+12.82%）；企业ABS中融资租赁类约占20.57%。线上3C/汽车租赁与融资租赁ABS有交叉。时点：2025。出处：联合资信《2025年ABS市场分析》。",
+  },
+  {
+    match: ["小微", "经营贷"],
+    kinds: "小微贷ABS/ABN",
+    text:
+      "线上小微/经营贷：2025年ABN小微贷款约1039.30亿元（同比约+79.59%）；信贷ABS小微贷约586.45亿元。时点：2025。出处：联合资信。",
+  },
+
+  // —— 美国/欧洲·BNPL / 信用卡 / 消费贷 / 学生贷 / 车贷 ——
+  {
+    match: ["Affirm"],
+    kinds: "BNPL/消费分期ABS",
+    text:
+      "线上BNPL：Affirm Master Trust 2025-1；Affirm Asset Securitization Trust 2025-X1（Class A约$5.34亿等）。时点：2025。出处：Morningstar DBRS。",
+  },
+  {
+    match: ["Klarna"],
+    kinds: "BNPL ABS/仓库融资",
+    text:
+      "线上BNPL：Klarna有欧洲ABS/私募证券化与仓库融资史；公开连发透明度低于美国信用卡主信托。时点：待最新单。出处：待DBRS/Fitch。",
+  },
+  {
+    match: ["Afterpay", "Block/Cash App"],
+    kinds: "BNPL应收证券化/融资",
+    text:
+      "线上BNPL（Afterpay）应收融资；公开主品牌ABS活跃度不及Affirm。时点：待补。出处：待EDGAR/评级。",
+  },
+  {
+    match: ["PayPal"],
+    kinds: "PayPal Credit/BNPL应收",
+    text:
+      "线上PayPal Credit/BNPL应收融资与证券化脚注见年报；主品牌ABS因期而异。时点：待10-K交叉。出处：PayPal SEC文件。",
+  },
+  {
+    match: ["SoFi Lending", "SoFi"],
+    kinds: "无抵押消费贷ABS + 学生贷历史证券化",
+    text:
+      "线上消费贷：SCLP 2025系列（如2025-2约$6.90亿）；另有LPB合作证券化约$6.976亿。SoFi亦有学生贷平台历史证券化传统。时点：2025。出处：SoFi IR；DBRS；ASR。",
+  },
+  {
+    match: ["Upstart"],
+    kinds: "无抵押消费贷ABS",
+    text:
+      "线上AI信贷：UPST 2025-3约$4.353亿（平台约第47单）。时点：2025-09。出处：KBRA。",
+  },
+  {
+    match: ["LendingClub"],
+    kinds: "平台消费贷证券化/整贷",
+    text:
+      "线上平台贷：历史ABS+整贷出售；近年主品牌新发弱于SoFi/Upstart。时点：至2025。出处：待EDGAR。",
+  },
+  {
+    match: ["Marlette", "Best Egg"],
+    kinds: "无抵押消费贷ABS",
+    text: "线上消费贷ABS/整贷出售传统。时点：待2024–2025逐单。出处：待KBRA/DBRS。",
+  },
+  {
+    match: ["Synchrony"],
+    kinds: "零售信用卡/店卡ABS",
+    text:
+      "线上+门店零售信用卡应收ABS（Synchrony Card系列）。公募/144A。时点：持续。出处：SEC EDGAR。",
+  },
+  {
+    match: ["Capital One", "COMET", "COMT"],
+    kinds: "信用卡ABS主信托",
+    text:
+      "信用卡应收：Capital One Multi-asset Execution Trust Card series；例A(2025-1)。时点：2025。出处：SEC 424B5。",
+  },
+  {
+    match: ["Chase Issuance", "JPMorgan Chase", "CHASEseries"],
+    kinds: "信用卡ABS主信托",
+    text:
+      "信用卡应收：Chase Issuance Trust；例Class A(2025-1) $15亿。时点：2025-07。出处：JPM公开招股书补充。",
+  },
+  {
+    match: ["Discover"],
+    kinds: "信用卡ABS主信托",
+    text:
+      "Discover Card Master Trust / Execution Note Trust持续公募。时点：持续。出处：SEC EDGAR。",
+  },
+  {
+    match: ["American Express", "Amex", "美国运通"],
+    kinds: "信用卡ABS主信托",
+    text:
+      "American Express Credit Account Master Trust等持续公募。时点：持续。出处：SEC；Amex IR。",
+  },
+  {
+    match: ["Ally", "GM Financial", "Ford Credit", "Santander Consumer"],
+    kinds: "车贷/租赁ABS",
+    text:
+      "美国车贷/租赁ABS（线上申请+经销商）。Ally/GM Financial/Ford Credit/Santander Consumer等为常发主体；2024汽车ABS为美国消费ABS主力品种之一（SEC DERA等统计口径）。时点：持续。出处：SEC；AB Alert/评级稿。",
+  },
+  {
+    match: ["Home Credit", "FE Credit", "Akulaku", "Atome", "Grab Financial", "Shopee Pinjam", "SeaBank"],
+    kinds: "东南亚消费分期/现金贷ABS或整贷出售",
+    text:
+      "东南亚线上消费贷/分期：本地ABS市场深度不及中美，多见银行间私募、整贷出售或仓库融资；公开主品牌ABS需按国（ID OJK等）逐单。时点：待补。出处：待本地交易所/评级。",
+  },
+  {
+    match: ["Mercado", "Nubank", "Kredito", "Credito"],
+    kinds: "拉美信用卡/消费贷证券化",
+    text:
+      "拉美线上卡贷/消费贷：Nubank等有FIDC/本地证券化工具；Mercado Credito等以本地结构为准。时点：待补。出处：待CVM/本地披露。",
+  },
+  {
+    match: ["Storepay"],
+    kinds: "BNPL（蒙古）—公开ABS少见",
+    text:
+      "线上BNPL。蒙古公开ABS市场有限，多见私募/股权融资；未查到主品牌公募ABS。时点：至2026-08。出处：公开检索未命中。",
+  },
+];
+
+const ABS_MARKET_BACKDROP =
+  "多资产市场：中国2025消费贷ABS（含信用卡分期统计）约4650.84亿；车贷ABS约1185.43亿；ABN消费类约1935.27亿、小微约1039.30亿、融资租赁约739.48亿。美国信用卡主信托+BNPL/消费贷ABS并行。";
+
+function resolveAbsIssuance(group: string): string | undefined {
+  const g = group.trim();
+  if (!g) return undefined;
+  const ranked = [...ABS_SECURITIZATION_NOTES].sort(
+    (a, b) => Math.max(...b.match.map((m) => m.length)) - Math.max(...a.match.map((m) => m.length)),
+  );
+  const hits: AbsSecNote[] = [];
+  for (const row of ranked) {
+    if (!row.match.some((m) => m.length >= 2 && g.includes(m))) continue;
+    // 避免「汽金」泛匹配抢走更具体主机厂条；若已有更长 match 命中则跳过短泛化条
+    if (row.match.includes("汽金·CN）") || row.match.includes("汽车金融")) {
+      if (hits.some((h) => h.kinds.includes("车贷"))) continue;
+    }
+    hits.push(row);
+    if (hits.length >= 2) break; // 最多拼两条（如分期+卡）
+  }
+  if (!hits.length) return undefined;
+  return hits.map((h) => `【${h.kinds}】${h.text}`).join(" ");
+}
+
 
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
@@ -14263,6 +18561,74 @@ const SCENE_PLAYER_KPI: Record<string, PlayerKpi> = {
     growth: "Block集团收入YoY约低双位数（待核最新）",
     growthFill: 22,
   },
+  "LendMN（LendMN·MN）": {
+    ticker: "LEND.MSE",
+    archetype: "垂直平台",
+    gmv: "净贷款约₮2765亿（2025Q3）；贷款组合约₮3031亿",
+    gmvFill: 18,
+    users: "总用户约8.1万（2025Q3）",
+    usersFill: 6,
+    growth: "净贷款同比约+38%；贷款组合约74% CAGR（2023Q3→2025Q3）",
+    growthFill: 76,
+    note: "出处：capitalmarkets.mn《Lend Teaser_2025Q3》",
+  },
+  "Storepay（Storepay·MN）": {
+    archetype: "垂直平台",
+    gmv: "GMV绝对值未披露；2022同比+276%（CEO访谈）",
+    gmvFill: 12,
+    users: "官网50万+；2023末约45万+（ikon.mn）",
+    usersFill: 8,
+    growth: "GMV 2022同比+276%（Retail Banker International访谈）",
+    growthFill: 100,
+    note: "出处：RBI访谈；ikon.mn；storepay.mn",
+  },
+  "Ard App/Ard Credit（Ard·MN）": {
+    archetype: "综合平台",
+    gmv: "官网展示放贷约₮1560亿（时点未标）",
+    gmvFill: 14,
+    users: "官网约140万+用户（时点未标；抓取2026-08）",
+    usersFill: 12,
+    growth: "增速未在官网指标条披露",
+    growthFill: 0,
+    note: "出处：ardcredit.com/en 首页；待年报交叉",
+  },
+  "Pocket/InvesCore（Pocket·MN）": {
+    archetype: "垂直平台",
+    gmv: "集团总资产约₮3563亿（2022末；ADB）",
+    gmvFill: 16,
+    users: "集团客户约11.66万（2022末；ADB）",
+    usersFill: 8,
+    growth: "集团资产CAGR约78.5%（2017–2022；ADB）",
+    growthFill: 100,
+    note: "出处：ADB RRP 56156-001；Pocket App单列待拆",
+  },
+  "Hipay（Hipay·MN）": {
+    archetype: "垂直平台",
+    gmv: "公开规模未查到",
+    gmvFill: 0,
+    users: "公开用户数未查到",
+    usersFill: 0,
+    growth: "增速未查到",
+    growthFill: 0,
+  },
+  "Shoppy.mn（Shoppy·MN）": {
+    archetype: "垂直平台",
+    gmv: "公开GMV未查到",
+    gmvFill: 0,
+    users: "公开MAU未查到",
+    usersFill: 0,
+    growth: "增速未查到",
+    growthFill: 0,
+  },
+  "Simple（Simple·MN）": {
+    archetype: "垂直平台",
+    gmv: "公开GMV未查到",
+    gmvFill: 0,
+    users: "公开用户数未查到",
+    usersFill: 0,
+    growth: "增速未查到",
+    growthFill: 0,
+  },
 };
 
 function parseApproxUsersFill(text: string): number {
@@ -14303,15 +18669,20 @@ function resolveSceneKpi(r: SceneRow): PlayerKpi {
 function resolveCreditKpi(r: CreditRow): PlayerKpi {
   const scale = creditScaleFromVolume(r.volume);
   const usersRaw = (r.users || "").trim() || "待核实";
-  const growthSrc = `${r.note} ${r.timing}`;
-  const growthMatch = growthSrc.match(/(收入|营收|revenue)[^\d+-]{0,8}([+-]?\d+(?:\.\d+)?)\s*%/i);
-  const growth = growthMatch
-    ? `收入YoY ${growthMatch[2]}%（备注/时点摘录）`
-    : "集团收入YoY待核实";
+  const growthSrc = `${r.volume} ${r.note} ${r.timing}`;
+  const rev = growthSrc.match(/(收入|营收|revenue)[^\d+-]{0,8}([+-]?\d+(?:\.\d+)?)\s*%/i);
+  const yoy = growthSrc.match(/同比(?:约)?\+?([+-]?\d+(?:\.\d+)?)\s*%/);
+  const cagr = growthSrc.match(/(?:约)?([\d.]+)\s*%\s*CAGR|CAGR[^\d]{0,12}([\d.]+)\s*%/i);
+  const gmvYoy = growthSrc.match(/GMV[^\d+]{0,12}(?:同比)?[^\d+]{0,6}\+?([\d.]+)\s*%/i);
+  let growth = "规模/收入增速待核实";
+  if (rev) growth = `收入YoY ${rev[2]}%（备注/规模摘录）`;
+  else if (gmvYoy) growth = `GMV同比约+${gmvYoy[1]}%（备注/规模摘录）`;
+  else if (yoy) growth = `规模同比约+${yoy[1]}%（规模字段摘录）`;
+  else if (cagr) growth = `CAGR约${cagr[1] || cagr[2]}%（规模字段摘录）`;
   return {
     gmv: scale.label,
     gmvFill: scale.fill,
-    users: /待核实|未公开/.test(usersRaw) ? "用户待核实" : usersRaw.split(/[；;]/)[0],
+    users: /待核实|未公开|未查到/.test(usersRaw) ? "用户待核实" : usersRaw.split(/[；;]/)[0],
     usersFill: parseApproxUsersFill(usersRaw),
     growth,
     growthFill: parseGrowthFill(growth),
@@ -15152,6 +19523,7 @@ const GEO_SCOPED_ECO_TYPES: InstitutionType[] = [
   "资金参与机构",
   "风险参与机构",
   "权益服务商",
+  "股权投资人",
 ];
 
 function isGeoScopedEcoType(t: InstitutionType): boolean {
@@ -15180,23 +19552,947 @@ function regulatorMatchesLicenseKind(r: CreditRow, kind: LicenseKind): boolean {
   return /协会|自律|反垄断|竞争|税务|税总|市监|SAMR|AFPI|NIFA|DLAI|KPPU|CCI|PCC/i.test(blob);
 }
 
+
+
+type MacroFactorRow = {
+  metric: string;
+  definition: string;
+  /** 对各场景信贷资产（消费分期、卡、租赁、经营贷等）的判断含义 */
+  meaning: string;
+  /** 仅国别卡片展示；不进总表备查、不作风险后台调参 */
+  alert: string;
+};
+
+/** 国别宏观因子总表（总览只展示指标/口径/含义；预警见 CountryMacroPanel） */
+const MACRO_FACTOR_GROUPS: { id: string; title: string; note?: string; rows: MacroFactorRow[] }[] = [
+  {
+    id: "fundamentals",
+    title: "一、经济基本面组",
+    rows: [
+      {
+        metric: "实际GDP季度同比",
+        definition: "剔除通胀后的GDP；IMF/WB/TE",
+        meaning: "居民收入总底盘；下行周期各场景信贷逾期易同步抬升",
+        alert: "连续2个季度负增长；明显低于历史中枢",
+      },
+      {
+        metric: "人均GDP（现价美元）",
+        definition: "名义人均GDP",
+        meaning: "划分发展阶段，间接反映客群基础偿还能力",
+        alert: "低于2000美元抗风险偏弱；高于12000美元消费信贷市场较成熟",
+      },
+      {
+        metric: "人均可支配收入（名义与实际）",
+        definition: "扣通胀后得实际人均收入",
+        meaning: "直接决定可用于还款的现金流，比GDP更贴近普通人",
+        alert: "实际人均收入连续2个季度负增长，违约风险上行",
+      },
+      {
+        metric: "CPI通胀（季度）",
+        definition: "季度平均通胀",
+        meaning: "侵蚀工薪购买力，易推高多头借贷",
+        alert: "季度通胀高于12%属高风险；恶性通胀宜回避",
+      },
+      {
+        metric: "消费者信心指数",
+        definition: "季度读数",
+        meaning: "收入预期影响借贷意愿与还款意愿",
+        alert: "连续下行时，新发放批次逾期往往先行走高",
+      },
+      {
+        metric: "三产结构（一/二/三产占GDP）",
+        definition: "季度产业结构",
+        meaning: "一产高：农业收入季节性强；二产主：工薪相对稳；三产高：服务业与非正式就业波动大",
+        alert: "一产高于30%季节性风险高；三产高于65%需重点核对非正式就业占比",
+      },
+    ],
+  },
+  {
+    id: "demo",
+    title: "二、人口与就业组",
+    rows: [
+      {
+        metric: "总人口、成年人口（18-64）",
+        definition: "联合国口径",
+        meaning: "市场总规模与可授信人口基数",
+        alert: "成年人口持续萎缩，市场天花板偏低",
+      },
+      {
+        metric: "18-45岁占成年人口比重",
+        definition: "联合国年龄结构",
+        meaning: "零售与消费类信贷核心客群；年轻人口借贷需求通常更强",
+        alert: "低于35%内生增长乏力；高于50%需求足但需警惕青年失业率",
+      },
+      {
+        metric: "总就业率 / ILO失业率",
+        definition: "官方与ILO；区分正式与非正式就业",
+        meaning: "失业率走高则还款来源受损；非正式就业越高，收入越不稳",
+        alert: "失业率高于8%；非正式就业高于60%；青年失业率高于20%",
+      },
+    ],
+  },
+  {
+    id: "credit-heat",
+    title: "三、居民信贷过热",
+    rows: [
+      {
+        metric: "家庭债务/GDP",
+        definition: "BIS/IMF",
+        meaning: "居民整体负债水位",
+        alert: "2-3年快速抬升；新兴市场警戒约45%-55%",
+      },
+      {
+        metric: "家庭债务收入比DTI",
+        definition: "家庭总债务/可支配收入",
+        meaning: "还本付息压力，比单纯杠杆率更精准",
+        alert: "DTI高于80%，整体偿债压力大",
+      },
+      {
+        metric: "信贷-GDP缺口",
+        definition: "IMF",
+        meaning: "私人信贷是否过热；多头的先行指标",
+        alert: "缺口高于+5%，后续大规模逾期概率上升",
+      },
+      {
+        metric: "非银消费信贷季度增速",
+        definition: "NBFC/Fintech等消费信贷",
+        meaning: "非银扩张速度；判断是否过热与多头蔓延",
+        alert: "远高于名义GDP增速，视为过热",
+      },
+      {
+        metric: "银行消费贷NPL（季度）",
+        definition: "银行业零售不良",
+        meaning: "消费信贷资产质量的先行信号",
+        alert: "银行消费贷NPL持续上行，线上与非银资产往往恶化更快",
+      },
+      {
+        metric: "多头借贷占比",
+        definition: "征信局；持有不少于2笔贷款的客户占比",
+        meaning: "多头泛滥程度",
+        alert: "高于30%宜审慎进入",
+      },
+    ],
+  },
+  {
+    id: "fx",
+    title: "四、外汇与跨境资本组",
+    note: "境外出资方核心风险：业务模型健康，也可能因换汇受限导致资金无法汇回。",
+    rows: [
+      {
+        metric: "经常账户季度顺逆差（占GDP）",
+        definition: "IMF季度",
+        meaning: "持续大额逆差带来贬值压力与外储消耗",
+        alert: "连续多季度大额逆差，警惕外汇管制",
+      },
+      {
+        metric: "外汇储备/短期外债",
+        definition: "IMF",
+        meaning: "抗外部冲击能力；锁汇与利润汇回风险",
+        alert: "储备低于短期外债的100%，极端冲击风险上升",
+      },
+      {
+        metric: "季度汇率（本币兑美元涨跌与波动）",
+        definition: "季度期末环比与波动率",
+        meaning: "资本金换本币、利润换回美元的汇兑损益",
+        alert: "单季贬值超过10%；波动率持续走高",
+      },
+      {
+        metric: "央行政策基准利率",
+        definition: "季度央行利率",
+        meaning: "资金成本；加息推高借款人还款压力",
+        alert: "快速加息周期，逾期往往抬升",
+      },
+    ],
+  },
+  {
+    id: "infra",
+    title: "五、基础设施与监管（可行性）",
+    rows: [
+      {
+        metric: "征信覆盖率",
+        definition: "可查询信贷人口/成年人口",
+        meaning: "识别多头与风控的基础条件",
+        alert: "低于30%：传统征信失效，坏账中枢偏高",
+      },
+      {
+        metric: "智能手机与移动互联网渗透率",
+        definition: "World Bank等",
+        meaning: "线上获客与线上信贷的基础设施",
+        alert: "低于60%，线上模式难跑通",
+      },
+      {
+        metric: "司法债务执行效率",
+        definition: "世界银行等",
+        meaning: "逾期后法律追偿是否有效",
+        alert: "判决执行周期超过18个月，法律催收基本失效",
+      },
+      {
+        metric: "利率上限、牌照、外资持股",
+        definition: "当地金融监管",
+        meaning: "商业是否可持续、外资能否落地",
+        alert: "利率上限过低则合规即亏损；外资或牌照壁垒高",
+      },
+      {
+        metric: "催收、数据本地化、隐私法规",
+        definition: "监管法案",
+        meaning: "影响风控、获客与回款",
+        alert: "强制本地存储或催收限制过严，回款能力受损",
+      },
+    ],
+  },
+];
+
+const MACRO_FACTOR_HEADERS = ["指标", "口径", "含义"];
+
+/** 总览备查：宏观因子框架（默认收起，避免打断主流程版面） */
+function MacroFactorFrameworkOverview() {
+  const n = MACRO_FACTOR_GROUPS.reduce((s, g) => s + g.rows.length, 0);
+  return (
+    <AtlasFold id="macro_framework_root" title="宏观因子框架（备查）" count={n} defaultOpen={false}>
+      <Stack gap={8}>
+        <Text size="small" tone="tertiary">
+          {CASH_LOAN_MACRO_FRAMEWORK.purpose}。决策序：{CASH_LOAN_MACRO_FRAMEWORK.decisionOrder}
+        </Text>
+        {MACRO_FACTOR_GROUPS.map((g) => (
+          <AtlasFold id={`macro_${g.id}`} title={g.title} count={g.rows.length} defaultOpen={false}>
+            <Stack gap={6}>
+              {g.note ? (
+                <Text size="small" tone="tertiary">
+                  {g.note}
+                </Text>
+              ) : null}
+              <Table
+                headers={MACRO_FACTOR_HEADERS}
+                rows={g.rows.map((r) => [r.metric, r.definition, r.meaning])}
+                striped
+              />
+            </Stack>
+          </AtlasFold>
+        ))}
+      </Stack>
+    </AtlasFold>
+  );
+}
+
+/** TE 读数：`客观数值·评价描述` → 分行展示 */
+function splitMacroReading(raw: string): { value: string; note?: string } {
+  const s = raw.trim();
+  if (!s) return { value: "" };
+  const idx = s.indexOf("·");
+  if (idx < 0) return { value: s };
+  const value = s.slice(0, idx).trim();
+  const note = s.slice(idx + 1).trim();
+  if (!note) return { value: s };
+  return { value, note: note || undefined };
+}
+
+function MacroStat({ raw, label }: { raw: string; label: string }) {
+  const theme = useHostTheme();
+  const { value, note } = splitMacroReading(raw);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+      <div
+        style={{
+          fontSize: 20,
+          fontWeight: 600,
+          color: theme.text.primary,
+          lineHeight: 1.25,
+          wordBreak: "break-word",
+          minHeight: 25,
+        }}
+      >
+        {value || "\u00a0"}
+      </div>
+      {note ? (
+        <div style={{ fontSize: 12, color: theme.text.secondary, lineHeight: 1.35 }}>{note}</div>
+      ) : null}
+      <div style={{ fontSize: 12, color: theme.text.tertiary }}>{label}</div>
+    </div>
+  );
+}
+
+/** 点选单一国家后展示；版式对齐机构 Card（Header + Body + DetailField） */
+
+type CompareMode = "macro" | InstitutionType;
+
+function compareModeLabel(m: CompareMode): string {
+  if (m === "macro") return "国别宏观";
+  return INSTITUTION_TYPE_LABEL[m];
+}
+
+/** 对照：国别宏观 / 玩家 / 其它机构类型并排 */
+const COMPARE_MAX = 6;
+/** 空搜时只给少量「随便看看」；有关键词时放宽结果条数 */
+const COMPARE_BROWSE_HINT = 12;
+const COMPARE_SEARCH_LIMIT = 80;
+
+function parseCmpKeys(raw: string): string[] {
+  return raw.split("|").map((x) => x.trim()).filter(Boolean);
+}
+
+function joinCmpKeys(keys: string[]): string {
+  return [...new Set(keys)].slice(0, COMPARE_MAX).join("|");
+}
+
+/** 对照芯片：优先短名（法定全称太长会刷屏） */
+function compareCreditLabel(r: CreditRow): string {
+  const nick = r.group.split("｜")[0]?.trim() || r.group.split("|")[0]?.trim() || r.group;
+  const brand = (r.brands || "").trim();
+  if (!brand) return nick;
+  if (brand.length > 18 && nick && nick.length < brand.length) return nick;
+  return brand;
+}
+
+function compareSceneLabel(r: SceneRow): string {
+  const nick = r.group.split("｜")[0]?.trim() || r.group.split("|")[0]?.trim() || r.group;
+  return nick.length <= 28 ? nick : `${nick.slice(0, 26)}…`;
+}
+
+/** 对照：国别 / 机构多选并排（最多 6）；CRM 与大屏共用 */
+function CompareHubPanel({ dense = false }: { dense?: boolean }) {
+  const theme = useHostTheme();
+  const [mode, setMode] = useCanvasState<CompareMode>("cmpMode2", "玩家");
+  const [macroKeysRaw, setMacroKeysRaw] = useCanvasState<string>("cmpMacroKeys1", "ID|IN");
+  const [instKeysRaw, setInstKeysRaw] = useCanvasState<string>("cmpInstKeys1", "");
+  const [pickQ, setPickQ] = useCanvasState<string>("cmpPickQ1", "");
+  const [createdPlayers] = useCanvasState<CreditDraft[]>("createdPlayers1", EMPTY_CREDIT_DRAFTS);
+
+  const liveCredits = dedupeCreditRows([
+    ...credits,
+    ...createdPlayers.map((d) => finalizeCredit(d)),
+  ]);
+
+  const modes: CompareMode[] = [
+    "macro",
+    "玩家",
+    "资金参与机构",
+    "流量服务商",
+    "风控服务方",
+    "律师事务所",
+    "会计师事务所",
+    "回收机构",
+    "数据服务方",
+    "支付服务机构",
+    "评级机构",
+  ];
+
+  const q = pickQ.trim();
+  const macroKeys = parseCmpKeys(macroKeysRaw) as Exclude<CountryCode, "all">[];
+  const instKeys = parseCmpKeys(instKeysRaw);
+
+  type InstPick =
+    | { kind: "scene"; key: string; label: string; hint: string; row: SceneRow }
+    | { kind: "credit"; key: string; label: string; hint: string; row: CreditRow };
+
+  const findPick = (key: string): InstPick | null => {
+    if (!key) return null;
+    if (key.startsWith("s:")) {
+      const bk = key.slice(2);
+      const row = scenes.find((r) => creditBrandKey(r.group) === bk);
+      return row
+        ? { kind: "scene", key, label: compareSceneLabel(row), hint: row.countries || "", row }
+        : null;
+    }
+    if (key.startsWith("c:")) {
+      const bk = key.slice(2);
+      const row = liveCredits.find((r) => creditBrandKey(r.group) === bk);
+      return row
+        ? {
+            kind: "credit",
+            key,
+            label: compareCreditLabel(row),
+            hint: [row.countries, row.licenseKinds?.join("·")].filter(Boolean).join(" · "),
+            row,
+          }
+        : null;
+    }
+    return null;
+  };
+
+  /** 当前类型下库内全量候选（未截断） */
+  const poolAll: InstPick[] = (() => {
+    if (mode === "macro") return [];
+    const out: InstPick[] = [];
+    if (mode === "玩家") {
+      for (const r of scenes) {
+        const key = `s:${creditBrandKey(r.group)}`;
+        out.push({
+          kind: "scene",
+          key,
+          label: compareSceneLabel(r),
+          hint: `场景 · ${r.countries || "—"}`,
+          row: r,
+        });
+      }
+      for (const r of liveCredits) {
+        if (!r.institutionTypes.includes("玩家")) continue;
+        const key = `c:${creditBrandKey(r.group)}`;
+        out.push({
+          kind: "credit",
+          key,
+          label: compareCreditLabel(r),
+          hint: [r.countries, r.licenseReg?.slice(0, 42)].filter(Boolean).join(" · "),
+          row: r,
+        });
+      }
+    } else {
+      for (const r of liveCredits) {
+        if (!r.institutionTypes.includes(mode)) continue;
+        const key = `c:${creditBrandKey(r.group)}`;
+        out.push({
+          kind: "credit",
+          key,
+          label: compareCreditLabel(r),
+          hint: [r.countries, r.licenseReg?.slice(0, 42)].filter(Boolean).join(" · "),
+          row: r,
+        });
+      }
+    }
+    return out;
+  })();
+
+  const poolMatched: InstPick[] = (() => {
+    if (mode === "macro") return [];
+    const selected = new Set(instKeys);
+    let out = poolAll;
+    if (q) {
+      out = poolAll.filter((p) => {
+        if (p.kind === "scene") {
+          return sceneMatchesKeyword(p.row, q) || matchesKeyword(q, p.label, p.row.group);
+        }
+        return (
+          creditMatchesKeyword(p.row, q) ||
+          matchesKeyword(q, p.label, p.row.group, p.row.brands, p.row.licenseReg)
+        );
+      });
+    }
+    out = [...out].sort((a, b) => {
+      const as = selected.has(a.key) ? 0 : 1;
+      const bs = selected.has(b.key) ? 0 : 1;
+      if (as !== bs) return as - bs;
+      if (q) {
+        const ra = keywordRelevanceRank(
+          q,
+          a.row.group,
+          a.kind === "credit" ? a.row.brands : a.label,
+          a.label,
+        );
+        const rb = keywordRelevanceRank(
+          q,
+          b.row.group,
+          b.kind === "credit" ? b.row.brands : b.label,
+          b.label,
+        );
+        if (ra !== rb) return ra - rb;
+      }
+      return a.label.localeCompare(b.label, "zh");
+    });
+    // 空搜：不铺开全库，只给少量浏览提示；有关键词：展示匹配结果（截断上限）
+    const limit = q ? COMPARE_SEARCH_LIMIT : COMPARE_BROWSE_HINT;
+    return out.slice(0, limit);
+  })();
+
+  const matchTotal = (() => {
+    if (mode === "macro" || !q) return poolAll.length;
+    return poolAll.filter((p) => {
+      if (p.kind === "scene") {
+        return sceneMatchesKeyword(p.row, q) || matchesKeyword(q, p.label, p.row.group);
+      }
+      return (
+        creditMatchesKeyword(p.row, q) ||
+        matchesKeyword(q, p.label, p.row.group, p.row.brands, p.row.licenseReg)
+      );
+    }).length;
+  })();
+
+  const macroCodes = (Object.keys(COUNTRY_LABEL) as CountryCode[]).filter(
+    (c) => c !== "all" && COUNTRY_MACRO[c as Exclude<CountryCode, "all">],
+  );
+
+  function toggleMacro(code: Exclude<CountryCode, "all">) {
+    const cur = [...macroKeys];
+    const i = cur.indexOf(code);
+    if (i >= 0) cur.splice(i, 1);
+    else if (cur.length < COMPARE_MAX) cur.push(code);
+    setMacroKeysRaw(joinCmpKeys(cur));
+  }
+
+  function toggleInst(key: string) {
+    const cur = [...instKeys];
+    const i = cur.indexOf(key);
+    if (i >= 0) cur.splice(i, 1);
+    else if (cur.length < COMPARE_MAX) cur.push(key);
+    setInstKeysRaw(joinCmpKeys(cur));
+  }
+
+  const selectedInst = instKeys.map(findPick).filter(Boolean) as InstPick[];
+  const nShow = mode === "macro" ? macroKeys.length : selectedInst.length;
+  const minCard = dense ? 260 : 280;
+  const listMaxH = dense ? 220 : 280;
+
+  return (
+    <Stack gap={dense ? 12 : 14}>
+      <Stack gap={4}>
+        <Text size="small" weight="medium">
+          对照对象
+        </Text>
+        <Row gap={6} wrap>
+          {modes.map((m) => (
+            <FilterChip
+              label={compareModeLabel(m)}
+              active={mode === m}
+              onClick={() => {
+                setMode(m);
+                setPickQ("");
+              }}
+            />
+          ))}
+        </Row>
+        <Text size="small" tone="tertiary">
+          可多选，最多 {COMPARE_MAX} 个；再点已选项可取消。已选 {nShow}/{COMPARE_MAX}
+          {mode !== "macro" ? ` · 本类库内约 ${poolAll.length} 家` : ""}
+        </Text>
+      </Stack>
+
+      {mode === "macro" ? (
+        <Stack gap={12}>
+          <Text size="small" tone="tertiary">
+            有宏观快照的国家可点选（共 {macroCodes.length}）；不会一次铺开全部对照卡。
+          </Text>
+          <Row gap={6} wrap>
+            {macroCodes.map((c) => {
+              const code = c as Exclude<CountryCode, "all">;
+              const on = macroKeys.includes(code);
+              return (
+                <FilterChip
+                  label={COUNTRY_LABEL[c]}
+                  active={on}
+                  clearable={on}
+                  present={on}
+                  onClick={() => toggleMacro(code)}
+                />
+              );
+            })}
+          </Row>
+          {macroKeys.length ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(auto-fit, minmax(${minCard}px, 1fr))`,
+                gap: 12,
+              }}
+            >
+              {macroKeys.map((code) => (
+                <Stack key={code} gap={6}>
+                  <Row gap={6} align="center" justify="space-between">
+                    <Text size="small" tone="tertiary">
+                      {COUNTRY_LABEL[code]}
+                    </Text>
+                    <Pill tone="neutral" size="sm" onClick={() => toggleMacro(code)}>
+                      移除
+                    </Pill>
+                  </Row>
+                  <CountryMacroPanel country={code} />
+                </Stack>
+              ))}
+            </div>
+          ) : (
+            <Callout tone="neutral">请点选至少一个国家加入对照。</Callout>
+          )}
+        </Stack>
+      ) : (
+        <Stack gap={12}>
+          <TextInput
+            value={pickQ}
+            onChange={setPickQ}
+            placeholder={`搜索${compareModeLabel(mode)}：品牌 / 法定名 / 牌照 / 国家`}
+            type="search"
+          />
+          {selectedInst.length ? (
+            <Row gap={6} wrap>
+              {selectedInst.map((p) => (
+                <FilterChip
+                  key={`sel-${p.key}`}
+                  label={p.label}
+                  active
+                  clearable
+                  present
+                  onClick={() => toggleInst(p.key)}
+                />
+              ))}
+            </Row>
+          ) : null}
+          <Callout tone="neutral">
+            {q
+              ? `匹配 ${matchTotal} 家${matchTotal > poolMatched.length ? `（下列展示前 ${poolMatched.length}）` : ""}；点行加入对照。`
+              : `库内约 ${poolAll.length} 家可对照（含监管名录导入的消金/LPBBTI 等）。默认不铺开全部，请搜索后点选；下列为随便看看 ${Math.min(COMPARE_BROWSE_HINT, poolAll.length)} 家。`}
+          </Callout>
+          <div
+            style={{
+              maxHeight: listMaxH,
+              overflow: "auto",
+              border: `1px solid ${theme.stroke.tertiary}`,
+              borderRadius: 8,
+              background: theme.bg.elevated,
+            }}
+          >
+            {poolMatched.length ? (
+              poolMatched.map((p) => {
+                const on = instKeys.includes(p.key);
+                const full = COMPARE_MAX > 0 && !on && selectedInst.length >= COMPARE_MAX;
+                return (
+                  <button
+                    key={p.key}
+                    type="button"
+                    disabled={full}
+                    onClick={() => toggleInst(p.key)}
+                    style={{
+                      display: "flex",
+                      width: "100%",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      padding: dense ? "8px 10px" : "10px 12px",
+                      border: "none",
+                      borderBottom: `1px solid ${theme.stroke.tertiary}`,
+                      background: on ? theme.fill.tertiary : "transparent",
+                      cursor: full ? "not-allowed" : "pointer",
+                      textAlign: "left",
+                      font: "inherit",
+                      opacity: full ? 0.45 : 1,
+                    }}
+                  >
+                    <span style={{ minWidth: 0 }}>
+                      <span
+                        style={{
+                          display: "block",
+                          fontSize: 13,
+                          fontWeight: on ? 600 : 500,
+                          color: theme.text.primary,
+                        }}
+                      >
+                        {p.label}
+                      </span>
+                      {p.hint ? (
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: 11,
+                            color: theme.text.tertiary,
+                            marginTop: 2,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {p.hint}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span
+                      style={{
+                        flexShrink: 0,
+                        fontSize: 12,
+                        color: on ? theme.text.link : theme.text.tertiary,
+                      }}
+                    >
+                      {on ? "已选 · 取消" : full ? "已满" : "加入"}
+                    </span>
+                  </button>
+                );
+              })
+            ) : (
+              <div style={{ padding: 12 }}>
+                <Text size="small" tone="tertiary">
+                  {q ? "无匹配机构，换个关键词试试。" : "本类暂无机构。"}
+                </Text>
+              </div>
+            )}
+          </div>
+          {selectedInst.length ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(auto-fit, minmax(${minCard}px, 1fr))`,
+                gap: 12,
+              }}
+            >
+              {selectedInst.map((p) => (
+                <Stack key={p.key} gap={6}>
+                  <Row gap={6} align="center" justify="space-between">
+                    <Text size="small" tone="tertiary">
+                      {p.label}
+                    </Text>
+                    <Pill tone="neutral" size="sm" onClick={() => toggleInst(p.key)}>
+                      移除
+                    </Pill>
+                  </Row>
+                  {p.kind === "scene" ? <ScenePlayer r={p.row} /> : <CreditPlayer r={p.row} />}
+                </Stack>
+              ))}
+            </div>
+          ) : (
+            <Callout tone="neutral">搜索并点选机构加入对照（可多选，最多 {COMPARE_MAX}）。</Callout>
+          )}
+        </Stack>
+      )}
+    </Stack>
+  );
+}
+
+function CountryMacroPanel({ country }: { country: CountryCode }) {
+  if (country === "all") return null;
+  const code = country as Exclude<CountryCode, "all">;
+  const snap = COUNTRY_MACRO[code];
+  const macroBrief = snap ? synthesizeCashLoanBrief(snap) : "";
+  const macroNote = snap ? displayCreditNote(snap) : undefined;
+  const langLine = formatCountryLanguageLine(code);
+  const langInfo = getCountryLanguage(code);
+  const teUrl = teIndicatorsUrl(code);
+  const [factorFold, setFactorFold] = useCanvasState<string>(`macroFactorFold_${code}`, "");
+  const toggleFactor = (id: string) => setFactorFold(factorFold === id ? "" : id);
+  const theme = useHostTheme();
+
+  const factorRows: {
+    id: string;
+    title: string;
+    summary: string;
+    body?: ReactNode;
+  }[] = snap
+    ? [
+        {
+          id: "pop_emp",
+          title: "人口与就业",
+          summary:
+            [snap.population, snap.ageStructure, snap.unemployment, snap.employmentNote]
+              .filter(Boolean)
+              .join("；") || "—",
+          body: getVitalCountry(code) ? (
+            <VitalPyramid country={code} countryLabel={COUNTRY_LABEL[code]} />
+          ) : (
+            <Text size="small" tone="tertiary">
+              暂无该国出生队列数据，无法展开入职/退休与就业预测图。
+            </Text>
+          ),
+        },
+        {
+          id: "income_sector",
+          title: "收入与三产",
+          summary:
+            [snap.incomePerCapita, snap.sectorMix].filter(Boolean).join("；") || "—",
+          body: <IncomeSectorCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} />,
+        },
+        {
+          id: "fx_ca",
+          title: "外汇与经常账户",
+          summary:
+            [snap.currentAccount, snap.fxReserves, snap.fxTrend || snap.fxHint]
+              .filter(Boolean)
+              .join("；") || "—",
+          body: <FxCaCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} />,
+        },
+        {
+          id: "credit",
+          title: "信贷水位",
+          summary:
+            [
+              snap.privCreditOrConsumer,
+              snap.householdDebtToGdp || snap.debtToGdp,
+              snap.consumerConfidence ? `信心${snap.consumerConfidence}` : "",
+            ]
+              .filter(Boolean)
+              .join("；") || "—",
+          body: <CreditDebtCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} />,
+        },
+      ]
+    : [];
+
+  return (
+    <Stack gap={8}>
+      <Card>
+        <CardHeader
+          trailing={
+            <Row gap={6} align="center">
+              {countryLanguageZone(code) ? (
+                <Pill tone="info" size="sm">
+                  {countryLanguageZone(code)}
+                </Pill>
+              ) : null}
+              <Pill tone="neutral" size="sm">
+                TE
+              </Pill>
+            </Row>
+          }
+        >
+          {COUNTRY_LABEL[code]}
+        </CardHeader>
+        <CardBody>
+          <Stack gap={8}>
+            {snap ? (
+              <Stack gap={8}>
+                <Text size="small" tone="tertiary">
+                  对照时点 · {snap.asOf}
+                  {langLine ? ` · ${langLine}` : ""}
+                  {langInfo?.productHint ? ` · 产品常用语 ${langInfo.productHint}` : ""}
+                </Text>
+                <Grid columns={4} gap={10}>
+                  {snap.gdpYoY ? <MacroStat raw={snap.gdpYoY} label="GDP同比" /> : null}
+                  {snap.gdpPerCapitaUsd ? (
+                    <MacroStat raw={snap.gdpPerCapitaUsd} label="人均GDP" />
+                  ) : null}
+                  {snap.inflation ? <MacroStat raw={snap.inflation} label="通胀" /> : null}
+                  {snap.policyRate ? <MacroStat raw={snap.policyRate} label="政策利率" /> : null}
+                </Grid>
+                {(snap.employedToPop ||
+                  snap.incomePerCapita ||
+                  snap.householdDebtToGdp ||
+                  snap.fxVolInYear) ? (
+                  <Grid columns={4} gap={10}>
+                    <MacroStat raw={snap.employedToPop ?? "—"} label="就业人口/人口" />
+                    <MacroStat raw={snap.incomePerCapita ?? "—"} label="人均收入" />
+                    <MacroStat raw={snap.householdDebtToGdp ?? "—"} label="居民杠杆率" />
+                    <MacroStat raw={snap.fxVolInYear ?? "—"} label="年内汇率波动率" />
+                  </Grid>
+                ) : null}
+
+                <Stack gap={0}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "120px 1fr 16px",
+                      gap: 8,
+                      padding: "6px 0",
+                      borderBottom: `1px solid ${theme.stroke.tertiary}`,
+                      fontSize: 12,
+                      color: theme.text.tertiary,
+                    }}
+                  >
+                    <span>因子组</span>
+                    <span>读数</span>
+                    <span />
+                  </div>
+                  {factorRows.map((row) => {
+                    const open = factorFold === row.id;
+                    const expandable = Boolean(row.body);
+                    return (
+                      <div key={row.id}>
+                        <button
+                          type="button"
+                          onClick={() => (expandable ? toggleFactor(row.id) : undefined)}
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "120px 1fr 16px",
+                            gap: 8,
+                            width: "100%",
+                            textAlign: "left",
+                            padding: "10px 0",
+                            border: "none",
+                            borderBottom: `1px solid ${theme.stroke.tertiary}`,
+                            background: open ? theme.fill.quaternary : "transparent",
+                            cursor: expandable ? "pointer" : "default",
+                            color: theme.text.primary,
+                            font: "inherit",
+                          }}
+                          title={expandable ? (open ? "收起" : "展开图表") : undefined}
+                        >
+                          <span style={{ fontSize: 13, fontWeight: 600 }}>{row.title}</span>
+                          <span
+                            style={{
+                              fontSize: 12,
+                              color: theme.text.secondary,
+                              lineHeight: 1.45,
+                            }}
+                          >
+                            {row.summary}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 12,
+                              color: theme.text.tertiary,
+                              textAlign: "right",
+                            }}
+                          >
+                            {expandable ? (open ? "▾" : "▸") : ""}
+                          </span>
+                        </button>
+                        {open && row.body ? (
+                          <div style={{ padding: "10px 0 14px" }}>{row.body}</div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </Stack>
+
+                <DetailField label="宏观简评" value={macroBrief} />
+                {macroNote ? <DetailField label="补充" value={macroNote} /> : null}
+              </Stack>
+            ) : (
+              <Stack gap={8}>
+                {langLine ? (
+                  <Text size="small" tone="tertiary">
+                    {langLine}
+                    {langInfo?.productHint ? ` · 产品常用语 ${langInfo.productHint}` : ""}
+                  </Text>
+                ) : null}
+                <Text size="small" tone="secondary">
+                  尚未落该国扩展快照。按总览「国别宏观因子总表」采人口/年龄/就业、人均GDP与收入、外储、经常账户、汇率、三产后回写 COUNTRY_MACRO。
+                </Text>
+              </Stack>
+            )}
+            {teUrl ? (
+              <Text size="small" tone="tertiary">
+                <Link href={teUrl}>Trading Economics · {COUNTRY_LABEL[code]}指标</Link>
+              </Text>
+            ) : null}
+          </Stack>
+        </CardBody>
+      </Card>
+      <AtlasFold
+        id={`macro_alert_${code}`}
+        title="预警参照"
+        count={MACRO_FACTOR_GROUPS.reduce((n, g) => n + g.rows.length, 0)}
+        defaultOpen={false}
+      >
+        <Stack gap={6}>
+          <Text size="small" tone="tertiary">
+            对照阈值备查；不作放款硬门槛
+          </Text>
+          <Table
+            headers={["指标", "预警"]}
+            rows={MACRO_FACTOR_GROUPS.flatMap((g) => g.rows.map((r) => [r.metric, r.alert]))}
+            striped
+          />
+        </Stack>
+      </AtlasFold>
+    </Stack>
+  );
+}
+
 /** 监管页 / 玩家页 / 生态机构页共用：洲际 → 国家 → 牌照粗类；presentSets 反向亮起已覆盖属地 */
 function GeoAndLicenseFilters({
   region,
   country,
+  langZone = "all",
   licenseKind,
   onRegion,
+  onLangZone,
   onCountry,
+  onCountryChip,
   onLicenseKind,
   showLicenseKind = true,
   coveredRegions,
   coveredCountries,
 }: {
   region: Region;
-  country: CountryCode;
+  country: CountryFilter;
+  langZone?: LangZoneFilter;
   licenseKind: LicenseKind | "all";
   onRegion: (r: Region) => void;
-  onCountry: (c: CountryCode) => void;
+  onLangZone?: (z: LangZoneFilter) => void;
+  /** 单选回写（旧调用方）；与 onCountryChip 二选一 */
+  onCountry?: (c: CountryCode) => void;
+  /** 多选芯片；优先于 onCountry */
+  onCountryChip?: (c: CountryCode) => void;
   onLicenseKind: (k: LicenseKind | "all") => void;
   showLicenseKind?: boolean;
   /** 反向映射：该机构类型已覆盖的洲际（不含 all） */
@@ -15214,6 +20510,19 @@ function GeoAndLicenseFilters({
     if (!showPresent) return undefined;
     if (k === "all") return (coveredCountries?.size ?? 0) > 0;
     return coveredCountries?.has(k) ?? false;
+  };
+  const macroCountry = countryFilterSingle(country) ?? ("all" as CountryCode);
+  const filterHint = formatCountryFilterLabel(country, region);
+  const handleCountryChip = (k: CountryCode) => {
+    if (onCountryChip) {
+      onCountryChip(k);
+      return;
+    }
+    if (onCountry) {
+      // 单选：再点同一国则回全部
+      const single = countryFilterSingle(country);
+      onCountry(k !== "all" && single === k ? "all" : k);
+    }
   };
   return (
     <Stack gap={10}>
@@ -15237,22 +20546,60 @@ function GeoAndLicenseFilters({
         </Row>
       </Stack>
 
+      {onLangZone ? (
+        <Stack gap={4}>
+          <Text size="small" weight="medium">
+            语言区
+          </Text>
+          <Text size="small" tone="tertiary">
+            按展业语言区收窄；选项随洲际变化
+          </Text>
+          <Row gap={6} wrap>
+            <FilterChip
+              label="全部语言区"
+              active={langZone === "all"}
+              onClick={() => onLangZone("all")}
+            />
+            {languageZonesForRegion(region).map((z) => (
+              <FilterChip
+                label={z}
+                active={langZone === z}
+                clearable
+                onClick={() => onLangZone(langZone === z ? "all" : z)}
+              />
+            ))}
+          </Row>
+        </Stack>
+      ) : null}
+
       <Stack gap={4}>
         <Text size="small" weight="medium">
           涉足国家/地区
         </Text>
+        <Text size="small" tone="tertiary">
+          {onCountryChip
+            ? "多选：点「全部」后点掉某国 = 除该国以外；再点可加回/去掉"
+            : "点选收窄；再点同一国取消"}
+        </Text>
         <Row gap={6} wrap>
-          {countriesForRegion(region).map((k) => (
+          {countriesForRegionAndLang(region, langZone).map((k) => (
             <FilterChip
               label={COUNTRY_LABEL[k]}
-              active={country === k}
+              active={isCountryChipActive(country, k)}
               present={countryPresent(k)}
               clearable={k !== "all"}
-              onClick={() => onCountry(country === k && k !== "all" ? "all" : k)}
+              onClick={() => handleCountryChip(k)}
             />
           ))}
         </Row>
+        {filterHint ? (
+          <Text size="small" tone="secondary">
+            当前筛选 · {filterHint}
+          </Text>
+        ) : null}
       </Stack>
+
+      <CountryMacroPanel country={macroCountry} />
 
       {showLicenseKind ? (
         <Stack gap={4}>
@@ -15280,25 +20627,45 @@ function GeoAndLicenseFilters({
   );
 }
 
-/** 未登录仅展示本页：填写完整邮箱 + 密码；不列出白名单；非受控输入防中文乱码 */
+/** 未登录门禁：受控输入（state + globalThis 双写，重建不丢字） */
 function LoginPage() {
   const theme = useHostTheme();
   const [users, setUsers] = useCanvasState<Record<string, AuthUserRecord>>("authUsers1", {});
   const [, setSession] = useCanvasState("authSession1", "");
   const [, setEmail] = useCanvasState("claimEmail1", "");
-  const [showPass, setShowPass] = useCanvasState("loginShowPw1", false);
+  const [userSaved, setUserSaved] = useCanvasState("loginUserDraft", "");
+  const [passSaved, setPassSaved] = useCanvasState("loginPassDraft", "");
+  const [showPass, setShowPass] = useCanvasState("loginShowPw2", false);
   const [err, setErr] = useCanvasState("loginErr1", "");
-  const userFieldId = "crm-login-user";
-  const passFieldId = "crm-login-pass";
+  const draft = getLoginDraft();
+
+  // 重建后若 state 已恢复而内存草稿空，回填草稿；若草稿比 state 新（竞态），以草稿为准展示
+  if (userSaved && !draft.email) draft.email = userSaved;
+  if (passSaved && !draft.pass) draft.pass = passSaved;
+  const userInput = pickLoginValue(userSaved, draft.email);
+  const passInput = pickLoginValue(passSaved, draft.pass);
+
+  function setUserInput(v: string) {
+    draft.email = v;
+    // 必须即时 setState：仅写 draft 不重渲染，受控 input 会吞字
+    setUserSaved(v);
+  }
+  function setPassInput(v: string) {
+    draft.pass = v;
+    setPassSaved(v);
+  }
 
   function onLogin() {
-    const emailRaw = readLoginField(userFieldId);
-    const pass = readLoginField(passFieldId);
+    const g = globalThis as unknown as { __crmLoginPersistTimer?: ReturnType<typeof setTimeout> };
+    if (g.__crmLoginPersistTimer) clearTimeout(g.__crmLoginPersistTimer);
+    setUserSaved(draft.email);
+    setPassSaved(draft.pass);
+    const emailRaw = pickLoginValue(userSaved, draft.email).trim() || draft.email.trim();
+    const pass = pickLoginValue(passSaved, draft.pass) || draft.pass;
     if (!emailRaw || !pass) {
       setErr("请输入邮箱与密码");
       return;
     }
-    // 必须完整邮箱；无权限/格式错误统一模糊提示，不暴露域名名单
     if (!emailHasClaimPermission(emailRaw)) {
       setErr("邮箱或密码错误");
       return;
@@ -15310,7 +20677,6 @@ function LoginPage() {
       return;
     }
     const isAdmin = isClaimAdmin(key);
-    // 管理员可用初始密码自救解锁；其他账号锁定后须管理员重置
     if (u.locked && !(isAdmin && pass === CLAIM_DEFAULT_PASSWORD)) {
       setErr("账号已锁定，请联系管理员重置");
       return;
@@ -15322,7 +20688,7 @@ function LoginPage() {
         setUsers((prev) => ({ ...prev, [key]: { ...u, locked: true } }));
         setErr("密码错误，账号已锁定，请联系管理员重置");
       }
-      setLoginField(passFieldId, "");
+      setPassInput("");
       return;
     }
     setUsers((prev) => ({
@@ -15332,7 +20698,7 @@ function LoginPage() {
     setSession(key);
     setEmail(normalizeClaimEmail(emailRaw));
     setErr("");
-    setLoginField(passFieldId, "");
+    setPassInput("");
   }
 
   return (
@@ -15340,7 +20706,7 @@ function LoginPage() {
       <Stack gap={6}>
         <H1>CRM 生态系统</H1>
         <Text size="small" tone="secondary">
-          访客可直接进入；经办认领请用公司邮箱登录
+          登录后继续
         </Text>
       </Stack>
       <div
@@ -15356,11 +20722,37 @@ function LoginPage() {
             <Text size="small" weight="medium">
               邮箱
             </Text>
-            <LoginNativeField
-              inputId={userFieldId}
-              type="email"
+            <input
+              type="text"
               placeholder="邮箱"
               autoComplete="username"
+              spellCheck={false}
+              value={userInput}
+              onChange={(e) => {
+                const t = e.currentTarget as unknown as { value?: string };
+                setUserInput(t.value ?? "");
+              }}
+              onPaste={(e) => {
+                const pasted = e.clipboardData?.getData("text") ?? "";
+                if (!pasted) return;
+                e.preventDefault();
+                const t = e.currentTarget as unknown as {
+                  selectionStart?: number | null;
+                  selectionEnd?: number | null;
+                };
+                setUserInput(applyPasteToValue(userInput, t.selectionStart, t.selectionEnd, pasted));
+              }}
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                padding: "8px 10px",
+                borderRadius: 8,
+                border: `1px solid ${theme.stroke.tertiary}`,
+                background: theme.bg.editor,
+                color: theme.text.primary,
+                outline: "none",
+                fontSize: 13,
+              }}
             />
           </Stack>
           <Stack gap={4}>
@@ -15368,31 +20760,14 @@ function LoginPage() {
               密码
             </Text>
             <LoginPasswordField
-              inputId={passFieldId}
+              value={passInput}
+              onChange={setPassInput}
               showPass={showPass}
-              onToggle={() => {
-                const el = document.getElementById(passFieldId) as {
-                  value?: string;
-                  type?: string;
-                } | null;
-                const kept = el?.value ?? "";
-                const next = !showPass;
-                setShowPass(next);
-                // 下一帧写回，避免受控 type 切换时非受控值被冲掉
-                setTimeout(() => {
-                  const again = document.getElementById(passFieldId) as {
-                    value?: string;
-                    type?: string;
-                  } | null;
-                  if (again) {
-                    again.type = next ? "text" : "password";
-                    again.value = kept;
-                  }
-                }, 0);
-              }}
+              onToggle={() => setShowPass(!showPass)}
             />
           </Stack>
           {err ? <Callout tone="danger">{err}</Callout> : null}
+
           <Row gap={8} wrap>
             <Button variant="primary" onClick={onLogin}>
               登录
@@ -15401,16 +20776,12 @@ function LoginPage() {
               variant="secondary"
               onClick={() => {
                 setSession("guest");
-                setEmail("");
                 setErr("");
               }}
             >
-              访客进入（免登录）
+              访客进入
             </Button>
           </Row>
-          <Text size="small" tone="tertiary">
-            公开网站版可直接访客浏览；公司邮箱登录后可做经办认领。
-          </Text>
         </Stack>
       </div>
     </Stack>
@@ -15507,7 +20878,7 @@ function SessionChrome() {
             {user.displayLocal}
           </Text>
           <Text size="small" tone="tertiary">
-            {session === "guest" ? "访客" : admin ? "Admin" : "Member"}
+            {admin ? "Admin" : "Member"}
           </Text>
         </div>
         <Button
@@ -15722,7 +21093,7 @@ function SourceVerifyBlock({
         )}
       </Row>
       <Text size="small" tone="secondary">
-        信源一般来自：流量源、监管源、经办认领（客户经理联系确认并对信息质量负责）。系统定期检索信源引入机构；亦可人工创建；未来可扩展更多信源。
+        信源一般来自：流量源、监管源、经办认领；宏观对照 Trading Economics；国内债券/ABN 交叉中国货币网；研报见墨腾。系统定期检索引入；亦可人工创设。
       </Text>
       <Row gap={6} wrap>
         {SOURCE_CHANNEL_ORDER.map((c) => (
@@ -15797,7 +21168,7 @@ function SourceVerifyBlock({
   );
 }
 
-/** 表卡内「详情」折叠：字阶与正文 small/tertiary 一致 */
+/** 表卡内「详情」折叠：原生 details，不写 sidecar、不触发整树重挂 */
 function CompactDetails({
   id,
   children,
@@ -15805,38 +21176,30 @@ function CompactDetails({
   id: string;
   children: ReactNode;
 }) {
-  const key = `cdet_${id.replace(/[^\w\u4e00-\u9fff]+/g, "_").slice(0, 48)}`;
-  const [open, setOpen] = useCanvasState(key, false);
   return (
-    <Stack gap={6}>
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setOpen(!open)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setOpen(!open);
-          }
-        }}
+    <details style={{ margin: 0 }}>
+      <summary
         style={{
           cursor: "pointer",
           display: "inline-flex",
           alignItems: "center",
           width: "fit-content",
           userSelect: "none",
+          listStyle: "none",
         }}
       >
         <Text size="small" tone="tertiary" as="span">
-          {open ? "▾ 详情" : "▸ 详情"}
+          详情
         </Text>
-      </div>
-      {open ? children : null}
-    </Stack>
+      </summary>
+      <Stack gap={6} style={{ marginTop: 6 }}>
+        {children}
+      </Stack>
+    </details>
   );
 }
 
-function ScenePlayer({ r }: { r: SceneRow }) {
+function ScenePlayer({ r, iosFinanceRank }: { r: SceneRow; iosFinanceRank?: number }) {
   const complete = r.verify === "双端通过";
   const kpi = resolveSceneKpi(r);
   const ticker = kpi.ticker || resolveListedTicker(r.group, r.equity);
@@ -15850,9 +21213,19 @@ function ScenePlayer({ r }: { r: SceneRow }) {
     .filter(Boolean)
     .join(" · ");
   const subtitle = fullName !== listTitle ? fullName.replace(/^[^｜]+｜/, "").replace(/｜/g, " · ") : "";
+  const trailing = (
+    <Row gap={6} align="center" wrap>
+      {iosFinanceRank != null ? (
+        <Pill tone="success" size="sm">
+          iOS商店·Finance #{iosFinanceRank}
+        </Pill>
+      ) : null}
+      {trailingBits ? <Text size="small" tone="tertiary">{trailingBits}</Text> : null}
+    </Row>
+  );
   return (
     <Card>
-      <CardHeader trailing={trailingBits}>
+      <CardHeader trailing={trailing}>
         {listTitle}
         {ticker ? ` (${ticker})` : ""}
       </CardHeader>
@@ -15946,6 +21319,12 @@ function ScenePlayer({ r }: { r: SceneRow }) {
                 <DetailField label="细分市占" value={r.share} />
               </Grid>
               <DetailField label="派生金融产品" value={r.creditAttach} />
+              {(() => {
+                const abs = resolveAbsIssuance(r.group);
+                return abs ? (
+                  <DetailField label="ABS/ABN/ABT·线上场景信贷资产证券化（现金贷/分期/信用卡/车贷等）" value={abs} />
+                ) : null;
+              })()}
               {r.diandian !== r.trafficRank ? (
                 <DetailField label="点点/路飞摘要（兼容）" value={r.diandian} />
               ) : null}
@@ -15983,9 +21362,34 @@ function cardListTitle(group: string, brands?: string): { title: string; full: s
   return { title: bare.length > 42 ? `${bare.slice(0, 40)}…` : bare || full, full };
 }
 
-function CreditPlayer({ r }: { r: CreditRow }) {
+type CoopStage = "验证期" | "扩张期" | "能力期";
+const COOP_STAGES: CoopStage[] = ["验证期", "扩张期", "能力期"];
+/** 对齐推介材料：接洽预审 NDA 后 1 周内清单 */
+const PRESCREEN_ITEMS = [
+  "股权结构",
+  "管理团队",
+  "组织架构",
+  "存量债务",
+  "产品资产",
+  "合规审查",
+] as const;
+
+function coopStateKey(group: string): string {
+  return group.replace(/[^\w\u4e00-\u9fff]+/g, "_").slice(0, 64);
+}
+
+function CreditPlayer({ r, iosFinanceRank }: { r: CreditRow; iosFinanceRank?: number }) {
   const complete = r.verify === "双端通过";
   const isPlayer = r.institutionTypes.includes("玩家");
+  const coopKey = coopStateKey(r.group);
+  const [coopStage, setCoopStage] = useCanvasState<CoopStage | "">(
+    `coopStage_${coopKey}`,
+    "",
+  );
+  const [prescreen, setPrescreen] = useCanvasState<Record<string, boolean>>(
+    `prescreen_${coopKey}`,
+    {},
+  );
   const isRegulator = r.institutionTypes.includes("监管");
   const bucket = primaryInstBucket(r.institutionTypes);
   const hideScaleMetrics = isComplianceIntermediary(r.institutionTypes);
@@ -16007,9 +21411,19 @@ function CreditPlayer({ r }: { r: CreditRow }) {
     const parts = bare.split("｜").map((s) => s.trim()).filter(Boolean);
     return parts.length >= 2 ? parts[parts.length - 1] : fullName;
   })();
+  const trailing = (
+    <Row gap={6} align="center" wrap>
+      {iosFinanceRank != null ? (
+        <Pill tone="success" size="sm">
+          iOS商店·Finance #{iosFinanceRank}
+        </Pill>
+      ) : null}
+      {trailingBits ? <Text size="small" tone="tertiary">{trailingBits}</Text> : null}
+    </Row>
+  );
   return (
     <Card>
-      <CardHeader trailing={trailingBits}>
+      <CardHeader trailing={trailing}>
         {listTitle}
         {ticker ? ` (${ticker})` : ""}
       </CardHeader>
@@ -16046,6 +21460,24 @@ function CreditPlayer({ r }: { r: CreditRow }) {
                 {r.trafficKinds.map((k) => (
                   <Pill tone="neutral" size="sm">
                     {TRAFFIC_KIND_LABEL[k]}
+                  </Pill>
+                ))}
+              </Row>
+            ) : null}
+            {r.paymentKinds.length ? (
+              <Row gap={6} wrap>
+                {r.paymentKinds.map((k) => (
+                  <Pill tone="neutral" size="sm">
+                    {PAYMENT_KIND_LABEL[k]}
+                  </Pill>
+                ))}
+              </Row>
+            ) : null}
+            {r.equityKinds.length ? (
+              <Row gap={6} wrap>
+                {r.equityKinds.map((k) => (
+                  <Pill tone="info" size="sm">
+                    股权·{EQUITY_KIND_LABEL[k]}
                   </Pill>
                 ))}
               </Row>
@@ -16091,6 +21523,16 @@ function CreditPlayer({ r }: { r: CreditRow }) {
                       {FUND_KIND_LABEL[k]}
                     </Pill>
                   ))}
+                  {r.paymentKinds.map((k) => (
+                    <Pill tone="neutral" size="sm">
+                      {PAYMENT_KIND_LABEL[k]}
+                    </Pill>
+                  ))}
+                  {r.equityKinds.map((k) => (
+                    <Pill tone="info" size="sm">
+                      股权·{EQUITY_KIND_LABEL[k]}
+                    </Pill>
+                  ))}
                 </Row>
                 <Text size="small" tone="secondary">
                   先有机构再挂类型。中介等生态机构可不含「玩家」；玩家机构可再挂生态角色。
@@ -16101,6 +21543,44 @@ function CreditPlayer({ r }: { r: CreditRow }) {
                   </Text>
                 ) : null}
               </Stack>
+              {isPlayer ? (
+                <Stack gap={6}>
+                  <Text size="small" weight="medium">
+                    合作 · 资产周期
+                  </Text>
+                  <Row gap={6} wrap>
+                    {COOP_STAGES.map((s) => (
+                      <FilterChip
+                        label={s}
+                        active={coopStage === s}
+                        clearable
+                        onClick={() => setCoopStage(coopStage === s ? "" : s)}
+                      />
+                    ))}
+                  </Row>
+                  <Text size="small" tone="tertiary">
+                    验证期跑通闭环 · 扩张期放量匹配资金 · 能力期机构化与品牌升级
+                  </Text>
+                  <Text size="small" weight="medium">
+                    接洽预审清单（NDA 后）
+                  </Text>
+                  <Row gap={6} wrap>
+                    {PRESCREEN_ITEMS.map((item) => (
+                      <FilterChip
+                        label={item}
+                        active={Boolean(prescreen[item])}
+                        clearable
+                        onClick={() =>
+                          setPrescreen({ ...prescreen, [item]: !prescreen[item] })
+                        }
+                      />
+                    ))}
+                  </Row>
+                  <Text size="small" tone="tertiary">
+                    已勾选 {PRESCREEN_ITEMS.filter((i) => prescreen[i]).length}/{PRESCREEN_ITEMS.length} · 资料齐可加速 Term Sheet
+                  </Text>
+                </Stack>
+              ) : null}
               {trafficPolicy ? (
                 <>
                   <Divider />
@@ -16280,6 +21760,12 @@ function CreditPlayer({ r }: { r: CreditRow }) {
                 <DetailField label="点点/路飞摘要" value={r.diandian} />
               </Grid>
               {r.note ? <DetailField label="备注" value={r.note} /> : null}
+              {(() => {
+                const abs = resolveAbsIssuance(r.group);
+                return abs ? (
+                  <DetailField label="ABS/ABN/ABT·线上场景信贷资产证券化（现金贷/分期/信用卡/车贷等）" value={abs} />
+                ) : null;
+              })()}
             </Stack>
           </CompactDetails>
         </Stack>
@@ -16460,7 +21946,7 @@ const CREDIT_L2_USER_BEHAVIOR: Partial<Record<Exclude<CreditProdL2, "all">, stri
   公务员贷: "面向公务人群的消费/周转借款",
 };
 
-/** 场景树折叠行：字阶对齐生态角色 CardHeader（small），避免 CollapsibleSection 默认偏大 */
+/** 场景树折叠行：原生 details，避免 useCanvasState 写 sidecar 导致滚动回顶 */
 function AtlasFold({
   id,
   title,
@@ -16474,20 +21960,9 @@ function AtlasFold({
   children?: ReactNode;
   defaultOpen?: boolean;
 }) {
-  const key = `atlasf_${id.replace(/[^\w\u4e00-\u9fff]+/g, "_").slice(0, 48)}`;
-  const [open, setOpen] = useCanvasState(key, defaultOpen);
   return (
-    <Stack gap={4}>
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => setOpen(!open)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setOpen(!open);
-          }
-        }}
+    <details defaultOpen={defaultOpen} style={{ margin: 0 }}>
+      <summary
         style={{
           cursor: "pointer",
           display: "flex",
@@ -16495,11 +21970,9 @@ function AtlasFold({
           gap: 8,
           minHeight: 28,
           userSelect: "none",
+          listStyle: "none",
         }}
       >
-        <Text size="small" tone="tertiary" as="span">
-          {open ? "▾" : "▸"}
-        </Text>
         <Text size="small" weight="medium" as="span" style={{ flex: 1, minWidth: 0 }}>
           {title}
         </Text>
@@ -16508,13 +21981,244 @@ function AtlasFold({
             {String(count)}
           </Pill>
         ) : null}
-      </div>
-      {open && children ? (
-        <Stack gap={4} style={{ paddingLeft: 18 }}>
+      </summary>
+      {children ? (
+        <Stack gap={4} style={{ paddingLeft: 18, marginTop: 4 }}>
           {children}
         </Stack>
       ) : null}
-    </Stack>
+    </details>
+  );
+}
+
+
+
+type AtlasScrollMem = {
+  y: number;
+  restoring: boolean;
+  installed: boolean;
+  shell: HTMLElement | null;
+};
+
+function getAtlasScrollMem(): AtlasScrollMem {
+  const g = globalThis as unknown as { __crmAtlasScrollMem?: AtlasScrollMem };
+  if (!g.__crmAtlasScrollMem) {
+    g.__crmAtlasScrollMem = { y: 0, restoring: false, installed: false, shell: null };
+  }
+  return g.__crmAtlasScrollMem;
+}
+
+function findAtlasScroller(shell: HTMLElement | null): HTMLElement | "window" {
+  if (!shell || typeof window === "undefined") return "window";
+  let best: HTMLElement | null = null;
+  let bestDelta = 0;
+  let cur: HTMLElement | null = shell.parentElement;
+  while (cur && cur !== document.documentElement) {
+    const st = window.getComputedStyle(cur);
+    const oy = st.overflowY;
+    const delta = cur.scrollHeight - cur.clientHeight;
+    const scrollable =
+      oy === "auto" || oy === "scroll" || oy === "overlay" || cur.scrollTop > 0;
+    if (scrollable && delta > bestDelta) {
+      best = cur;
+      bestDelta = delta;
+    }
+    cur = cur.parentElement;
+  }
+  return best && bestDelta > 1 ? best : "window";
+}
+
+function readScrollerY(scroller: HTMLElement | "window"): number {
+  if (scroller === "window") {
+    return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  }
+  return scroller.scrollTop;
+}
+
+function writeScrollerY(scroller: HTMLElement | "window", y: number) {
+  if (y <= 0) return;
+  if (scroller === "window") {
+    window.scrollTo(0, y);
+    return;
+  }
+  scroller.scrollTop = y;
+}
+
+/**
+ * 一动就回的根因：误用 window.scrollY（常为 0）+ 延迟 scrollTo 与真实滚动容器对打。
+ * 改为：捕获真实 target 的 scrollTop；重挂时只恢复该容器；无延迟定时器。
+ */
+function ensureAtlasScrollMem() {
+  if (typeof window === "undefined") return;
+  const mem = getAtlasScrollMem();
+  if (mem.installed) return;
+  mem.installed = true;
+  try {
+    document.documentElement.style.overflowAnchor = "none";
+  } catch {
+    /* ignore */
+  }
+  document.addEventListener(
+    "scroll",
+    (e) => {
+      if (mem.restoring) return;
+      const t = e.target;
+      let y = 0;
+      if (t === document || t === document.documentElement || t === document.body) {
+        y = window.scrollY || document.documentElement.scrollTop || 0;
+      } else if (t instanceof HTMLElement) {
+        y = t.scrollTop;
+      }
+      if (y > 0) mem.y = y;
+    },
+    { capture: true, passive: true },
+  );
+}
+
+function PersistScrollShell({ children }: { children?: ReactNode }) {
+  ensureAtlasScrollMem();
+  return (
+    <div
+      style={{ minHeight: "100%", overflowAnchor: "none" }}
+      ref={(node) => {
+        if (!node || typeof window === "undefined") return;
+        const mem = getAtlasScrollMem();
+        mem.shell = node;
+        const mark = node as unknown as { __crmScrollInit?: boolean };
+        if (mark.__crmScrollInit) return;
+        mark.__crmScrollInit = true;
+
+        const y = mem.y;
+        if (y <= 8) return;
+        const scroller = findAtlasScroller(node);
+        const cur = readScrollerY(scroller);
+        if (cur >= 8) return;
+
+        mem.restoring = true;
+        writeScrollerY(scroller, y);
+        requestAnimationFrame(() => {
+          writeScrollerY(scroller, mem.y > 8 ? mem.y : y);
+          mem.restoring = false;
+        });
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** 词条玩家名单过长时压成卡片可读行 */
+function clipScenePlayerLine(line: string, max = 160): string {
+  const t = line.trim();
+  if (!t || t === "—") return "—";
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const at = Math.max(cut.lastIndexOf(" · "), cut.lastIndexOf("、"), cut.lastIndexOf("，"));
+  return `${(at > 40 ? cut.slice(0, at) : cut).trim()} …`;
+}
+
+/** 场景词条卡：名称 → 行为/目的 → 玩家名单 */
+function SceneEntryCard({ leaf }: { leaf: SceneAtlasLeaf }) {
+  return (
+    <Card style={{ height: "100%" }}>
+      <CardHeader>{leaf.title}</CardHeader>
+      <CardBody>
+        <Stack gap={8}>
+          <Stack gap={2}>
+            <Text size="small" tone="tertiary" style={{ fontSize: 11 }}>
+              行为 / 目的
+            </Text>
+            <Text size="small" tone="secondary" style={{ fontSize: 12, lineHeight: 1.4 }}>
+              {leaf.hint?.trim() || "待补用户行为/目的"}
+            </Text>
+          </Stack>
+          <Stack gap={2}>
+            <Text size="small" tone="tertiary" style={{ fontSize: 11 }}>
+              玩家名单
+            </Text>
+            <Text size="small" style={{ fontSize: 12, lineHeight: 1.4 }}>
+              {clipScenePlayerLine(leaf.line || "—")}
+            </Text>
+          </Stack>
+        </Stack>
+      </CardBody>
+    </Card>
+  );
+}
+
+/** 业态入口卡（全部业态一览） */
+function SceneIndustryCard({
+  title,
+  count,
+  preview,
+  onOpen,
+}: {
+  title: string;
+  count: number;
+  preview: string;
+  onOpen: () => void;
+}) {
+  return (
+    <div
+      style={{ cursor: "pointer", minWidth: 0, height: "100%" }}
+      onClick={onOpen}
+      onKeyDown={(e: { key: string; preventDefault: () => void }) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      title={`查看「${title}」词条`}
+    >
+      <Card style={{ height: "100%" }}>
+        <CardHeader
+          trailing={
+            <Pill tone="neutral" size="sm">
+              {String(count)}
+            </Pill>
+          }
+        >
+          {title}
+        </CardHeader>
+        <CardBody>
+          <Text
+            size="small"
+            tone="tertiary"
+            style={{
+              fontSize: 11,
+              lineHeight: 1.35,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {preview || "点击查看词条卡片"}
+          </Text>
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
+
+function renderSceneEntryGrid(leaves: SceneAtlasLeaf[]) {
+  if (!leaves.length) {
+    return (
+      <Text size="small" tone="tertiary">
+        暂无条目
+      </Text>
+    );
+  }
+  return (
+    <Grid columns={2} gap={8} align="stretch">
+      {leaves.map((leaf) => (
+        <div key={leaf.title} style={{ minWidth: 0, height: "100%" }}>
+          <SceneEntryCard leaf={leaf} />
+        </div>
+      ))}
+    </Grid>
   );
 }
 
@@ -16522,6 +22226,7 @@ function AtlasFold({
 function DigitalSceneAtlasBrowse() {
   const [layer, setLayer] = useCanvasState<SceneAtlasLayer>("atlasLayer3", "web2");
   const [web2Focus, setWeb2Focus] = useCanvasState<string>("atlasW2f2", "all");
+  const [web3Focus, setWeb3Focus] = useCanvasState<string>("atlasW3f1", "all");
 
   const web2IndustryTags = SCENE_TAG_ORDER.filter(
     (t) => t !== "Web3" && t !== "金融" && t !== "艺术" && t !== "信用管理",
@@ -16563,37 +22268,10 @@ function DigitalSceneAtlasBrowse() {
     });
   }
 
-  function renderLeafList(leaves: SceneAtlasLeaf[]) {
-    if (!leaves.length) {
-      return (
-        <Text size="small" tone="tertiary">
-          暂无条目
-        </Text>
-      );
-    }
-    return (
-      <Stack gap={8}>
-        {leaves.map((leaf) => (
-          <Stack gap={2}>
-            <Text size="small" weight="medium">
-              {leaf.title}
-            </Text>
-            <Text size="small" tone="tertiary" style={{ fontSize: 11, lineHeight: 1.35 }}>
-              行为/目的：{leaf.hint?.trim() || "待补用户行为/目的"}
-            </Text>
-            <Text size="small" tone="tertiary" style={{ fontSize: 11, lineHeight: 1.35 }}>
-              玩家：{leaf.line?.trim() || "—"}
-            </Text>
-          </Stack>
-        ))}
-      </Stack>
-    );
-  }
-
   function renderCreditL1Body(l1: Exclude<CreditProdL1, "all">) {
     const l2s = CREDIT_PROD_L2_BY_L1[l1];
     if (!l2s.length) {
-      return renderLeafList([
+      return renderSceneEntryGrid([
         {
           title: l1,
           hint: "用户按信贷超市比价选品、申请导流至持牌放贷方",
@@ -16601,7 +22279,7 @@ function DigitalSceneAtlasBrowse() {
         },
       ]);
     }
-    return renderLeafList(
+    return renderSceneEntryGrid(
       l2s.map((l2) => {
         const l3s = CREDIT_PROD_L3_BY_L2[l2];
         return {
@@ -16615,43 +22293,57 @@ function DigitalSceneAtlasBrowse() {
     );
   }
 
-  const showFinance = web2Focus === "all" || web2Focus === "金融";
   const financeSecondLevelCount =
     1 + CREDIT_PROD_L1_ORDER.length + WEALTH_SCENE_L1.length; // 信用管理 + 信贷L1 + 理财L1
 
-  const financeBody = (
-    <Stack gap={4}>
-      <AtlasFold
-        id="fin_credit_mgmt"
-        title="信用管理"
-        count={creditMgmtRows.length}
-      >
-        <Stack gap={6}>
+  const financeSections: { id: string; title: string; count: number; body: ReactNode }[] = [
+    {
+      id: "fin_credit_mgmt",
+      title: "信用管理",
+      count: creditMgmtRows.length,
+      body: (
+        <Stack gap={8}>
           <Text size="small" tone="tertiary" style={{ fontSize: 11, lineHeight: 1.35 }}>
             To C 场景以征信查询等为主。信用评分/画像、反欺诈为 B 端能力，见机构类型「风控服务方」。
           </Text>
-          {renderLeafList(creditMgmtRows)}
+          {renderSceneEntryGrid(creditMgmtRows)}
         </Stack>
-      </AtlasFold>
-      {CREDIT_PROD_L1_ORDER.map((l1) => (
-        <AtlasFold
-          id={`fin_l1_${l1}`}
-          title={l1}
-          count={CREDIT_PROD_L2_BY_L1[l1].length || 1}
-        >
-          {renderCreditL1Body(l1)}
-        </AtlasFold>
-      ))}
-      {WEALTH_SCENE_L1.map((w) => (
-        <AtlasFold id={`fin_wealth_${w.id}`} title={w.id} count={w.items.length}>
-          {renderLeafList(
-            w.items.map((item) => ({
-              title: item.title,
-              hint: item.hint,
-              line: item.line,
-            })),
-          )}
-        </AtlasFold>
+      ),
+    },
+    ...CREDIT_PROD_L1_ORDER.map((l1) => ({
+      id: `fin_l1_${l1}`,
+      title: l1,
+      count: CREDIT_PROD_L2_BY_L1[l1].length || 1,
+      body: renderCreditL1Body(l1),
+    })),
+    ...WEALTH_SCENE_L1.map((w) => ({
+      id: `fin_wealth_${w.id}`,
+      title: w.id,
+      count: w.items.length,
+      body: renderSceneEntryGrid(
+        w.items.map((item) => ({
+          title: item.title,
+          hint: item.hint,
+          line: item.line,
+        })),
+      ),
+    })),
+  ];
+
+  const financeBody = (
+    <Stack gap={12}>
+      {financeSections.map((sec) => (
+        <Stack key={sec.id} gap={8}>
+          <Row gap={8} align="center">
+            <Text size="small" weight="medium">
+              {sec.title}
+            </Text>
+            <Pill size="sm" tone="neutral">
+              {String(sec.count)}
+            </Pill>
+          </Row>
+          {sec.body}
+        </Stack>
       ))}
     </Stack>
   );
@@ -16672,13 +22364,14 @@ function DigitalSceneAtlasBrowse() {
             onClick={() => {
               setLayer(o.id);
               if (o.id !== "web2") setWeb2Focus("all");
+              if (o.id !== "web3") setWeb3Focus("all");
             }}
           />
         ))}
       </Row>
 
       {layer === "web2" ? (
-        <Stack gap={8}>
+        <Stack gap={10}>
           <Row gap={6} wrap>
             <FilterChip
               label="全部业态"
@@ -16701,94 +22394,141 @@ function DigitalSceneAtlasBrowse() {
             ))}
           </Row>
 
-          <Stack gap={4}>
-            {showFinance ? (
-              web2Focus === "金融" ? (
-                <Stack gap={8}>
+          {web2Focus === "all" ? (
+            <Grid columns={3} gap={8} align="stretch">
+              <SceneIndustryCard
+                title="金融"
+                count={financeSecondLevelCount}
+                preview="信用管理 · 信贷产品 · 理财"
+                onOpen={() => setWeb2Focus("金融")}
+              />
+              {Array.from(industryGrouped.entries()).map(([l1, list]) => (
+                <SceneIndustryCard
+                  key={l1}
+                  title={SCENE_TAG_LABEL[l1]}
+                  count={list.length}
+                  preview={list
+                    .slice(0, 4)
+                    .map((r) => r.l2)
+                    .join(" · ")}
+                  onOpen={() => setWeb2Focus(l1)}
+                />
+              ))}
+            </Grid>
+          ) : web2Focus === "金融" ? (
+            <Stack gap={10}>
+              <Row gap={8} align="center">
+                <Text size="small" weight="medium">
+                  金融
+                </Text>
+                <Pill size="sm" tone="neutral">
+                  {String(financeSecondLevelCount)}
+                </Pill>
+              </Row>
+              {financeBody}
+            </Stack>
+          ) : (
+            (() => {
+              const list = industryGrouped.get(web2Focus as SceneTag) ?? [];
+              const leaves = list.map((r) => {
+                const { line } = compactMarketLine(r.cells, WIDE_MARKET_ORDER);
+                return {
+                  title: r.l2,
+                  hint: SCENE_USER_BEHAVIOR[r.l2],
+                  line: line || "—",
+                };
+              });
+              return (
+                <Stack gap={10}>
                   <Row gap={8} align="center">
                     <Text size="small" weight="medium">
-                      金融
+                      {SCENE_TAG_LABEL[web2Focus as SceneTag] ?? web2Focus}
                     </Text>
-                    <Pill size="sm">{String(financeSecondLevelCount)}</Pill>
+                    <Pill size="sm" tone="neutral">
+                      {String(list.length)}
+                    </Pill>
                   </Row>
-                  {financeBody}
+                  {renderSceneEntryGrid(leaves)}
                 </Stack>
-              ) : (
-                <AtlasFold id="w2_金融" title="金融" count={financeSecondLevelCount}>
-                  {financeBody}
-                </AtlasFold>
-              )
-            ) : null}
-            {web2Focus !== "金融"
-              ? Array.from(industryGrouped.entries())
-                  .filter(([l1]) => web2Focus === "all" || web2Focus === l1)
-                  .map(([l1, list]) => {
-                    const leaves = list.map((r) => {
-                      const { line } = compactMarketLine(r.cells, WIDE_MARKET_ORDER);
-                      return {
-                        title: r.l2,
-                        hint: SCENE_USER_BEHAVIOR[r.l2],
-                        line: line || "—",
-                      };
-                    });
-                    if (web2Focus === l1) {
-                      return (
-                        <Stack gap={8}>
-                          <Row gap={8} align="center">
-                            <Text size="small" weight="medium">
-                              {SCENE_TAG_LABEL[l1]}
-                            </Text>
-                            <Pill size="sm">{String(list.length)}</Pill>
-                          </Row>
-                          {renderLeafList(leaves)}
-                        </Stack>
-                      );
-                    }
-                    return (
-                      <AtlasFold
-                        id={`w2_${l1}`}
-                        title={SCENE_TAG_LABEL[l1]}
-                        count={list.length}
-                      >
-                        {renderLeafList(leaves)}
-                      </AtlasFold>
-                    );
-                  })
-              : null}
-          </Stack>
+              );
+            })()
+          )}
         </Stack>
       ) : null}
 
       {layer === "web3" ? (
-        <Stack gap={4}>
-          {(["金融", "游戏", "艺术", "社交"] as const).map((bucket) => (
-            <AtlasFold
-              id={`w3_${bucket}`}
-              title={bucket}
-              count={web3ByBucket[bucket].length}
-            >
-              {renderLeafList(web3ByBucket[bucket])}
-            </AtlasFold>
-          ))}
+        <Stack gap={10}>
+          <Row gap={6} wrap>
+            <FilterChip
+              label="全部子域"
+              active={web3Focus === "all"}
+              onClick={() => setWeb3Focus("all")}
+            />
+            {(["金融", "游戏", "艺术", "社交"] as const).map((bucket) => (
+              <FilterChip
+                label={bucket}
+                active={web3Focus === bucket}
+                clearable
+                onClick={() => setWeb3Focus(web3Focus === bucket ? "all" : bucket)}
+              />
+            ))}
+          </Row>
+          {web3Focus === "all" ? (
+            <Grid columns={2} gap={8} align="stretch">
+              {(["金融", "游戏", "艺术", "社交"] as const).map((bucket) => (
+                <SceneIndustryCard
+                  key={bucket}
+                  title={bucket}
+                  count={web3ByBucket[bucket].length}
+                  preview={web3ByBucket[bucket]
+                    .slice(0, 4)
+                    .map((x) => x.title)
+                    .join(" · ")}
+                  onOpen={() => setWeb3Focus(bucket)}
+                />
+              ))}
+            </Grid>
+          ) : (
+            <Stack gap={10}>
+              <Row gap={8} align="center">
+                <Text size="small" weight="medium">
+                  {web3Focus}
+                </Text>
+                <Pill size="sm" tone="neutral">
+                  {String(web3ByBucket[web3Focus as keyof typeof web3ByBucket]?.length ?? 0)}
+                </Pill>
+              </Row>
+              {renderSceneEntryGrid(
+                web3ByBucket[web3Focus as keyof typeof web3ByBucket] ?? [],
+              )}
+            </Stack>
+          )}
         </Stack>
       ) : null}
 
       {layer === "agent" ? (
-        <Stack gap={4}>
-          <AtlasFold id="agent_豆包" title="豆包" count={1}>
-            {renderLeafList([
-              {
-                title: "豆包",
-                hint: "与对话式 Agent 交互：提问、创作、办事助手、持续多轮对话",
-                line: "中国 · 豆包 App / 网页端（字节跳动）",
-              },
-            ])}
-          </AtlasFold>
+        <Stack gap={10}>
+          <Row gap={8} align="center" wrap>
+            <Text size="small" weight="medium">
+              Agent 词条
+            </Text>
+            <Pill size="sm" tone="neutral">
+              {String(AGENT_SCENE_LEAVES.length)}
+            </Pill>
+            <Text size="small" tone="tertiary" style={{ fontSize: 11, lineHeight: 1.35 }}>
+              来源：36氪AI产品榜（点评/新鲜/热门）+ 首页推荐 · {AI_PRODUCT_RANK_36KR.meta.as_of}
+              ；名称 → 行为/目的 → 玩家名单
+            </Text>
+          </Row>
+          {renderSceneEntryGrid(AGENT_SCENE_LEAVES)}
         </Stack>
       ) : null}
     </Stack>
   );
 }
+
+const EMPTY_CREDIT_DRAFTS: CreditDraft[] = [];
+const EMPTY_COMPOSER_ATTS: ComposerAttach[] = [];
 
 type AppTab = "crm" | "screen";
 
@@ -16800,24 +22540,21 @@ function AppTabBar({
   setAppTab: (t: AppTab) => void;
 }) {
   return (
-    <Row gap={8} align="center" wrap>
-      <Button
-        variant={appTab === "crm" ? "primary" : "secondary"}
-        onClick={() => setAppTab("crm")}
-      >
-        CRM生态系统
-      </Button>
-      <Button
-        variant={appTab === "screen" ? "primary" : "secondary"}
-        onClick={() => setAppTab("screen")}
-      >
-        大屏
-      </Button>
-    </Row>
+    <Stack gap={4}>
+      <Text size="small" tone="secondary" weight="medium">
+        工作区
+      </Text>
+      <Row gap={6} wrap>
+        <FilterChip
+          label="CRM生态系统"
+          active={appTab === "crm"}
+          onClick={() => setAppTab("crm")}
+        />
+        <FilterChip label="大屏" active={appTab === "screen"} onClick={() => setAppTab("screen")} />
+      </Row>
+    </Stack>
   );
 }
-
-type ScreenSub = "overlay" | "home" | "invested" | "nbfc";
 
 function qualityTone(q: NbfcDataQuality): "success" | "warning" | "neutral" | "info" {
   if (q === "official") return "success";
@@ -16826,18 +22563,477 @@ function qualityTone(q: NbfcDataQuality): "success" | "warning" | "neutral" | "i
   return "neutral";
 }
 
+function briefThemeBlurb(id: string, summary: string): string {
+  const map: Record<string, string> = {
+    reggeo: "展业六国当地监管（印/印尼/泰/菲/墨/港）；非国内证监会监控。",
+    macro: "利率、汇率与资金成本，影响现金贷定价和锁汇。",
+    credit: "信贷与行业整顿信号，和融资热度要分开看。",
+    infra: "支付、保险与结算通道，影响开户和合规沟通。",
+    capital: "上市与募资窗口，偏资金面情绪。",
+    overseas: "出海平台与流量规则，影响场景信贷挂载。",
+    other: "其余快讯，需要时再展开扫一眼。",
+  };
+  return map[id] || summary.slice(0, 36);
+}
+
+function UnreadBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  const label = count > 99 ? "99+" : String(count);
+  return (
+    <span
+      style={{
+        position: "absolute",
+        top: -6,
+        right: -6,
+        minWidth: 18,
+        height: 18,
+        padding: "0 5px",
+        borderRadius: 999,
+        background: "#fa5151",
+        color: "#fff",
+        fontSize: 11,
+        fontWeight: 600,
+        lineHeight: "18px",
+        textAlign: "center",
+        boxSizing: "border-box",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+/** 从集团名/品牌抽快讯匹配针（长词优先，减少误挂） */
+function briefNeedlesForPlayer(group: string, brands: string): string[] {
+  const out = new Set<string>();
+  const push = (s: string) => {
+    const t = s.trim();
+    if (t.length >= 2) out.add(t);
+  };
+  push(group.split("｜")[0] ?? "");
+  const m = group.match(/（([^）]+)）\s*$/);
+  if (m) push(m[1].split(/[·・]/)[0] ?? "");
+  for (const part of brands.split(/[/／、,，|｜]+/)) push(part);
+  for (const brand of Object.keys(BRAND_SEARCH_ALIASES)) {
+    if (group.includes(brand) || brands.includes(brand)) {
+      push(brand);
+      for (const a of BRAND_SEARCH_ALIASES[brand]) {
+        if (/[\u4e00-\u9fff]/.test(a) || a.length >= 4) push(a);
+      }
+    }
+  }
+  return [...out].sort((a, b) => b.length - a.length);
+}
+
+type PlayerBriefHit = {
+  key: string;
+  label: string;
+  group: string;
+  items: { themeId: string; title: string; time?: string }[];
+};
+
+function buildPlayerBriefHits(
+  brief: typeof MORNING_BRIEF_36KR,
+  players: CreditRow[],
+): PlayerBriefHit[] {
+  const catalog = players
+    .filter((r) => r.institutionTypes.includes("玩家"))
+    .map((r) => ({
+      key: creditBrandKey(r.group),
+      label: compareCreditLabel(r),
+      group: r.group,
+      needles: briefNeedlesForPlayer(r.group, r.brands),
+    }))
+    .filter((p) => p.needles.length > 0);
+
+  const byKey = new Map<string, PlayerBriefHit>();
+  for (const theme of brief.themes) {
+    for (const src of theme.sources ?? []) {
+      const title = src.title || "";
+      if (!title) continue;
+      const titleLow = title.toLowerCase();
+      let best: (typeof catalog)[0] | null = null;
+      let bestLen = 0;
+      for (const p of catalog) {
+        for (const n of p.needles) {
+          const hit =
+            /[\u4e00-\u9fff]/.test(n) ? title.includes(n) : titleLow.includes(n.toLowerCase());
+          if (hit && n.length > bestLen) {
+            best = p;
+            bestLen = n.length;
+          }
+        }
+      }
+      if (!best || bestLen < 2) continue;
+      const cur =
+        byKey.get(best.key) ??
+        ({ key: best.key, label: best.label, group: best.group, items: [] } as PlayerBriefHit);
+      if (!cur.items.some((x) => x.title === title && x.themeId === theme.id)) {
+        cur.items.push({ themeId: theme.id, title, time: src.time });
+      }
+      byKey.set(best.key, cur);
+    }
+  }
+  return [...byKey.values()].sort((a, b) => b.items.length - a.items.length);
+}
+
+function MorningBriefHome() {
+  const brief = MORNING_BRIEF_36KR;
+  const theme = useHostTheme();
+  const dayKey = brief.displayDate || brief.coverageDate || "na";
+  const [openId, setOpenId] = useCanvasState<string>(`mornOpen_${dayKey}`, "");
+  const [readIds, setReadIds] = useCanvasState<string>(`mornRead_${dayKey}`, "");
+  const [openPlayer, setOpenPlayer] = useCanvasState<string>(`mornPlayer_${dayKey}`, "");
+  const [readPlayers, setReadPlayers] = useCanvasState<string>(`mornPlayerRead_${dayKey}`, "");
+  const readSet = new Set(readIds.split("|").filter(Boolean));
+  const readPlayerSet = new Set(readPlayers.split("|").filter(Boolean));
+  const playerHits = buildPlayerBriefHits(brief, credits);
+
+  function openTheme(id: string) {
+    const next = openId === id ? "" : id;
+    setOpenId(next);
+    if (next) setOpenPlayer("");
+    if (next && !readSet.has(id)) {
+      setReadIds([...readSet, id].join("|"));
+    }
+  }
+
+  function openPlayerCard(key: string) {
+    const next = openPlayer === key ? "" : key;
+    setOpenPlayer(next);
+    if (next) setOpenId("");
+    if (next && !readPlayerSet.has(key)) {
+      setReadPlayers([...readPlayerSet, key].join("|"));
+    }
+  }
+
+  const openRow = brief.themes.find((r) => r.id === openId) ?? null;
+  const openPlayerHit = playerHits.find((p) => p.key === openPlayer) ?? null;
+
+  return (
+    <Card>
+      <CardHeader>{brief.headline}</CardHeader>
+      <CardBody>
+        <Stack gap={14}>
+          <Text size="small" tone="tertiary">
+            {brief.publishAt ? `发布 ${brief.publishAt}` : `整理 ${brief.generatedAt}`}
+            {brief.windowStart && brief.windowEnd
+              ? ` · ${brief.windowStart}–${brief.windowEnd}`
+              : ""}
+            {` · ${brief.stats.coverageTotal} 条`}
+            {playerHits.length ? ` · 挂到 ${playerHits.length} 家玩家` : ""}
+          </Text>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
+              gap: 10,
+            }}
+          >
+            {brief.themes.map((row) => {
+              const unread = readSet.has(row.id) ? 0 : row.count;
+              const active = openId === row.id;
+              return (
+                <button
+                  key={row.id}
+                  type="button"
+                  onClick={() => openTheme(row.id)}
+                  style={{
+                    position: "relative",
+                    textAlign: "left",
+                    padding: "12px 12px 14px",
+                    borderRadius: 10,
+                    border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+                    background: active ? theme.fill.quaternary : theme.bg.elevated,
+                    cursor: "pointer",
+                    color: theme.text.primary,
+                    font: "inherit",
+                    minHeight: 88,
+                  }}
+                  title={active ? "收起" : "查看快讯"}
+                >
+                  <UnreadBadge count={unread} />
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      marginBottom: 6,
+                      paddingRight: 8,
+                    }}
+                  >
+                    {row.title.replace("·", " · ")}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      lineHeight: 1.45,
+                      color: theme.text.secondary,
+                      fontWeight: 400,
+                    }}
+                  >
+                    {briefThemeBlurb(row.id, row.summary)}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {playerHits.length ? (
+            <Stack gap={8}>
+              <Text size="small" weight="medium">
+                玩家相关快讯
+              </Text>
+              <Text size="small" tone="tertiary">
+                按标题关键词挂到 CRM 玩家（如 CEO/人事/融资提及品牌名）；红点为未读条数。
+              </Text>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
+                  gap: 10,
+                }}
+              >
+                {playerHits.slice(0, 24).map((p) => {
+                  const unread = readPlayerSet.has(p.key) ? 0 : p.items.length;
+                  const active = openPlayer === p.key;
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => openPlayerCard(p.key)}
+                      style={{
+                        position: "relative",
+                        textAlign: "left",
+                        padding: "12px 12px 14px",
+                        borderRadius: 10,
+                        border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+                        background: active ? theme.fill.quaternary : theme.bg.elevated,
+                        cursor: "pointer",
+                        color: theme.text.primary,
+                        font: "inherit",
+                        minHeight: 72,
+                      }}
+                    >
+                      <UnreadBadge count={unread} />
+                      <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, paddingRight: 8 }}>
+                        {p.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: theme.text.secondary }}>
+                        {p.items.length} 条相关
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </Stack>
+          ) : null}
+
+          {openPlayerHit ? (
+            <Stack gap={10}>
+              <Row gap={8} align="center" justify="space-between" wrap>
+                <Text size="small" weight="medium">
+                  {openPlayerHit.label} · {openPlayerHit.items.length} 条
+                </Text>
+                <Text size="small" tone="tertiary">
+                  再点卡片可收起
+                </Text>
+              </Row>
+              <div
+                style={{
+                  maxHeight: 280,
+                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                {openPlayerHit.items.map((s, i) => (
+                  <div
+                    key={`${openPlayerHit.key}-${i}-${s.title}`}
+                    style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.secondary }}
+                  >
+                    <span style={{ color: theme.text.tertiary, marginRight: 8 }}>
+                      {s.time || "·"}
+                    </span>
+                    {s.title}
+                  </div>
+                ))}
+              </div>
+            </Stack>
+          ) : openRow ? (
+            <Stack gap={10}>
+              <Row gap={8} align="center" justify="space-between" wrap>
+                <Text size="small" weight="medium">
+                  {openRow.title} · {openRow.count} 条
+                </Text>
+                <Text size="small" tone="tertiary">
+                  点击卡片可收起
+                </Text>
+              </Row>
+              <div
+                style={{
+                  fontSize: 13,
+                  lineHeight: 1.6,
+                  color: theme.text.secondary,
+                }}
+              >
+                {openRow.commentary}
+              </div>
+              {openRow.sources?.length ? (
+                <div
+                  style={{
+                    maxHeight: 280,
+                    overflowY: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                    paddingTop: 4,
+                  }}
+                >
+                  {openRow.sources.map((s, i) => (
+                    <div
+                      key={`${openRow.id}-${i}-${s.title}`}
+                      style={{
+                        fontSize: 13,
+                        lineHeight: 1.5,
+                        color: theme.text.secondary,
+                      }}
+                    >
+                      <span style={{ color: theme.text.tertiary, marginRight: 8 }}>
+                        {s.time || "·"}
+                      </span>
+                      {s.title}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </Stack>
+          ) : (
+            <Text size="small" tone="tertiary">
+              点主题或玩家卡片查看快讯；右上角红点为未读，点开后清除。
+            </Text>
+          )}
+        </Stack>
+      </CardBody>
+    </Card>
+  );
+}
+
+/** 把备注里的 URL 拆成可点链接，便于「其他」列阅读 */
+function linkifyText(text: string, linkColor: string): ReactNode[] {
+  const re = /(https?:\/\/[^\s；;，,）)\]]+)/g;
+  const parts: ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let i = 0;
+  while ((m = re.exec(text)) != null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    const url = m[1].replace(/[.,;；]+$/, "");
+    parts.push(
+      <a
+        key={`u-${i++}`}
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        style={{ color: linkColor, wordBreak: "break-all" }}
+      >
+        {url.replace(/^https?:\/\//, "").length > 42
+          ? `${url.replace(/^https?:\/\//, "").slice(0, 40)}…`
+          : url.replace(/^https?:\/\//, "")}
+      </a>,
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length ? parts : [text];
+}
+
+function NbfcOtherCell({
+  otherInfo,
+  notes,
+}: {
+  otherInfo: string;
+  notes: string;
+}) {
+  const theme = useHostTheme();
+  const [open, setOpen] = useState(false);
+  const hasOther = Boolean(otherInfo.trim());
+  const hasNotes = Boolean(notes.trim());
+  if (!hasOther && !hasNotes) {
+    return <span style={{ color: theme.text.tertiary }}>—</span>;
+  }
+  const joinedLen = (otherInfo + notes).length;
+  const collapsed = !open && joinedLen > 96;
+  const block = (label: string, body: string, muted?: boolean): ReactNode => {
+    if (!body.trim()) return null;
+    const shown = collapsed && body.length > 72 ? `${body.slice(0, 70)}…` : body;
+    return (
+      <div style={{ marginBottom: hasOther && hasNotes ? 6 : 0 }}>
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "0.02em",
+            color: theme.text.tertiary,
+            marginBottom: 2,
+          }}
+        >
+          {label}
+        </div>
+        <div
+          style={{
+            fontSize: 12,
+            lineHeight: 1.55,
+            color: muted ? theme.text.secondary : theme.text.primary,
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {linkifyText(shown, theme.accent.control)}
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div style={{ minWidth: 0 }}>
+      {block("摘要", otherInfo)}
+      {block("备注", notes, true)}
+      {joinedLen > 96 ? (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          style={{
+            marginTop: 4,
+            padding: 0,
+            border: "none",
+            background: "transparent",
+            color: theme.accent.control,
+            fontSize: 12,
+            cursor: "pointer",
+            fontWeight: 500,
+          }}
+        >
+          {open ? "收起" : "展开全部"}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function NbfcStatsSubpage() {
   const theme = useHostTheme();
   const rows = NBFC_STATS.rows;
   const withCount = rows.filter((r) => r.nbfc_count.trim()).length;
   const official = rows.filter((r) => r.data_quality === "official").length;
 
-  const th: React.CSSProperties = {
+  const th: CSSProperties = {
     position: "sticky",
     top: 0,
     zIndex: 1,
     textAlign: "left",
-    padding: "8px 10px",
+    padding: "10px 12px",
     fontSize: 12,
     fontWeight: 600,
     whiteSpace: "nowrap",
@@ -16845,28 +23041,78 @@ function NbfcStatsSubpage() {
     borderBottom: `1px solid ${theme.stroke.secondary}`,
     color: theme.text.secondary,
   };
-  const td: React.CSSProperties = {
-    padding: "8px 10px",
+  const td: CSSProperties = {
+    padding: "10px 12px",
     fontSize: 12,
     verticalAlign: "top",
     borderBottom: `1px solid ${theme.stroke.tertiary}`,
     color: theme.text.primary,
-    maxWidth: 220,
+  };
+  const tdCountry: CSSProperties = {
+    ...td,
+    position: "sticky",
+    left: 0,
+    zIndex: 2,
+    background: theme.bg.elevated,
+    whiteSpace: "nowrap",
+    width: 96,
+    minWidth: 96,
+    boxShadow: `1px 0 0 ${theme.stroke.tertiary}`,
+  };
+  const thCountry: CSSProperties = {
+    ...th,
+    left: 0,
+    zIndex: 3,
+    width: 96,
+    minWidth: 96,
+    boxShadow: `1px 0 0 ${theme.stroke.tertiary}`,
+  };
+  const tdQuality: CSSProperties = {
+    ...td,
+    whiteSpace: "nowrap",
+    width: 76,
+    minWidth: 76,
+  };
+  const tdNum: CSSProperties = {
+    ...td,
+    maxWidth: 120,
+    overflow: "hidden",
+    overflowWrap: "anywhere",
+    wordBreak: "break-word",
+    whiteSpace: "normal",
+  };
+  const tdClamp: CSSProperties = {
+    ...td,
+    maxWidth: 148,
+    overflow: "hidden",
+    overflowWrap: "anywhere",
+    wordBreak: "break-word",
+    whiteSpace: "normal",
+  };
+  const tdOther: CSSProperties = {
+    ...td,
+    width: "32%",
+    minWidth: 420,
   };
 
   return (
     <Stack gap={14}>
       <Row gap={8} align="center" justify="space-between" wrap>
         <Stack gap={4}>
-          <H2>NBFC 国家统计</H2>
+          <H2>非银玩家统计信息（监管名单）</H2>
           <Text size="small" tone="secondary">
             {NBFC_STATS.meta.title} · 更新 {NBFC_STATS.meta.updated} · {rows.length} 行 · 有机构数{" "}
             {withCount} · 官方口径 {official}
           </Text>
         </Stack>
-        <Button variant="primary" onClick={downloadNbfcXlsx}>
-          Download
-        </Button>
+        <Pill
+          tone="neutral"
+          size="sm"
+          onClick={downloadNbfcXlsx}
+          title="导出非银玩家统计信息（监管名单）.xlsx"
+        >
+          导出 Excel
+        </Pill>
       </Row>
 
       <Callout tone="info">
@@ -16877,16 +23123,39 @@ function NbfcStatsSubpage() {
       <div
         style={{
           overflow: "auto",
-          maxHeight: "70vh",
+          maxHeight: "min(78vh, 920px)",
           border: `1px solid ${theme.stroke.tertiary}`,
           borderRadius: 10,
           background: theme.bg.elevated,
         }}
       >
-        <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 1400 }}>
+        <table
+          style={{
+            borderCollapse: "separate",
+            borderSpacing: 0,
+            width: "100%",
+            minWidth: 1680,
+            tableLayout: "fixed",
+          }}
+        >
+          <colgroup>
+            <col style={{ width: 96 }} />
+            <col style={{ width: 132 }} />
+            <col style={{ width: 132 }} />
+            <col style={{ width: 88 }} />
+            <col style={{ width: 120 }} />
+            <col style={{ width: 108 }} />
+            <col style={{ width: 100 }} />
+            <col style={{ width: 100 }} />
+            <col style={{ width: 96 }} />
+            <col style={{ width: 88 }} />
+            <col style={{ width: 140 }} />
+            <col style={{ width: 76 }} />
+            <col />
+          </colgroup>
           <thead>
             <tr>
-              <th style={th}>国家</th>
+              <th style={thCountry}>国家</th>
               <th style={th}>NBFC/等效</th>
               <th style={th}>监管机构</th>
               <th style={th}>机构数量</th>
@@ -16897,48 +23166,63 @@ function NbfcStatsSubpage() {
               <th style={th}>Default/NPL</th>
               <th style={th}>时点</th>
               <th style={th}>信源</th>
-              <th style={th}>质量</th>
+              <th style={{ ...th, width: 76 }}>质量</th>
               <th style={th}>其他</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, i) => (
-              <tr key={`${r.country_code}-${r.nbfc_equivalent_name}-${i}`}>
-                <td style={td}>
-                  <Text size="small" weight="medium" as="span">
-                    {r.country_name_zh}
-                  </Text>
-                  <Text size="small" tone="tertiary" as="span">
-                    {" "}
-                    {r.country_code}
-                  </Text>
-                </td>
-                <td style={td}>{r.nbfc_equivalent_name || "—"}</td>
-                <td style={td}>{r.regulator || "—"}</td>
-                <td style={td}>{r.nbfc_count || "—"}</td>
-                <td style={td}>{r.loan_book_total || "—"}</td>
-                <td style={td}>{r.loan_book_usd || "—"}</td>
-                <td style={td}>{r.borrowers_covered || "—"}</td>
-                <td style={td}>{r.avg_loan_size || "—"}</td>
-                <td style={td}>{r.default_rate || "—"}</td>
-                <td style={td}>{r.as_of || "—"}</td>
-                <td style={td}>
-                  {r.source_url ? (
-                    <Link href={r.source_url}>{r.source_title || r.source_url}</Link>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td style={td}>
-                  <Pill size="sm" tone={qualityTone(r.data_quality)}>
-                    {DATA_QUALITY_LABEL[r.data_quality]}
-                  </Pill>
-                </td>
-                <td style={{ ...td, maxWidth: 260 }}>
-                  {[r.other_info, r.notes].filter(Boolean).join(" · ") || "—"}
-                </td>
-              </tr>
-            ))}
+            {rows.map((r, i) => {
+              const zebra = i % 2 === 1 ? theme.fill.tertiary : theme.bg.elevated;
+              return (
+                <tr key={`${r.country_code}-${r.nbfc_equivalent_name}-${i}`} style={{ background: zebra }}>
+                  <td style={{ ...tdCountry, background: zebra }}>
+                    <Text size="small" weight="medium" as="span">
+                      {r.country_name_zh}
+                    </Text>
+                    <Text size="small" tone="tertiary" as="span">
+                      {" "}
+                      {r.country_code}
+                    </Text>
+                  </td>
+                  <td style={tdClamp} title={r.nbfc_equivalent_name || undefined}>
+                    {r.nbfc_equivalent_name || "—"}
+                  </td>
+                  <td style={tdClamp} title={r.regulator || undefined}>
+                    {r.regulator || "—"}
+                  </td>
+                  <td style={tdNum}>{r.nbfc_count || "—"}</td>
+                  <td style={tdClamp} title={r.loan_book_total || undefined}>
+                    {r.loan_book_total || "—"}
+                  </td>
+                  <td style={tdNum}>{r.loan_book_usd || "—"}</td>
+                  <td style={tdClamp} title={r.borrowers_covered || undefined}>
+                    {r.borrowers_covered || "—"}
+                  </td>
+                  <td style={tdClamp} title={r.avg_loan_size || undefined}>
+                    {r.avg_loan_size || "—"}
+                  </td>
+                  <td style={tdClamp} title={r.default_rate || undefined}>
+                    {r.default_rate || "—"}
+                  </td>
+                  <td style={tdNum}>{r.as_of || "—"}</td>
+                  <td style={tdClamp}>
+                    {r.source_url ? (
+                      <Link href={r.source_url}>{r.source_title || r.source_url}</Link>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td style={tdQuality}>
+                    <Pill size="sm" tone={qualityTone(r.data_quality)}>
+                      {DATA_QUALITY_LABEL[r.data_quality]}
+                    </Pill>
+                  </td>
+                  <td style={tdOther}>
+                    <NbfcOtherCell otherInfo={r.other_info || ""} notes={r.notes || ""} />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -16947,122 +23231,694 @@ function NbfcStatsSubpage() {
 }
 
 function MapPanel({ children }: { children: ReactNode }) {
+  return (
+    <Card>
+      <CardBody>{children}</CardBody>
+    </Card>
+  );
+}
+
+/** 地图右上角：透明图标 · 全屏 / 退出 */
+function MapChromeIconBtn({
+  title,
+  onClick,
+  children,
+}: {
+  title: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
   const theme = useHostTheme();
   return (
-    <div
-      style={mergeStyle({
-        padding: 16,
-        borderRadius: 12,
-        background: theme.bg.elevated,
-        border: `1px solid ${theme.stroke.tertiary}`,
-      })}
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      style={{
+        width: 32,
+        height: 32,
+        margin: 0,
+        padding: 0,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "none",
+        borderRadius: 6,
+        background: "transparent",
+        color: theme.text.tertiary,
+        cursor: "pointer",
+        opacity: 0.7,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.opacity = "1";
+        e.currentTarget.style.color = theme.text.secondary;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.opacity = "0.7";
+        e.currentTarget.style.color = theme.text.tertiary;
+      }}
     >
+      {children}
+    </button>
+  );
+}
+
+function IconExpand() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconCollapse() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M6 2.5V6H2.5M13.5 6H10V2.5M10 13.5V10h3.5M2.5 10H6v3.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function MapStage({
+  children,
+  present,
+  onPresent,
+  onExit,
+}: {
+  children: ReactNode;
+  present: boolean;
+  onPresent: () => void;
+  onExit?: () => void;
+}) {
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: present ? "100%" : undefined,
+        minHeight: present ? 0 : undefined,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          zIndex: 8,
+          display: "flex",
+          gap: 2,
+          alignItems: "center",
+        }}
+      >
+        {present && onExit ? (
+          <MapChromeIconBtn title="退出全屏" onClick={onExit}>
+            <IconCollapse />
+          </MapChromeIconBtn>
+        ) : !present ? (
+          <MapChromeIconBtn title="全屏" onClick={onPresent}>
+            <IconExpand />
+          </MapChromeIconBtn>
+        ) : null}
+      </div>
       {children}
     </div>
   );
 }
 
-/** 大屏：红绿叠加（默认） */
-function BigScreenOverlay() {
+/** 大屏地图国别计数：按机构 group 国别码 / countries 别名落点（避免「全球」刷满整图） */
+function aggregateEcoCountsByCountry(type: InstitutionType): Record<string, number> {
+  const out: Record<string, number> = {};
+  const codes = (Object.keys(COUNTRY_LABEL) as CountryCode[]).filter(
+    (c): c is Exclude<CountryCode, "all"> => c !== "all",
+  );
+  for (const r of credits) {
+    if (!r.institutionTypes.includes(type)) continue;
+    const hits = new Set<Exclude<CountryCode, "all">>();
+    for (const c of codes) {
+      if (r.group.includes(`·${c}`) || new RegExp(`[·（(]${c}[）)]`).test(r.group)) {
+        hits.add(c);
+        continue;
+      }
+      const aliases = COUNTRY_ALIASES[c] ?? [];
+      if (aliases.some((a) => r.countries.includes(a))) hits.add(c);
+    }
+    if (hits.size === 0 && !hasWorldwideCoverage(r.countries)) {
+      for (const c of countriesCoveredByCreditRow(r)) hits.add(c);
+    }
+    for (const c of hits) out[c] = (out[c] ?? 0) + 1;
+  }
+  return out;
+}
+
+/** 大屏：市场 × 展业 / 其他机构（同一底图切换图层，固定画幅） */
+function BigScreenOverlay({
+  height = 560,
+  bare = false,
+  present = false,
+  onPresent,
+  onExit,
+  showMarket = true,
+  showInvested = true,
+  ecoType,
+}: {
+  height?: number;
+  bare?: boolean;
+  present?: boolean;
+  onPresent?: () => void;
+  onExit?: () => void;
+  showMarket?: boolean;
+  showInvested?: boolean;
+  ecoType?: InstitutionType | "";
+}) {
+  const ecoOn = Boolean(ecoType);
+  const ecoCounts = useMemo(
+    () => (ecoType ? aggregateEcoCountsByCountry(ecoType) : undefined),
+    [ecoType],
+  );
+  const both = showMarket && showInvested && !ecoOn;
+  const marketEco = showMarket && ecoOn;
+  const title = marketEco
+    ? `市场 × ${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}`
+    : ecoOn
+      ? `${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}分布`
+      : both
+        ? "市场 × 展业"
+        : showMarket
+          ? "市场放贷热力图"
+          : "展业热力图";
+  const subtitle = marketEco
+    ? `面填=市场放贷；圆点=${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}样本数 · 可对照市场空间`
+    : ecoOn
+      ? `${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}：面填=各国样本数 · 点击国家放大`
+      : both
+        ? "面填灰阶=市场放贷；圆点=展业在贷 · 图层开关不重载底图"
+        : showMarket
+          ? "市场放贷总量(USD)：灰阶分档浅→深 · 点击有数据国家可放大"
+          : "展业在贷：面填深浅 · 点击国家查看已投平台";
+
+  const globe = (
+    <CombinedHeatGlobe
+      height={height}
+      fill={bare}
+      legendPlacement="bottom"
+      showMarket={showMarket}
+      showInvested={showInvested && !ecoOn}
+      showEco={ecoOn}
+      ecoCounts={ecoCounts}
+      ecoLabel={ecoType ? INSTITUTION_TYPE_LABEL[ecoType] : undefined}
+    />
+  );
+
+  /** 地图与下方图例分栏：图例在地图框外，避免叠底图只露出一国 */
+  const frame = bare ? (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        minHeight: 0,
+      }}
+    >
+      {globe}
+    </div>
+  ) : (
+    <div style={{ width: "100%" }}>{globe}</div>
+  );
+
+  const staged =
+    onPresent != null ? (
+      <MapStage
+        present={present}
+        onPresent={onPresent ?? (() => undefined)}
+        onExit={onExit}
+      >
+        {bare ? frame : <MapPanel>{frame}</MapPanel>}
+      </MapStage>
+    ) : bare ? (
+      frame
+    ) : (
+      <MapPanel>{frame}</MapPanel>
+    );
+
+  if (bare) return staged;
   return (
     <Stack gap={14}>
-      <Stack gap={4}>
-        <H2>红绿叠加热力图</H2>
+      <Stack gap={4} style={{ minHeight: 48 }}>
+        <H2>{title}</H2>
         <Text size="small" tone="secondary">
-          底色红=市场放贷总量 · 绿色描边/圆点=已投国家（在贷越大越深越大）· 点击查看详情
+          {subtitle}
         </Text>
       </Stack>
-      <MapPanel>
-        <CombinedHeatGlobe height={440} />
-      </MapPanel>
+      {staged}
     </Stack>
   );
 }
 
-/** 大屏：市场放贷（红） */
-function BigScreenOverview() {
+/** 大屏：市场放贷 */
+function BigScreenOverview({
+  height = 440,
+  bare = false,
+  present = false,
+  onPresent,
+}: {
+  height?: number;
+  bare?: boolean;
+  present?: boolean;
+  onPresent?: () => void;
+}) {
+  const map = bare ? (
+    <LendingHeatGlobe height={height} fill legendPlacement="bottom" />
+  ) : (
+    <MapPanel>
+      <LendingHeatGlobe height={height} />
+    </MapPanel>
+  );
+  const staged =
+    onPresent != null ? (
+      <MapStage present={present} onPresent={onPresent}>
+        {map}
+      </MapStage>
+    ) : (
+      map
+    );
+  if (bare) return staged;
   return (
     <Stack gap={14}>
       <Stack gap={4}>
-        <H2>放贷总量平面热力图</H2>
+        <H2>市场放贷热力图</H2>
         <Text size="small" tone="secondary">
-          按市场放贷总量(USD)着色 · 越多越红 · 点击有数据国家可放大
+          市场放贷总量(USD)：灰阶分档浅→深 · 点击有数据国家可放大
         </Text>
       </Stack>
-      <MapPanel>
-        <LendingHeatGlobe height={440} />
-      </MapPanel>
+      {staged}
     </Stack>
   );
 }
 
-/** 大屏：已投生产商（绿） */
-function BigScreenInvested() {
+/** 大屏：展业（已投） */
+function BigScreenInvested({
+  height = 440,
+  bare = false,
+  present = false,
+  onPresent,
+}: {
+  height?: number;
+  bare?: boolean;
+  present?: boolean;
+  onPresent?: () => void;
+}) {
+  const map = bare ? (
+    <InvestedHeatGlobe height={height} fill legendPlacement="bottom" />
+  ) : (
+    <MapPanel>
+      <InvestedHeatGlobe height={height} />
+    </MapPanel>
+  );
+  const staged =
+    onPresent != null ? (
+      <MapStage present={present} onPresent={onPresent}>
+        {map}
+      </MapStage>
+    ) : (
+      map
+    );
+  if (bare) return staged;
   return (
     <Stack gap={14}>
       <Stack gap={4}>
-        <H2>已投生产商热力图</H2>
+        <H2>展业热力图</H2>
         <Text size="small" tone="secondary">
-          已投国家绿色点亮 · 生产商在贷余额越大颜色越深 · 点击国家查看已投平台
+          展业在贷：强调色深浅 + 圆点大小 · 点击国家查看已投平台
         </Text>
       </Stack>
-      <MapPanel>
-        <InvestedHeatGlobe height={440} />
-      </MapPanel>
+      {staged}
+    </Stack>
+  );
+}
+
+/** 大屏：宏观因子地域分布 */
+function BigScreenMacro({
+  height = 520,
+  bare = false,
+  factor,
+  present = false,
+  onPresent,
+}: {
+  height?: number;
+  bare?: boolean;
+  factor: MacroMapFactorId;
+  present?: boolean;
+  onPresent?: () => void;
+}) {
+  const meta = MACRO_MAP_FACTORS.find((f) => f.id === factor);
+  const map = bare ? (
+    <MacroHeatGlobe height={height} factor={factor} fill legendPlacement="bottom" />
+  ) : (
+    <MapPanel>
+      <MacroHeatGlobe height={height} factor={factor} />
+    </MapPanel>
+  );
+  const staged =
+    onPresent != null ? (
+      <MapStage present={present} onPresent={onPresent}>
+        {map}
+      </MapStage>
+    ) : (
+      map
+    );
+  if (bare) return staged;
+  return (
+    <Stack gap={14}>
+      <Stack gap={4}>
+        <H2>宏观因子 · 地域分布</H2>
+        <Text size="small" tone="secondary">
+          {meta?.label ?? factor}：色阶=各国读数高低 · 点击国家看全套宏观 + 放贷/已投对照 ·{" "}
+          {meta?.blurb}
+        </Text>
+      </Stack>
+      {staged}
     </Stack>
   );
 }
 
 function BigScreen() {
-  const [sub, setSub] = useCanvasState<ScreenSub>("screenSub4", "overlay");
+  const theme = useHostTheme();
+  /** 市场 / 展业可同时亮起；监管名单、对照为独立页；其他机构为第二列选类型上图 */
+  const [showMarket, setShowMarket] = useCanvasState<boolean>("screenMkt2", true);
+  const [showInvested, setShowInvested] = useCanvasState<boolean>("screenInv2", true);
+  const [showRoster, setShowRoster] = useCanvasState<boolean>("screenRoster2", false);
+  const [showCompare, setShowCompare] = useCanvasState<boolean>("screenCmp1", false);
+  const [ecoType, setEcoType] = useCanvasState<InstitutionType | "">("screenEcoType1", "");
+  const [ecoPickerOpen, setEcoPickerOpen] = useCanvasState<boolean>("screenEcoOpen1", false);
+  const [present, setPresent] = useCanvasState<boolean>("screenPresent1", false);
+  const [vh, setVh] = useState(800);
+
+  const countEcoType = (t: InstitutionType) =>
+    credits.filter((r) => r.institutionTypes.includes(t)).length;
+
+  useEffect(() => {
+    const sync = () => setVh(typeof window !== "undefined" ? window.innerHeight : 800);
+    sync();
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
+  }, []);
+
+  useEffect(() => {
+    if (!present) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPresent(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [present, setPresent]);
+
+  const enterPresent = () => {
+    setPresent(true);
+    const el = document.documentElement;
+    const req = el.requestFullscreen?.bind(el);
+    if (req) {
+      try {
+        void Promise.resolve(req()).catch(() => undefined);
+      } catch {
+        /* iframe 等环境可能拒绝浏览器全屏，应用内铺满仍可用 */
+      }
+    }
+  };
+
+  const exitPresent = () => {
+    setPresent(false);
+    if (typeof document !== "undefined" && document.fullscreenElement) {
+      void document.exitFullscreen?.().catch(() => undefined);
+    }
+  };
+
+  const leaveSpecial = () => {
+    setShowRoster(false);
+    setShowCompare(false);
+  };
+
+  const clearEco = () => {
+    setEcoType("");
+    setEcoPickerOpen(false);
+  };
+
+  const toggleMarket = () => {
+    if (showRoster || showCompare) {
+      leaveSpecial();
+      setShowMarket(true);
+      return;
+    }
+    if (showMarket && !showInvested && !ecoType) return; // 至少保留一层
+    setShowMarket(!showMarket);
+  };
+
+  const toggleInvested = () => {
+    if (showRoster || showCompare) {
+      leaveSpecial();
+      clearEco();
+      setShowInvested(true);
+      return;
+    }
+    if (ecoType) clearEco();
+    if (showInvested && !showMarket) return;
+    setShowInvested(!showInvested);
+  };
+
+  const toggleRoster = () => {
+    if (showRoster) {
+      setShowRoster(false);
+      if (!showMarket && !showInvested && !ecoType) {
+        setShowMarket(true);
+        setShowInvested(true);
+      }
+      return;
+    }
+    clearEco();
+    setShowCompare(false);
+    setShowRoster(true);
+  };
+
+  const toggleCompare = () => {
+    if (showCompare) {
+      setShowCompare(false);
+      if (!showMarket && !showInvested && !ecoType) {
+        setShowMarket(true);
+        setShowInvested(true);
+      }
+      return;
+    }
+    clearEco();
+    setShowRoster(false);
+    setShowCompare(true);
+  };
+
+  const toggleEcoPicker = () => {
+    if (showRoster || showCompare) leaveSpecial();
+    setEcoPickerOpen(!ecoPickerOpen);
+  };
+
+  const selectEcoType = (t: InstitutionType) => {
+    leaveSpecial();
+    if (ecoType === t) {
+      clearEco();
+      if (!showMarket && !showInvested) {
+        setShowMarket(true);
+        setShowInvested(true);
+      }
+      return;
+    }
+    setEcoType(t);
+    setEcoPickerOpen(false);
+    setShowInvested(false);
+    if (!showMarket) setShowMarket(true);
+  };
+
+  const presentMapH = Math.max(640, Math.round(vh * 0.92));
+  /** 固定画幅高度；图层只改 props，不换组件 */
+  const normalMapH = 560;
+  const onMap = !showRoster && !showCompare;
+
+  const layerTabs = (
+    <Stack gap={8}>
+      <Row gap={8} wrap align="center">
+        <Text size="small" tone="tertiary">
+          常用
+        </Text>
+        <FilterChip
+          label="市场"
+          active={showMarket && onMap}
+          onClick={toggleMarket}
+        />
+        <FilterChip
+          label="展业"
+          active={showInvested && onMap && !ecoType}
+          onClick={toggleInvested}
+        />
+        <FilterChip label="非银玩家统计信息（监管名单）" active={showRoster} onClick={toggleRoster} />
+        <FilterChip label="对照" active={showCompare} onClick={toggleCompare} />
+      </Row>
+      <Row gap={8} wrap align="center">
+        <Text size="small" tone="tertiary">
+          其他
+        </Text>
+        <FilterChip
+          label={
+            ecoType
+              ? `${INSTITUTION_TYPE_LABEL[ecoType]} · 地图`
+              : ecoPickerOpen
+                ? "机构 · 收起"
+                : "机构"
+          }
+          active={Boolean(ecoType) || ecoPickerOpen}
+          clearable={Boolean(ecoType)}
+          onClick={() => {
+            if (ecoType && !ecoPickerOpen) {
+              clearEco();
+              if (!showMarket && !showInvested) {
+                setShowMarket(true);
+                setShowInvested(true);
+              }
+              return;
+            }
+            toggleEcoPicker();
+          }}
+        />
+        {ecoType ? (
+          <Text size="small" tone="secondary">
+            面填市场 × 圆点机构分布；点类型可切换
+          </Text>
+        ) : null}
+      </Row>
+      {ecoPickerOpen ? (
+        <Stack
+          gap={8}
+          style={{
+            padding: 12,
+            borderRadius: 10,
+            border: `1px solid ${theme.stroke.tertiary}`,
+            background: theme.bg.editor,
+            maxWidth: 920,
+          }}
+        >
+          <Text size="small" weight="medium">
+            选择机构类型上图（与图一生态入口同口径；不含玩家）
+          </Text>
+          {INST_BUCKET_ORDER.filter((b) => b !== "用户端").map((bucket) => (
+            <Stack gap={6} key={bucket}>
+              <Text size="small" tone="secondary">
+                {INST_BUCKET_LABEL[bucket]}
+              </Text>
+              <Row gap={6} wrap>
+                {INST_BUCKET_TYPES[bucket]
+                  .filter((t) => t !== "玩家")
+                  .map((t) => (
+                    <FilterChip
+                      key={t}
+                      label={`${INSTITUTION_TYPE_LABEL[t]} · ${countEcoType(t)}`}
+                      active={ecoType === t}
+                      clearable
+                      onClick={() => selectEcoType(t)}
+                    />
+                  ))}
+              </Row>
+            </Stack>
+          ))}
+        </Stack>
+      ) : null}
+    </Stack>
+  );
+
+  const mapPane =
+    showRoster || showCompare ? null : (
+      <BigScreenOverlay
+        height={present ? presentMapH : normalMapH}
+        bare={present}
+        present={present}
+        onPresent={enterPresent}
+        onExit={exitPresent}
+        showMarket={showMarket}
+        showInvested={showInvested}
+        ecoType={ecoType}
+      />
+    );
+
+  if (present) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          background: theme.bg.chrome,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: 10,
+            left: 12,
+            zIndex: 20,
+            pointerEvents: "auto",
+          }}
+        >
+          {layerTabs}
+        </div>
+        {showRoster ? (
+          <div style={{ flex: 1, overflow: "auto", padding: "56px 16px 16px" }}>
+            <NbfcStatsSubpage />
+          </div>
+        ) : showCompare ? (
+          <div style={{ flex: 1, overflow: "auto", padding: "56px 16px 16px" }}>
+            <CompareHubPanel dense />
+          </div>
+        ) : (
+          <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{mapPane}</div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <Stack gap={16}>
       <Stack gap={6}>
         <H1>大屏</H1>
         <Text size="small" tone="secondary">
-          独立展示视图 · 与 CRM 名单并行，互不影响
+          第一列常用：市场 / 展业 / 非银名单 / 对照。第二列「机构」可选支付、监管、流量等上图对照；全屏同样可用。
         </Text>
       </Stack>
 
-      <Row gap={8} wrap>
-        <Button
-          variant={sub === "overlay" ? "primary" : "secondary"}
-          onClick={() => setSub("overlay")}
-        >
-          红绿叠加
-        </Button>
-        <Button variant={sub === "home" ? "primary" : "secondary"} onClick={() => setSub("home")}>
-          仅红
-        </Button>
-        <Button
-          variant={sub === "invested" ? "primary" : "secondary"}
-          onClick={() => setSub("invested")}
-        >
-          仅绿
-        </Button>
-        <Button variant={sub === "nbfc" ? "primary" : "secondary"} onClick={() => setSub("nbfc")}>
-          NBFC国家统计
-        </Button>
-      </Row>
+      {layerTabs}
 
-      {sub === "nbfc" ? (
-        <NbfcStatsSubpage />
-      ) : sub === "invested" ? (
-        <BigScreenInvested />
-      ) : sub === "home" ? (
-        <BigScreenOverview />
-      ) : (
-        <BigScreenOverlay />
-      )}
+      {showRoster ? <NbfcStatsSubpage /> : showCompare ? <CompareHubPanel dense /> : mapPane}
     </Stack>
   );
 }
 
+
 export default function Canvas() {
+  type AtlasHub = "home" | "scenes" | "macro" | "compare" | InstitutionType;
   const [appTab, setAppTab] = useCanvasState<AppTab>("appTab1", "crm");
-  const [hub, setHub] = useCanvasState<"home" | InstitutionType>("hub6", "home");
+  const [hub, setHub] = useCanvasState<AtlasHub>("hub7", "home");
+  const isInstHub =
+    hub !== "home" && hub !== "scenes" && hub !== "macro" && hub !== "compare";
   const [region, setRegion] = useCanvasState<Region>("region5", "all");
+  const [langZone, setLangZone] = useCanvasState<LangZoneFilter>("langZone1", "all");
   const [country, setCountry] = useCanvasState<CountryCode>("country8", "all");
   const [primary, setPrimary] = useCanvasState<Primary>("primary7", "all");
   const [creditL1, setCreditL1] = useCanvasState<CreditProdL1>("credL1a", "all");
@@ -17073,9 +23929,22 @@ export default function Canvas() {
   const [licenseKind, setLicenseKind] = useCanvasState<LicenseKind | "all">("license4", "all");
   const [fundKind, setFundKind] = useCanvasState<FundParticipationKind | "all">("fundKind5", "all");
   const [trafficKind, setTrafficKind] = useCanvasState<TrafficServiceKind | "all">("trafficKind2", "all");
+  const [paymentKind, setPaymentKind] = useCanvasState<PaymentKind | "all">("paymentKind1", "all");
+  const [equityKind, setEquityKind] = useCanvasState<EquityInvestorKind | "all">("equityKind1", "all");
   const [regLicenseId, setRegLicenseId] = useCanvasState<string>("regLic3", "all");
-  const [keyword, setKeyword] = useCanvasState("kw1", "");
-  const [createdPlayers, setCreatedPlayers] = useCanvasState<CreditDraft[]>("createdPlayers1", []);
+  /** 玩家列表：按 GP Finance 借贷榜名次排序（需先选具体国家） */
+  const [storeRankSort, setStoreRankSort] = useCanvasState<StoreRankSortMode>("storeRankSort1", "off");
+  const [keywordSaved, setKeywordSaved] = useCanvasState("kw1", "");
+  const searchDraft = getSearchDraft();
+  // 重建后回填 draft；受控展示取两侧较长者（与登录框同口径）
+  if (keywordSaved && !searchDraft.q) searchDraft.q = keywordSaved;
+  const keyword = pickLoginValue(keywordSaved, searchDraft.q);
+  function setKeyword(v: string) {
+    searchDraft.q = v;
+    // 必须即时 setState：仅写 draft 不重渲染，受控 Composer 会吞字（「录不进去」）
+    setKeywordSaved(v);
+  }
+  const [createdPlayers, setCreatedPlayers] = useCanvasState<CreditDraft[]>("createdPlayers1", EMPTY_CREDIT_DRAFTS);
 
   const showScene = primary === "all" || primary === "scene";
   const showCredit = primary === "all" || primary === "credit";
@@ -17086,34 +23955,106 @@ export default function Canvas() {
     ...createdPlayers.map((d) => finalizeCredit(d)),
   ]);
 
-  const sceneRows = filterScenes(region, country, sceneTag, sceneSub, licenseKind).filter((r) =>
-    sceneMatchesKeyword(r, kw),
-  );
-  const creditRows = filterCredits(
-    region,
-    country,
-    creditL1,
-    creditL2,
-    creditL3,
-    sceneTag,
-    licenseKind,
-  )
-    .filter((r) => r.institutionTypes.includes("玩家"))
-    .filter((r) => creditMatchesKeyword(r, kw));
+  // 总览/场景/宏观页不跑玩家大表过滤，降低重渲染成本（大画布滚动时宿主易重挂）
+  const needPlayerLists = hub === "玩家" || (hub === "home" && Boolean(kw));
+  const sceneRows = needPlayerLists
+    ? filterScenes(region, country, sceneTag, sceneSub, licenseKind, langZone).filter((r) =>
+        sceneMatchesKeyword(r, kw),
+      )
+    : [];
+  const creditRows = needPlayerLists
+    ? filterCredits(
+        region,
+        country,
+        creditL1,
+        creditL2,
+        creditL3,
+        sceneTag,
+        licenseKind,
+        langZone,
+      )
+        .filter((r) => r.institutionTypes.includes("玩家"))
+        .filter((r) => creditMatchesKeyword(r, kw))
+    : [];
   // filterCredits 基于静态 credits；人工创设需并入
-  const creditRowsLive = dedupeCreditRows([
-    ...creditRows,
-    ...liveCredits.filter((r) => {
-      if (!r.institutionTypes.includes("玩家")) return false;
-      if (!creditMatchesKeyword(r, kw)) return false;
-      if (region !== "all" && r.region !== region) return false;
-      if (!matchesCountry(r.group, r.countries, country)) return false;
-      if (!matchesCreditProductTree(r, creditL1, creditL2, creditL3)) return false;
-      if (licenseKind !== "all" && !r.licenseKinds.includes(licenseKind)) return false;
-      return !creditRows.some((x) => x.group === r.group);
-    }),
-  ]);
+  const creditRowsLive = needPlayerLists
+    ? dedupeCreditRows([
+        ...creditRows,
+        ...liveCredits.filter((r) => {
+          if (!r.institutionTypes.includes("玩家")) return false;
+          if (!creditMatchesKeyword(r, kw)) return false;
+          if (region !== "all" && r.region !== region) return false;
+          if (!matchesLanguageZoneFilter(r.group, r.countries, langZone)) return false;
+          if (!matchesCountryFilter(r.group, r.countries, country)) return false;
+          if (!matchesCreditProductTree(r, creditL1, creditL2, creditL3)) return false;
+          if (licenseKind !== "all" && !r.licenseKinds.includes(licenseKind)) return false;
+          return !creditRows.some((x) => x.group === r.group);
+        }),
+      ])
+    : [];
   const creditProdLabel = creditProductFilterLabel(creditL1, creditL2, creditL3);
+
+  const storeRankCountry = countryFilterSingle(country);
+  const sceneRowsSorted =
+    storeRankSort === "off" || !storeRankCountry || primary !== "credit"
+      ? sceneRows
+      : sceneRows.slice().sort((a, b) =>
+          compareByStoreRank(
+            storeRankCountry,
+            `${a.group} ${a.apps} ${a.trafficRank} ${a.diandian}`,
+            `${b.group} ${b.apps} ${b.trafficRank} ${b.diandian}`,
+            storeRankSort,
+            undefined,
+            a.group,
+            b.group,
+          ),
+        );
+  const creditRowsSorted = (() => {
+    const base =
+      storeRankSort === "off" || !storeRankCountry || primary !== "credit"
+        ? creditRowsLive.slice()
+        : creditRowsLive.slice().sort((a, b) =>
+            compareByStoreRank(
+              storeRankCountry,
+              `${a.group} ${a.brands} ${a.trafficRank} ${a.diandian}`,
+              `${b.group} ${b.brands} ${a.trafficRank} ${a.diandian}`,
+              storeRankSort,
+              undefined,
+              a.group,
+              b.group,
+            ),
+          );
+    if (!kw.trim()) return base;
+    return base.sort(
+      (a, b) =>
+        keywordRelevanceRank(kw, a.group, a.brands, a.controller, a.note, a.licenseReg) -
+        keywordRelevanceRank(kw, b.group, b.brands, b.controller, b.note, b.licenseReg),
+    );
+  })();
+  const storeRankCoverage = storeRankCountry
+    ? countRanksForCountry(storeRankCountry)
+    : STORE_RANK_FINANCE.entries.length;
+  const storeRankHitScene = storeRankCountry && storeRankSort !== "off"
+    ? sceneRowsSorted.filter(
+        (r) =>
+          lookupStoreRank({
+            country: storeRankCountry,
+            text: `${r.group} ${r.apps} ${r.trafficRank} ${r.diandian}`,
+            group: r.group,
+          }) != null,
+      ).length
+    : 0;
+  const storeRankHitCredit = storeRankCountry && storeRankSort !== "off"
+    ? creditRowsSorted.filter(
+        (r) =>
+          lookupStoreRank({
+            country: storeRankCountry,
+            text: `${r.group} ${r.brands} ${r.trafficRank} ${r.diandian}`,
+            group: r.group,
+          }) != null,
+      ).length
+    : 0;
+
   const nSceneNative = scenes.length;
   const nFinanceNative = liveCredits.filter((r) => r.institutionTypes.includes("玩家")).length;
 
@@ -17122,32 +24063,40 @@ export default function Canvas() {
     return credits.filter((r) => r.institutionTypes.includes(t)).length;
   }
 
-  const regLicenseOptions = licensesForGeo(region, country);
+  const regLicenseOptions = licensesForGeo(region, country, licenseKind);
   const activeRegLicense =
     regLicenseId === "all" ? null : (REGULATORY_LICENSE_CATALOG.find((l) => l.id === regLicenseId) ?? null);
 
   const ecoRows =
-    hub !== "home" && hub !== "玩家"
+    isInstHub && hub !== "玩家"
       ? credits
           .filter((r) => {
-            if (!r.institutionTypes.includes(hub)) return false;
-            if (hub === "资金参与机构" && fundKind !== "all" && !r.fundKinds.includes(fundKind)) {
+            const inst = hub as InstitutionType;
+            if (!r.institutionTypes.includes(inst)) return false;
+            if (inst === "资金参与机构" && fundKind !== "all" && !r.fundKinds.includes(fundKind)) {
               return false;
             }
-            if (hub === "流量服务商" && trafficKind !== "all" && !r.trafficKinds.includes(trafficKind)) {
+            if (inst === "流量服务商" && trafficKind !== "all" && !r.trafficKinds.includes(trafficKind)) {
               return false;
             }
-            if (isGeoScopedEcoType(hub)) {
+            if (inst === "支付服务机构" && paymentKind !== "all" && !r.paymentKinds.includes(paymentKind)) {
+              return false;
+            }
+            if (inst === "股权投资人" && equityKind !== "all" && !r.equityKinds.includes(equityKind)) {
+              return false;
+            }
+            if (isGeoScopedEcoType(inst)) {
               if (region !== "all" && r.region !== region && !hasWorldwideCoverage(r.countries)) {
                 return false;
               }
-              if (!matchesCountry(r.group, r.countries, country)) return false;
+              if (!matchesLanguageZoneFilter(r.group, r.countries, langZone)) return false;
+              if (!matchesCountryFilter(r.group, r.countries, country)) return false;
             }
-            if (hub === "监管") {
+            if (inst === "监管") {
               if (licenseKind !== "all" && !regulatorMatchesLicenseKind(r, licenseKind)) return false;
               if (activeRegLicense && !regulatorMatchesLicense(r, activeRegLicense)) return false;
             }
-            if (!creditMatchesKeyword(r, kw)) return false;
+            // 机构类型浏览不受顶栏搜索词过滤（搜「快牛」再点流量服务商会误成 0 家）；关键词检索只在总览搜索结果里做
             return true;
           })
           .slice()
@@ -17161,13 +24110,29 @@ export default function Canvas() {
               const d = rank(a) - rank(b);
               if (d !== 0) return d;
             }
+            if (hub === "支付服务机构" && paymentKind === "all") {
+              const rank = (r: CreditRow) => {
+                const idx = PAYMENT_KIND_ORDER.findIndex((k) => r.paymentKinds.includes(k));
+                return idx === -1 ? PAYMENT_KIND_ORDER.length : idx;
+              };
+              const d = rank(a) - rank(b);
+              if (d !== 0) return d;
+            }
+            if (hub === "股权投资人" && equityKind === "all") {
+              const rank = (r: CreditRow) => {
+                const idx = EQUITY_KIND_ORDER.findIndex((k) => r.equityKinds.includes(k));
+                return idx === -1 ? EQUITY_KIND_ORDER.length : idx;
+              };
+              const d = rank(a) - rank(b);
+              if (d !== 0) return d;
+            }
             return 0;
           })
       : [];
 
   /** 反向映射用池：不受洲际/国家筛选，只看该机构类型（及资金细分）全量覆盖 */
   const hubGeoCoverage = (() => {
-    if (hub === "home") {
+    if (hub === "home" || hub === "scenes" || hub === "macro") {
       return collectGeoCoverage([]);
     }
     if (hub === "玩家") {
@@ -17184,11 +24149,18 @@ export default function Canvas() {
       return collectGeoCoverage([...sceneBits, ...creditBits]);
     }
     const pool = credits.filter((r) => {
-      if (!r.institutionTypes.includes(hub)) return false;
-      if (hub === "资金参与机构" && fundKind !== "all" && !r.fundKinds.includes(fundKind)) {
+      const inst = hub as InstitutionType;
+      if (!r.institutionTypes.includes(inst)) return false;
+      if (inst === "资金参与机构" && fundKind !== "all" && !r.fundKinds.includes(fundKind)) {
         return false;
       }
-      if (hub === "流量服务商" && trafficKind !== "all" && !r.trafficKinds.includes(trafficKind)) {
+      if (inst === "流量服务商" && trafficKind !== "all" && !r.trafficKinds.includes(trafficKind)) {
+        return false;
+      }
+      if (inst === "支付服务机构" && paymentKind !== "all" && !r.paymentKinds.includes(paymentKind)) {
+        return false;
+      }
+      if (inst === "股权投资人" && equityKind !== "all" && !r.equityKinds.includes(equityKind)) {
         return false;
       }
       return true;
@@ -17201,18 +24173,65 @@ export default function Canvas() {
     );
   })();
 
-  const searchSceneHits = kw ? scenes.filter((r) => sceneMatchesKeyword(r, kw)).slice(0, 40) : [];
-  const searchCreditHits = kw
-    ? credits
-        .filter((r) => r.institutionTypes.includes("玩家") && creditMatchesKeyword(r, kw))
+  const searchSceneHits = kw
+    ? scenes
+        .filter((r) => sceneMatchesKeyword(r, kw))
+        .slice()
+        .sort(
+          (a, b) =>
+            keywordRelevanceRank(kw, a.group, a.apps, a.controller) -
+            keywordRelevanceRank(kw, b.group, b.apps, b.controller),
+        )
         .slice(0, 40)
+    : [];
+  const searchCreditHits = kw
+    ? collapseCreditHitsByBrandFamily(
+        credits
+          .filter((r) => r.institutionTypes.includes("玩家") && creditMatchesKeyword(r, kw))
+          .slice()
+          .sort(
+            (a, b) =>
+              keywordRelevanceRank(kw, a.group, a.brands, a.controller, a.note) -
+              keywordRelevanceRank(kw, b.group, b.brands, b.controller, b.note),
+          ),
+        kw,
+      ).slice(0, 40)
     : [];
   const searchEcoHits = kw
     ? credits
         .filter((r) => !r.institutionTypes.includes("玩家") && creditMatchesKeyword(r, kw))
+        .slice()
+        .sort(
+          (a, b) =>
+            keywordRelevanceRank(kw, a.group, a.brands, a.controller, a.note) -
+            keywordRelevanceRank(kw, b.group, b.brands, b.controller, b.note),
+        )
         .slice(0, 40)
     : [];
-  const searchHitCount = searchSceneHits.length + searchCreditHits.length + searchEcoHits.length;
+  const searchMacroHits = kw
+    ? (Object.keys(COUNTRY_MACRO) as Exclude<CountryCode, "all">[])
+        .filter((code) => macroCountryMatchesKeyword(code, kw))
+        .slice(0, 40)
+    : [];
+  const searchHitCount =
+    searchSceneHits.length +
+    searchCreditHits.length +
+    searchEcoHits.length +
+    searchMacroHits.length;
+  /** 搜索块顺序：谁更贴关键词谁在前（快牛等信贷原生不应被场景块压在下面） */
+  const searchSceneBest = searchSceneHits.length
+    ? Math.min(
+        ...searchSceneHits.map((r) => keywordRelevanceRank(kw, r.group, r.apps, r.controller)),
+      )
+    : 99;
+  const searchCreditBest = searchCreditHits.length
+    ? Math.min(
+        ...searchCreditHits.map((r) =>
+          keywordRelevanceRank(kw, r.group, r.brands, r.controller, r.note),
+        ),
+      )
+    : 99;
+  const searchCreditBeforeScene = searchCreditBest < searchSceneBest;
 
   const regLicenseHolders = activeRegLicense
     ? [
@@ -17228,37 +24247,60 @@ export default function Canvas() {
       (r) => r.institutionTypes.includes("资金参与机构") && r.fundKinds.includes(k),
     ).length;
   }
+  function countEquityKind(k: EquityInvestorKind): number {
+    return credits.filter(
+      (r) => r.institutionTypes.includes("股权投资人") && r.equityKinds.includes(k),
+    ).length;
+  }
 
   function countTrafficKind(k: TrafficServiceKind): number {
     return credits.filter((r) => {
       if (!r.institutionTypes.includes("流量服务商") || !r.trafficKinds.includes(k)) return false;
       if (region !== "all" && r.region !== region && !hasWorldwideCoverage(r.countries)) return false;
-      if (!matchesCountry(r.group, r.countries, country)) return false;
+      if (!matchesLanguageZoneFilter(r.group, r.countries, langZone)) return false;
+      if (!matchesCountryFilter(r.group, r.countries, country)) return false;
       return true;
     }).length;
   }
 
-  const [authSession] = useCanvasState("authSession1", "guest");
-  // 网站版：默认以访客进入；退出后仍可一键访客进入或公司邮箱登录
+  function countPaymentKind(k: PaymentKind): number {
+    return credits.filter((r) => {
+      if (!r.institutionTypes.includes("支付服务机构") || !r.paymentKinds.includes(k)) return false;
+      if (region !== "all" && r.region !== region && !hasWorldwideCoverage(r.countries)) return false;
+      if (!matchesLanguageZoneFilter(r.group, r.countries, langZone)) return false;
+      if (!matchesCountryFilter(r.group, r.countries, country)) return false;
+      return true;
+    }).length;
+  }
+
+  const [authSession] = useCanvasState("authSession1", "");
   if (!authSession) {
-    return <LoginPage />;
+    return (
+      <PersistScrollShell>
+        <LoginPage />
+      </PersistScrollShell>
+    );
   }
 
   if (appTab === "screen") {
     return (
-      <Stack gap={20}>
-        <SessionChrome />
-        <AppTabBar appTab={appTab} setAppTab={setAppTab} />
-        <BigScreen />
-      </Stack>
+      <PersistScrollShell>
+        <Stack gap={20} style={{ scrollbarGutter: "stable", overflowAnchor: "none" }}>
+          <SessionChrome />
+          <AppTabBar appTab={appTab} setAppTab={setAppTab} />
+          <BigScreen />
+        </Stack>
+      </PersistScrollShell>
     );
   }
 
   return (
-    <Stack gap={20}>
+    <PersistScrollShell>
+    <Stack gap={20} style={{ scrollbarGutter: "stable", overflowAnchor: "none" }}>
       <SessionChrome />
-
       <AppTabBar appTab={appTab} setAppTab={setAppTab} />
+
+      <H1>CRM生态系统</H1>
 
       <CursorStyleComposer
         value={keyword}
@@ -17301,6 +24343,31 @@ export default function Canvas() {
         <Row gap={6} wrap>
           <FilterChip label="总览" active={hub === "home"} onClick={() => setHub("home")} />
         </Row>
+        <Stack gap={4}>
+          <Text size="small" tone="secondary" weight="medium">
+            场景与宏观
+          </Text>
+          <Row gap={6} wrap>
+            <FilterChip
+              label={`线上数字经济 · ${SCENE_WIDE_TABLE.length + WEB3_SCENE_WIDE_TABLE.length}`}
+              active={hub === "scenes"}
+              clearable
+              onClick={() => setHub(hub === "scenes" ? "home" : "scenes")}
+            />
+            <FilterChip
+              label={`国别宏观 · ${Object.keys(COUNTRY_MACRO).length}`}
+              active={hub === "macro"}
+              clearable
+              onClick={() => setHub(hub === "macro" ? "home" : "macro")}
+            />
+            <FilterChip
+              label="对照"
+              active={hub === "compare"}
+              clearable
+              onClick={() => setHub(hub === "compare" ? "home" : "compare")}
+            />
+          </Row>
+        </Stack>
         {INST_BUCKET_ORDER.map((bucket) => (
           <Stack gap={4}>
             <Text size="small" tone="secondary" weight="medium">
@@ -17325,22 +24392,45 @@ export default function Canvas() {
           {kw ? (
             <Stack gap={12}>
               <H2>搜索结果 · {searchHitCount}</H2>
-              {searchSceneHits.length ? (
-                <Stack gap={8}>
-                  <Text weight="medium">场景原生</Text>
-                  {searchSceneHits.map((r) => (
-                    <ScenePlayer r={r} />
-                  ))}
-                </Stack>
-              ) : null}
-              {searchCreditHits.length ? (
-                <Stack gap={8}>
-                  <Text weight="medium">信贷原生</Text>
-                  {searchCreditHits.map((r) => (
-                    <CreditPlayer r={r} />
-                  ))}
-                </Stack>
-              ) : null}
+              {searchCreditBeforeScene ? (
+                <>
+                  {searchCreditHits.length ? (
+                    <Stack gap={8}>
+                      <Text weight="medium">信贷原生</Text>
+                      {searchCreditHits.map((r) => (
+                        <CreditPlayer r={r} />
+                      ))}
+                    </Stack>
+                  ) : null}
+                  {searchSceneHits.length ? (
+                    <Stack gap={8}>
+                      <Text weight="medium">场景原生</Text>
+                      {searchSceneHits.map((r) => (
+                        <ScenePlayer r={r} />
+                      ))}
+                    </Stack>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  {searchSceneHits.length ? (
+                    <Stack gap={8}>
+                      <Text weight="medium">场景原生</Text>
+                      {searchSceneHits.map((r) => (
+                        <ScenePlayer r={r} />
+                      ))}
+                    </Stack>
+                  ) : null}
+                  {searchCreditHits.length ? (
+                    <Stack gap={8}>
+                      <Text weight="medium">信贷原生</Text>
+                      {searchCreditHits.map((r) => (
+                        <CreditPlayer r={r} />
+                      ))}
+                    </Stack>
+                  ) : null}
+                </>
+              )}
               {searchEcoHits.length ? (
                 <Stack gap={8}>
                   <Text weight="medium">生态机构</Text>
@@ -17349,8 +24439,28 @@ export default function Canvas() {
                   ))}
                 </Stack>
               ) : null}
+              {searchMacroHits.length ? (
+                <Stack gap={8}>
+                  <Text weight="medium">国别宏观</Text>
+                  <Row gap={6} wrap>
+                    {searchMacroHits.map((code) => (
+                      <FilterChip
+                        key={code}
+                        label={COUNTRY_LABEL[code]}
+                        active={false}
+                        onClick={() => {
+                          setHub("macro");
+                          const reg = regionForCountry(code);
+                          if (reg) setRegion(reg);
+                          setCountry(code);
+                        }}
+                      />
+                    ))}
+                  </Row>
+                </Stack>
+              ) : null}
               {!searchHitCount ? (
-                <Callout tone="neutral">未找到匹配机构。可换关键词，或点 + 导入创设材料。</Callout>
+                <Callout tone="neutral">未找到匹配机构或国别。可换关键词，或点 + 导入创设材料。</Callout>
               ) : null}
               <Divider />
             </Stack>
@@ -17365,7 +24475,7 @@ export default function Canvas() {
                   {INST_BUCKET_LABEL[bucket]}
                 </Text>
                 <Grid
-                  columns="repeat(auto-fit, minmax(min(100%, 200px), 1fr))"
+                  columns={3}
                   gap={8}
                   align="stretch"
                 >
@@ -17424,13 +24534,209 @@ export default function Canvas() {
           </Stack>
 
           <Divider />
+          <H2>场景与宏观</H2>
+          <Grid
+            columns={3}
+            gap={8}
+            align="stretch"
+          >
+            <div
+              style={{ cursor: "pointer", minWidth: 0, height: "100%" }}
+              onClick={() => setHub("scenes")}
+              onKeyDown={(e: { key: string; preventDefault: () => void }) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setHub("scenes");
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              title="查看线上数字经济场景"
+            >
+              <Card style={{ height: "100%" }}>
+                <CardHeader
+                  trailing={
+                    <Row gap={6} align="center">
+                      <Pill tone="neutral" size="sm">
+                        {String(SCENE_WIDE_TABLE.length + WEB3_SCENE_WIDE_TABLE.length)}
+                      </Pill>
+                      <Text size="small" tone="tertiary" as="span">
+                        →
+                      </Text>
+                    </Row>
+                  }
+                >
+                  线上数字经济
+                </CardHeader>
+                <CardBody>
+                  <Text
+                    size="small"
+                    tone="tertiary"
+                    style={{
+                      fontSize: 11,
+                      lineHeight: 1.35,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    Web2 / Web3 / Agent 场景词条；点选后按层筛选浏览
+                  </Text>
+                </CardBody>
+              </Card>
+            </div>
+            <div
+              style={{ cursor: "pointer", minWidth: 0, height: "100%" }}
+              onClick={() => setHub("macro")}
+              onKeyDown={(e: { key: string; preventDefault: () => void }) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setHub("macro");
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              title="查看国别宏观因子"
+            >
+              <Card style={{ height: "100%" }}>
+                <CardHeader
+                  trailing={
+                    <Row gap={6} align="center">
+                      <Pill tone="neutral" size="sm">
+                        {String(Object.keys(COUNTRY_MACRO).length)}
+                      </Pill>
+                      <Text size="small" tone="tertiary" as="span">
+                        →
+                      </Text>
+                    </Row>
+                  }
+                >
+                  国别宏观因子
+                </CardHeader>
+                <CardBody>
+                  <Text
+                    size="small"
+                    tone="tertiary"
+                    style={{
+                      fontSize: 11,
+                      lineHeight: 1.35,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    点选洲际/国家筛宏观快照；框架表作备查
+                  </Text>
+                </CardBody>
+              </Card>
+            </div>
+          </Grid>
+
+          <Divider />
+          <MorningBriefHome />
+        </Stack>
+      ) : null}
+
+      {hub === "scenes" ? (
+        <Stack gap={16}>
           <H2>线上数字经济场景</H2>
           <Text size="small" tone="tertiary">
-            Web2 / Web3 / Agent · 词条统一：名称 → 行为/目的 → 玩家名单
+            Web2 / Web3 / Agent · 词条：名称 → 行为/目的 → 玩家名单
           </Text>
           <DigitalSceneAtlasBrowse />
         </Stack>
       ) : null}
+
+      {hub === "macro" ? (
+        <Stack gap={16}>
+          <H2>国别宏观因子</H2>
+          <Text size="small" tone="tertiary">
+            {CASH_LOAN_MACRO_FRAMEWORK.purpose} · 先选属地，再看单国快照
+          </Text>
+          <Stack gap={10}>
+            <Stack gap={4}>
+              <Text size="small" weight="medium">
+                涉足洲际
+              </Text>
+              <Row gap={6} wrap>
+                {(Object.keys(REGION_LABEL) as Region[]).map((k) => (
+                  <FilterChip
+                    label={REGION_LABEL[k]}
+                    active={region === k}
+                    clearable={k !== "all"}
+                    onClick={() => {
+                      const next = region === k && k !== "all" ? "all" : k;
+                      setRegion(next);
+                      if (!countryInRegion(country, next)) setCountry("all");
+                      if (!langZoneInRegion(langZone, next)) setLangZone("all");
+                    }}
+                  />
+                ))}
+              </Row>
+            </Stack>
+            <Stack gap={4}>
+              <Text size="small" weight="medium">
+                语言区
+              </Text>
+              <Text size="small" tone="tertiary">
+                按展业语言区收窄；选项随洲际变化
+              </Text>
+              <Row gap={6} wrap>
+                <FilterChip
+                  label="全部语言区"
+                  active={langZone === "all"}
+                  onClick={() => setLangZone("all")}
+                />
+                {languageZonesForRegion(region).map((z) => (
+                  <FilterChip
+                    label={z}
+                    active={langZone === z}
+                    clearable
+                    onClick={() => {
+                      const next = langZone === z ? "all" : z;
+                      setLangZone(next);
+                      if (next !== "all") {
+                        const allow = new Set(countriesInLanguageZone(next));
+                        if (country !== "all" && !allow.has(country as string)) setCountry("all");
+                      }
+                    }}
+                  />
+                ))}
+              </Row>
+            </Stack>
+            <Stack gap={4}>
+              <Text size="small" weight="medium">
+                涉足国家/地区
+              </Text>
+              <Row gap={6} wrap>
+                {countriesForRegionAndLang(region, langZone).map((k) => (
+                  <FilterChip
+                    label={COUNTRY_LABEL[k]}
+                    active={country === k}
+                    clearable={k !== "all"}
+                    onClick={() => setCountry(country === k && k !== "all" ? "all" : k)}
+                  />
+                ))}
+              </Row>
+            </Stack>
+            <CountryMacroPanel country={country} />
+            <MacroFactorFrameworkOverview />
+          </Stack>
+        </Stack>
+      ) : null}
+
+      {hub === "compare" ? (
+        <Stack gap={16}>
+          <H2>对照</H2>
+          <Text size="small" tone="tertiary">
+            国别宏观、玩家及其它机构均可多选并排对照（最多 6 个）；大屏页也可进入对照。
+          </Text>
+          <CompareHubPanel />
+        </Stack>
+      ) : null}
+
 
       {hub === "玩家" ? (
         <Stack gap={16}>
@@ -17455,6 +24761,38 @@ export default function Canvas() {
                       const next = region === k && k !== "all" ? "all" : k;
                       setRegion(next);
                       if (!countryInRegion(country, next)) setCountry("all");
+                      if (!langZoneInRegion(langZone, next)) setLangZone("all");
+                    }}
+                  />
+                ))}
+              </Row>
+            </Stack>
+
+            <Stack gap={4}>
+              <Text size="small" weight="medium">
+                语言区
+              </Text>
+              <Text size="small" tone="tertiary">
+                按展业语言区收窄；选项随洲际变化
+              </Text>
+              <Row gap={6} wrap>
+                <FilterChip
+                  label="全部语言区"
+                  active={langZone === "all"}
+                  onClick={() => setLangZone("all")}
+                />
+                {languageZonesForRegion(region).map((z) => (
+                  <FilterChip
+                    label={z}
+                    active={langZone === z}
+                    clearable
+                    onClick={() => {
+                      const next = langZone === z ? "all" : z;
+                      setLangZone(next);
+                      if (next !== "all") {
+                        const allow = new Set(countriesInLanguageZone(next));
+                        if (country !== "all" && !allow.has(country as string)) setCountry("all");
+                      }
                     }}
                   />
                 ))}
@@ -17466,7 +24804,7 @@ export default function Canvas() {
                 涉足国家/地区
               </Text>
               <Row gap={6} wrap>
-                {countriesForRegion(region).map((k) => (
+                {countriesForRegionAndLang(region, langZone).map((k) => (
                   <FilterChip
                     label={COUNTRY_LABEL[k]}
                     active={country === k}
@@ -17476,6 +24814,8 @@ export default function Canvas() {
                 ))}
               </Row>
             </Stack>
+
+            <CountryMacroPanel country={country} />
 
             <Stack gap={4}>
               <Text size="small" weight="medium">
@@ -17693,79 +25033,179 @@ export default function Canvas() {
                 ))}
               </Row>
             </Stack>
+
+            {primary === "credit" && storeRankCountry ? (
+              <Stack gap={6} style={{ minWidth: 240, maxWidth: 520 }}>
+                <Text size="small" weight="medium">
+                  商店榜排序 · Finance借贷
+                </Text>
+                <Select
+                  value={storeRankSort}
+                  onChange={(v) => setStoreRankSort(v as StoreRankSortMode)}
+                  options={storeRankSortOptions()}
+                />
+                <Text size="small" tone="tertiary">
+                  已选 {COUNTRY_LABEL[storeRankCountry]} · iOS Finance 入库 {storeRankCoverage} 条。命中信贷{" "}
+                  {storeRankHitCredit} 家（未命中排末尾，不单独标注）。
+                </Text>
+              </Stack>
+            ) : null}
           </Stack>
 
           <Divider />
 
-          {showScene ? (
-            <Stack gap={12}>
-              <Row gap={8} align="center" wrap>
-                <H2>场景原生机构</H2>
-                <Pill tone="info">{REGION_LABEL[region]}</Pill>
-                {country !== "all" ? <Pill tone="info">{COUNTRY_LABEL[country]}</Pill> : null}
-                {sceneTag !== "all" ? <Pill tone="info">{SCENE_TAG_LABEL[sceneTag]}</Pill> : null}
-                {sceneSub !== "all" ? (
-                  <Pill tone="neutral">
-                    {SCENE_TAG_LABEL[SCENE_SUB_PARENT[sceneSub]]}/{SCENE_SUB_LABEL[sceneSub]}
-                  </Pill>
-                ) : null}
-                {licenseKind !== "all" ? (
-                  <Pill tone="success">{LICENSE_KIND_LABEL[licenseKind]}</Pill>
-                ) : null}
-                <Text size="small" tone="secondary">
-                  {sceneRows.length} 家 · 三项：规模(GMV) / 用户 / 增速(收入YoY)；点「详情」展开
-                </Text>
-              </Row>
-              <Stack gap={8}>
-                {sceneRows.map((r) => (
-                  <ScenePlayer r={r} />
-                ))}
+          {(() => {
+            const sceneBlock = showScene ? (
+              <Stack gap={12}>
+                <Row gap={8} align="center" wrap>
+                  <H2>场景原生机构</H2>
+                  <Pill tone="info">{REGION_LABEL[region]}</Pill>
+                  {country !== "all" ? <Pill tone="info">{COUNTRY_LABEL[country]}</Pill> : null}
+                  {sceneTag !== "all" ? <Pill tone="info">{SCENE_TAG_LABEL[sceneTag]}</Pill> : null}
+                  {sceneSub !== "all" ? (
+                    <Pill tone="neutral">
+                      {SCENE_TAG_LABEL[SCENE_SUB_PARENT[sceneSub]]}/{SCENE_SUB_LABEL[sceneSub]}
+                    </Pill>
+                  ) : null}
+                  {licenseKind !== "all" ? (
+                    <Pill tone="success">{LICENSE_KIND_LABEL[licenseKind]}</Pill>
+                  ) : null}
+                  {primary === "credit" && storeRankSort !== "off" && storeRankCountry ? (
+                    <Pill tone="warning">{`商店榜排序 · 命中 ${storeRankHitScene}`}</Pill>
+                  ) : null}
+                  <Text size="small" tone="secondary">
+                    {sceneRowsSorted.length} 家 · 三项：规模(GMV) / 用户 / 增速(收入YoY)；点「详情」展开
+                  </Text>
+                </Row>
+                <Stack gap={8}>
+                  {sceneRowsSorted.map((r) => {
+                    const hit =
+                      storeRankCountry && storeRankSort !== "off" && primary === "credit"
+                        ? lookupStoreRank({
+                            country: storeRankCountry,
+                            text: `${r.group} ${r.apps} ${r.trafficRank} ${r.diandian}`,
+                            group: r.group,
+                          })
+                        : null;
+                    return (
+                      <ScenePlayer
+                        key={`sc_${r.group}`}
+                        r={r}
+                        iosFinanceRank={hit?.rank}
+                      />
+                    );
+                  })}
+                </Stack>
               </Stack>
-            </Stack>
-          ) : null}
-
-          {showCredit ? (
-            <Stack gap={12}>
-              <Row gap={8} align="center" wrap>
-                <H2>信贷原生机构</H2>
-                <Pill tone="warning">{creditProdLabel}</Pill>
-                {sceneTag !== "all" ? <Pill tone="info">{SCENE_TAG_LABEL[sceneTag]}</Pill> : null}
-                {licenseKind !== "all" ? (
-                  <Pill tone="success">{LICENSE_KIND_LABEL[licenseKind]}</Pill>
-                ) : null}
-                <Pill tone="info">{REGION_LABEL[region]}</Pill>
-                {country !== "all" ? <Pill tone="info">{COUNTRY_LABEL[country]}</Pill> : null}
-                <Text size="small" tone="secondary">
-                  {creditRows.length} 家 · 三项：信贷规模 / 用户 / 增速；点「详情」展开
-                </Text>
-              </Row>
-              <Stack gap={8}>
-                {creditRows.map((r) => (
-                  <CreditPlayer r={r} />
-                ))}
+            ) : null;
+            const creditBlock = showCredit ? (
+              <Stack gap={12}>
+                <Row gap={8} align="center" wrap>
+                  <H2>信贷原生机构</H2>
+                  <Pill tone="warning">{creditProdLabel}</Pill>
+                  {sceneTag !== "all" ? <Pill tone="info">{SCENE_TAG_LABEL[sceneTag]}</Pill> : null}
+                  {licenseKind !== "all" ? (
+                    <Pill tone="success">{LICENSE_KIND_LABEL[licenseKind]}</Pill>
+                  ) : null}
+                  <Pill tone="info">{REGION_LABEL[region]}</Pill>
+                  {country !== "all" ? <Pill tone="info">{COUNTRY_LABEL[country]}</Pill> : null}
+                  {primary === "credit" && storeRankSort !== "off" && storeRankCountry ? (
+                    <Pill tone="warning">{`商店榜排序 · 命中 ${storeRankHitCredit}`}</Pill>
+                  ) : null}
+                  <Text size="small" tone="secondary">
+                    {creditRowsSorted.length} 家 · 三项：信贷规模 / 用户 / 增速；点「详情」展开
+                  </Text>
+                </Row>
+                <Stack gap={8}>
+                  {creditRowsSorted.map((r) => {
+                    const hit =
+                      storeRankCountry && storeRankSort !== "off" && primary === "credit"
+                        ? lookupStoreRank({
+                            country: storeRankCountry,
+                            text: `${r.group} ${r.brands} ${r.trafficRank} ${r.diandian}`,
+                            group: r.group,
+                          })
+                        : null;
+                    return (
+                      <CreditPlayer
+                        key={`cr_${r.group}`}
+                        r={r}
+                        iosFinanceRank={hit?.rank}
+                      />
+                    );
+                  })}
+                </Stack>
               </Stack>
-            </Stack>
-          ) : null}
+            ) : null;
+            // 有关键词时：信贷原生命中更强（如快牛）则信贷块置顶；无关键词保持场景在前
+            const playerCreditFirst =
+              Boolean(kw.trim()) &&
+              creditRowsSorted.length > 0 &&
+              (sceneRowsSorted.length === 0 ||
+                Math.min(
+                  ...creditRowsSorted.map((r) =>
+                    keywordRelevanceRank(kw, r.group, r.brands, r.controller, r.note),
+                  ),
+                ) <
+                  Math.min(
+                    ...sceneRowsSorted.map((r) =>
+                      keywordRelevanceRank(kw, r.group, r.apps, r.controller),
+                    ),
+                  ));
+            return playerCreditFirst ? (
+              <>
+                {creditBlock}
+                {sceneBlock}
+              </>
+            ) : (
+              <>
+                {sceneBlock}
+                {creditBlock}
+              </>
+            );
+          })()}
         </Stack>
       ) : null}
 
-      {hub !== "home" && hub !== "玩家" ? (
+      {isInstHub && hub !== "玩家" ? (
         <Stack gap={12}>
           <H2>{INSTITUTION_TYPE_LABEL[hub]}</H2>
+          {kw ? (
+            <Callout tone="warning">
+              顶栏仍留着搜索「{kw}」，机构类型页已不按该词过滤名单（避免流量平台等被滤成 0 家）。
+              关键词请回总览看搜索结果。
+              <Row gap={8} style={{ marginTop: 8 }}>
+                <Button variant="secondary" onClick={() => setKeyword("")}>
+                  清除搜索词
+                </Button>
+              </Row>
+            </Callout>
+          ) : null}
 
           {hub === "监管" ? (
             <Stack gap={12}>
               <Text size="small" tone="secondary">
-                市场定位：{INST_BUCKET_LABEL.监管与合规中介} · 先选洲际/国家，再选牌照粗类与当地法定牌照
+                市场定位：{INST_BUCKET_LABEL.监管与合规中介} · 先选洲际与具体国家，再选牌照粗类，当地法定牌照按选择展开
               </Text>
 
               <GeoAndLicenseFilters
                 region={region}
                 country={country}
+                langZone={langZone}
                 licenseKind={licenseKind}
                 onRegion={(next) => {
                   setRegion(next);
                   if (!countryInRegion(country, next)) setCountry("all");
+                  if (!langZoneInRegion(langZone, next)) setLangZone("all");
+                  setRegLicenseId("all");
+                }}
+                onLangZone={(next) => {
+                  setLangZone(next);
+                  if (next !== "all") {
+                    const allow = new Set(countriesInLanguageZone(next));
+                    const cur = countryFilterSingle(country);
+                    if (cur && !allow.has(cur)) setCountry("all");
+                  }
                   setRegLicenseId("all");
                 }}
                 onCountry={(next) => {
@@ -17782,35 +25222,45 @@ export default function Canvas() {
                 <Text size="small" weight="medium">
                   当地法定牌照（监管对应）
                 </Text>
-                <Row gap={6} wrap>
-                  <FilterChip
-                    label="全部法定牌照"
-                    active={regLicenseId === "all"}
-                    onClick={() => setRegLicenseId("all")}
-                  />
-                  {regLicenseOptions.map((lic) => (
-                    <FilterChip
-                      label={
-                        country === "all"
-                          ? `${lic.name}@${COUNTRY_LABEL[lic.country]}`
-                          : lic.name
-                      }
-                      active={regLicenseId === lic.id}
-                      clearable
-                      onClick={() =>
-                        setRegLicenseId(regLicenseId === lic.id ? "all" : lic.id)
-                      }
-                    />
-                  ))}
-                </Row>
-                {regLicenseOptions.length === 0 ? (
+                {country === "all" ? (
                   <Text size="small" tone="tertiary">
-                    当前地域尚未录入法定牌照对照表；请先选已建档市场（如中国、印尼、菲律宾）。
+                    请先在上方点选具体国家/地区；可选牌照粗类进一步收窄。选中后再展示该地法定牌照对照。
                   </Text>
                 ) : (
-                  <Text size="small" tone="secondary">
-                    例：选中国可见支付业务许可证/小额贷款等；选印尼可见 LPBBTI（P2P）等。
-                  </Text>
+                  <>
+                    <Row gap={6} wrap>
+                      <FilterChip
+                        label="全部法定牌照"
+                        active={regLicenseId === "all"}
+                        onClick={() => setRegLicenseId("all")}
+                      />
+                      {regLicenseOptions.map((lic) => (
+                        <FilterChip
+                          label={lic.name}
+                          active={regLicenseId === lic.id}
+                          clearable
+                          onClick={() =>
+                            setRegLicenseId(regLicenseId === lic.id ? "all" : lic.id)
+                          }
+                        />
+                      ))}
+                    </Row>
+                    {regLicenseOptions.length === 0 ? (
+                      <Text size="small" tone="tertiary">
+                        {licenseKind === "all"
+                          ? `「${COUNTRY_LABEL[country]}」暂未录入法定牌照对照表。`
+                          : `「${COUNTRY_LABEL[country]}」在「${LICENSE_KIND_LABEL[licenseKind]}」下暂无对照条目，可改选「全部牌照粗类」。`}
+                      </Text>
+                    ) : (
+                      <Text size="small" tone="secondary">
+                        当前 · {COUNTRY_LABEL[country]}
+                        {licenseKind !== "all"
+                          ? ` · ${LICENSE_KIND_LABEL[licenseKind]}`
+                          : ""}{" "}
+                        · {regLicenseOptions.length} 项法定牌照
+                      </Text>
+                    )}
+                  </>
                 )}
               </Stack>
 
@@ -17869,34 +25319,60 @@ export default function Canvas() {
           ) : hub === "流量服务商" ? (
             <Stack gap={12}>
               <Text size="small" tone="secondary">
-                市场定位：{INST_BUCKET_LABEL[INST_TYPE_TO_BUCKET[hub]]}
+                市场定位：{INST_BUCKET_LABEL[INST_TYPE_TO_BUCKET[hub as InstitutionType]]}
               </Text>
               <GeoAndLicenseFilters
                 region={region}
                 country={country}
+                langZone={langZone}
                 licenseKind={licenseKind}
                 showLicenseKind={false}
+                coveredRegions={hubGeoCoverage.regions}
+                coveredCountries={hubGeoCoverage.countries}
                 onRegion={(next) => {
                   setRegion(next);
                   if (!countryInRegion(country, next)) setCountry("all");
+                  if (!langZoneInRegion(langZone, next)) setLangZone("all");
                 }}
+                onLangZone={(next) => {
+                  setLangZone(next);
+                  if (next !== "all") {
+                    const allow = new Set(countriesInLanguageZone(next));
+                    const cur = countryFilterSingle(country);
+                    if (cur && !allow.has(cur)) setCountry("all");
+                  }
+                }}
+
                 onCountry={setCountry}
                 onLicenseKind={setLicenseKind}
               />
-              <Grid columns={4} gap={10}>
-                {TRAFFIC_KIND_ORDER.map((k) => (
-                  <Stat value={String(countTrafficKind(k))} label={TRAFFIC_KIND_LABEL[k]} />
-                ))}
-              </Grid>
-              <Stack gap={4} style={{ minWidth: 200, maxWidth: 420 }}>
+              <Stack gap={6}>
                 <Text size="small" weight="medium">
-                  流量服务商细分
+                  流量服务商细分（点选才生效；当前未单选则看全部）
                 </Text>
+                <Row gap={6} wrap>
+                  <FilterChip
+                    label={`全部 · ${TRAFFIC_KIND_ORDER.reduce((n, k) => n + countTrafficKind(k), 0)}`}
+                    active={trafficKind === "all"}
+                    onClick={() => setTrafficKind("all")}
+                  />
+                  {TRAFFIC_KIND_ORDER.map((k) => (
+                    <FilterChip
+                      key={k}
+                      label={`${TRAFFIC_KIND_LABEL[k]} · ${countTrafficKind(k)}`}
+                      active={trafficKind === k}
+                      clearable
+                      onClick={() => setTrafficKind(trafficKind === k ? "all" : k)}
+                    />
+                  ))}
+                </Row>
+              </Stack>
+              <Stack gap={4} style={{ minWidth: 200, maxWidth: 420 }}>
                 <Select
                   value={trafficKind}
                   onChange={(v) => setTrafficKind(v as TrafficServiceKind | "all")}
                   options={[
-                    { value: "all", label: "全部" },
+                    { value: "all", label: "全部（未单选细分）" },
                     ...TRAFFIC_KIND_ORDER.map((k) => ({
                       value: k,
                       label: `${TRAFFIC_KIND_LABEL[k]} · ${countTrafficKind(k)}`,
@@ -17906,10 +25382,17 @@ export default function Canvas() {
               </Stack>
               <Row gap={8} align="center" wrap>
                 <Pill tone="info">{REGION_LABEL[region]}</Pill>
-                {country !== "all" ? <Pill tone="info">{COUNTRY_LABEL[country]}</Pill> : null}
+                {formatCountryFilterLabel(country, region) ? (
+                  <Pill tone="info">{formatCountryFilterLabel(country, region)}</Pill>
+                ) : null}
+                {trafficKind !== "all" ? (
+                  <Pill tone="warning">{TRAFFIC_KIND_LABEL[trafficKind]}</Pill>
+                ) : (
+                  <Pill tone="neutral">细分未单选</Pill>
+                )}
                 <Text size="small" tone="secondary">
                   {trafficKind === "all"
-                    ? INSTITUTION_TYPE_BLURB.流量服务商
+                    ? "当前未单选细分，展示全部流量服务商样本。"
                     : TRAFFIC_KIND_BLURB[trafficKind]}{" "}
                   属地筛选后样本 {ecoRows.length} 家。
                 </Text>
@@ -17923,17 +25406,28 @@ export default function Canvas() {
           ) : hub === "资金参与机构" ? (
             <Stack gap={12}>
               <Text size="small" tone="secondary">
-                市场定位：{INST_BUCKET_LABEL[INST_TYPE_TO_BUCKET[hub]]}
+                市场定位：{INST_BUCKET_LABEL[INST_TYPE_TO_BUCKET[hub as InstitutionType]]}
               </Text>
               <GeoAndLicenseFilters
                 region={region}
                 country={country}
+                langZone={langZone}
                 licenseKind={licenseKind}
                 showLicenseKind={false}
                 onRegion={(next) => {
                   setRegion(next);
                   if (!countryInRegion(country, next)) setCountry("all");
+                  if (!langZoneInRegion(langZone, next)) setLangZone("all");
                 }}
+                onLangZone={(next) => {
+                  setLangZone(next);
+                  if (next !== "all") {
+                    const allow = new Set(countriesInLanguageZone(next));
+                    const cur = countryFilterSingle(country);
+                    if (cur && !allow.has(cur)) setCountry("all");
+                  }
+                }}
+
                 onCountry={setCountry}
                 onLicenseKind={setLicenseKind}
               />
@@ -17974,30 +25468,176 @@ export default function Canvas() {
                 ))}
               </Stack>
             </Stack>
+          ) : hub === "股权投资人" ? (
+            <Stack gap={12}>
+              <Text size="small" tone="secondary">
+                市场定位：{INST_BUCKET_LABEL[INST_TYPE_TO_BUCKET[hub as InstitutionType]]}
+              </Text>
+              <GeoAndLicenseFilters
+                region={region}
+                country={country}
+                langZone={langZone}
+                licenseKind={licenseKind}
+                showLicenseKind={false}
+                onRegion={(next) => {
+                  setRegion(next);
+                  if (!countryInRegion(country, next)) setCountry("all");
+                  if (!langZoneInRegion(langZone, next)) setLangZone("all");
+                }}
+                onLangZone={(next) => {
+                  setLangZone(next);
+                  if (next !== "all") {
+                    const allow = new Set(countriesInLanguageZone(next));
+                    const cur = countryFilterSingle(country);
+                    if (cur && !allow.has(cur)) setCountry("all");
+                  }
+                }}
+
+                onCountry={setCountry}
+                onLicenseKind={setLicenseKind}
+              />
+              <Grid columns={6} gap={10}>
+                {EQUITY_KIND_ORDER.map((k) => (
+                  <Stat value={String(countEquityKind(k))} label={EQUITY_KIND_LABEL[k]} />
+                ))}
+              </Grid>
+              <Stack gap={4} style={{ minWidth: 200, maxWidth: 360 }}>
+                <Text size="small" weight="medium">
+                  股权投资人细分
+                </Text>
+                <Select
+                  value={equityKind}
+                  onChange={(v) => setEquityKind(v as EquityInvestorKind | "all")}
+                  options={[
+                    { value: "all", label: "全部" },
+                    ...EQUITY_KIND_ORDER.map((k) => ({
+                      value: k,
+                      label: `${EQUITY_KIND_LABEL[k]} · ${countEquityKind(k)}`,
+                    })),
+                  ]}
+                />
+              </Stack>
+              <Row gap={8} align="center" wrap>
+                <Pill tone="info">{REGION_LABEL[region]}</Pill>
+                {formatCountryFilterLabel(country, region) ? (
+                  <Pill tone="info">{formatCountryFilterLabel(country, region)}</Pill>
+                ) : null}
+                {equityKind !== "all" ? (
+                  <Pill tone="warning">{EQUITY_KIND_LABEL[equityKind]}</Pill>
+                ) : null}
+                <Text size="small" tone="secondary">
+                  {equityKind === "all"
+                    ? INSTITUTION_TYPE_BLURB.股权投资人
+                    : EQUITY_KIND_BLURB[equityKind]}{" "}
+                  属地筛选后样本 {ecoRows.length} 家。已有 CRM 主体仅打标不建重档。
+                </Text>
+              </Row>
+              <Stack gap={4}>
+                {ecoRows.map((r) => (
+                  <CreditPlayer r={r} />
+                ))}
+              </Stack>
+            </Stack>
+          ) : hub === "支付服务机构" ? (
+            <Stack gap={12}>
+              <Text size="small" tone="secondary">
+                市场定位：{INST_BUCKET_LABEL[INST_TYPE_TO_BUCKET[hub as InstitutionType]]}
+              </Text>
+              <GeoAndLicenseFilters
+                region={region}
+                country={country}
+                langZone={langZone}
+                licenseKind={licenseKind}
+                showLicenseKind={false}
+                onRegion={(next) => {
+                  setRegion(next);
+                  if (!countryInRegion(country, next)) setCountry("all");
+                  if (!langZoneInRegion(langZone, next)) setLangZone("all");
+                }}
+                onLangZone={(next) => {
+                  setLangZone(next);
+                  if (next !== "all") {
+                    const allow = new Set(countriesInLanguageZone(next));
+                    const cur = countryFilterSingle(country);
+                    if (cur && !allow.has(cur)) setCountry("all");
+                  }
+                }}
+
+                onCountry={setCountry}
+                onLicenseKind={setLicenseKind}
+              />
+              <Grid columns={3} gap={10}>
+                {PAYMENT_KIND_ORDER.map((k) => (
+                  <Stat value={String(countPaymentKind(k))} label={PAYMENT_KIND_LABEL[k]} />
+                ))}
+              </Grid>
+              <Stack gap={4} style={{ minWidth: 220, maxWidth: 420 }}>
+                <Text size="small" weight="medium">
+                  支付服务细分
+                </Text>
+                <Select
+                  value={paymentKind}
+                  onChange={(v) => setPaymentKind(v as PaymentKind | "all")}
+                  options={[
+                    { value: "all", label: "全部" },
+                    ...PAYMENT_KIND_ORDER.map((k) => ({
+                      value: k,
+                      label: `${PAYMENT_KIND_LABEL[k]} · ${countPaymentKind(k)}`,
+                    })),
+                  ]}
+                />
+              </Stack>
+              <Row gap={8} align="center" wrap>
+                <Pill tone="info">{REGION_LABEL[region]}</Pill>
+                {country !== "all" ? <Pill tone="info">{COUNTRY_LABEL[country]}</Pill> : null}
+                <Text size="small" tone="secondary">
+                  {paymentKind === "all"
+                    ? INSTITUTION_TYPE_BLURB.支付服务机构
+                    : PAYMENT_KIND_BLURB[paymentKind]}{" "}
+                  属地筛选后样本 {ecoRows.length} 家。
+                </Text>
+              </Row>
+              <Stack gap={4}>
+                {ecoRows.map((r) => (
+                  <CreditPlayer r={r} />
+                ))}
+              </Stack>
+            </Stack>
           ) : (
             <Stack gap={12}>
               <Text size="small" tone="secondary">
-                市场定位：{INST_BUCKET_LABEL[INST_TYPE_TO_BUCKET[hub]]}
+                市场定位：{INST_BUCKET_LABEL[INST_TYPE_TO_BUCKET[hub as InstitutionType]]}
               </Text>
-              {isGeoScopedEcoType(hub) ? (
+              {isGeoScopedEcoType(hub as InstitutionType) ? (
                 <Stack gap={10}>
                   <Text size="small" tone="secondary">
-                    {INSTITUTION_TYPE_BLURB[hub]} 属地筛选后样本 {ecoRows.length} 家。
+                    {INSTITUTION_TYPE_BLURB[hub as InstitutionType]} 属地筛选后样本 {ecoRows.length} 家。
                   </Text>
                   <GeoAndLicenseFilters
                     region={region}
                     country={country}
+                    langZone={langZone}
                     licenseKind={licenseKind}
                     showLicenseKind={false}
                     onRegion={(next) => {
                       setRegion(next);
                       if (!countryInRegion(country, next)) setCountry("all");
+                      if (!langZoneInRegion(langZone, next)) setLangZone("all");
+                    }}
+                    onLangZone={(next) => {
+                      setLangZone(next);
+                      if (next !== "all") {
+                        const allow = new Set(countriesInLanguageZone(next));
+                        const cur = countryFilterSingle(country);
+                        if (cur && !allow.has(cur)) setCountry("all");
+                      }
                     }}
                     onCountry={setCountry}
                     onLicenseKind={setLicenseKind}
                   />
                   <Row gap={8} align="center" wrap>
                     <Pill tone="info">{REGION_LABEL[region]}</Pill>
+                    {langZone !== "all" ? <Pill tone="info">{langZone}</Pill> : null}
                     {country !== "all" ? <Pill tone="info">{COUNTRY_LABEL[country]}</Pill> : null}
                     <Text size="small" tone="secondary">
                       {ecoRows.length} 家
@@ -18019,6 +25659,7 @@ export default function Canvas() {
         </Stack>
       ) : null}
     </Stack>
+    </PersistScrollShell>
   );
 }
 

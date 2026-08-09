@@ -34,7 +34,7 @@
       "producer_short": "CU电商金融",
       "entity": "亚太电商金融科技平台（香港商户/营收共享融资）",
       "product_type": "商户贷款-中小微",
-      "country_zh": "香港",
+      "country_zh": "中国香港",
       "investment_usd": 2000000,
       "priority_yield": 0.14,
       "benchmark_coverage": 1.25,
@@ -421,7 +421,7 @@
     },
     {
       "country_code": "HK",
-      "country_zh": "香港",
+      "country_zh": "中国香港",
       "investment_usd": 2000000,
       "outstanding_usd_for_heat": 2000000,
       "outstanding_known": false,

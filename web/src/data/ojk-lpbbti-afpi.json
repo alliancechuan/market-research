@@ -1,0 +1,470 @@
+{
+  "meta": {
+    "source": "AFPI members_data（协会会员公开页；非OJK PDF原文）",
+    "as_of": "2026-08-07",
+    "note": "OJK官网PDF抓取被拒；以AFPI会员平台名交叉，待与OJK Direktori PDF核对",
+    "count": 92
+  },
+  "platforms": [
+    {
+      "id": "70",
+      "platform_name": "AdaKami",
+      "logo": "https://afpi.or.id/fm/Members/1665_b0316eb8638.png"
+    },
+    {
+      "id": "195",
+      "platform_name": "AdaModal",
+      "logo": "https://afpi.or.id/fm/download-4.jpg"
+    },
+    {
+      "id": "178",
+      "platform_name": "Adapundi",
+      "logo": "fm/uploads/members/d2ee1f55cd90e3d8813386a627289733.png"
+    },
+    {
+      "id": "14",
+      "platform_name": "Akseleran",
+      "logo": "https://afpi.or.id/fm/Members/LOGO_AKSELERAN_AFPI.png"
+    },
+    {
+      "id": "53",
+      "platform_name": "Aktivaku",
+      "logo": "https://afpi.or.id/fm/Aktivaku.jpg"
+    },
+    {
+      "id": "131",
+      "platform_name": "Alami Sharia",
+      "logo": "/fm/uploads/members/1649222576.png"
+    },
+    {
+      "id": "67",
+      "platform_name": "Amartha",
+      "logo": "https://afpi.or.id/fm/Amartha.png"
+    },
+    {
+      "id": "43",
+      "platform_name": "Ammana ",
+      "logo": "https://afpi.or.id/fm/Members-02/Untitled-1-01.png"
+    },
+    {
+      "id": "69",
+      "platform_name": "Asetku",
+      "logo": "https://afpi.or.id/fm/download-2.png"
+    },
+    {
+      "id": "35",
+      "platform_name": "Avantee",
+      "logo": "https://afpi.or.id/fm/Members/avantee-logo.png"
+    },
+    {
+      "id": "61",
+      "platform_name": "AwanTunai",
+      "logo": "https://afpi.or.id/fm/download-4.png"
+    },
+    {
+      "id": "36",
+      "platform_name": "BantuFazz",
+      "logo": "fm/uploads/members/57e4d54da2d577a3fdcdf2ac76cb8a9e.png"
+    },
+    {
+      "id": "163",
+      "platform_name": "BantuSaku",
+      "logo": "https://afpi.or.id/fm/Members/7256_8b44acf91c2.jpg"
+    },
+    {
+      "id": "139",
+      "platform_name": "Batumbu",
+      "logo": "https://www.afpi.or.id/fm/logo_batumbu.png"
+    },
+    {
+      "id": "87",
+      "platform_name": "Boost",
+      "logo": "https://afpi.or.id/fm/Members/7202_7a94b60b343.png"
+    },
+    {
+      "id": "133",
+      "platform_name": "Cairin",
+      "logo": "https://afpi.or.id/fm/LOGO-1024.png"
+    },
+    {
+      "id": "92",
+      "platform_name": "Cashcepat",
+      "logo": "https://afpi.or.id/fm/download-14.jpg"
+    },
+    {
+      "id": "31",
+      "platform_name": "CICIL",
+      "logo": "https://afpi.or.id/fm/Members/7953_403e2737b41.png"
+    },
+    {
+      "id": "12",
+      "platform_name": "Crowdo",
+      "logo": "https://afpi.or.id/fm/download-6.png"
+    },
+    {
+      "id": "76",
+      "platform_name": "Dana Syariah",
+      "logo": "https://afpi.or.id/fm/Members/3221_151567627cf.png"
+    },
+    {
+      "id": "85",
+      "platform_name": "DanaBagus",
+      "logo": "fm/uploads/members/2f26d8e196036e5538c0fbb3391236dc.png"
+    },
+    {
+      "id": "37",
+      "platform_name": "Danabijak",
+      "logo": "https://afpi.or.id/fm/Members/Danabijak_Logo.png"
+    },
+    {
+      "id": "30",
+      "platform_name": "Danacita",
+      "logo": "https://afpi.or.id/fm/Members/7168_5834c22be17.png"
+    },
+    {
+      "id": "42",
+      "platform_name": "Danai.id",
+      "logo": "https://afpi.or.id/fm/Members/5410_6d4c32644fe.png"
+    },
+    {
+      "id": "21",
+      "platform_name": "DanaIn",
+      "logo": "fm/uploads/members/fb49f82c8a76e6f42621854cc6ae7c6b.png"
+    },
+    {
+      "id": "46",
+      "platform_name": "DanaKredi",
+      "logo": "fm/uploads/members/2b3eba52f362db40403c88e86c65a3ce.png"
+    },
+    {
+      "id": "79",
+      "platform_name": "Danaku",
+      "logo": "fm/uploads/members/77df9165069548be7df09e2e52ccf926.png"
+    },
+    {
+      "id": "58",
+      "platform_name": "Danamas",
+      "logo": "https://afpi.or.id/fm/Members-03/logo-danamas-p2p-Transparan.png"
+    },
+    {
+      "id": "18",
+      "platform_name": "Danamerdeka",
+      "logo": "https://afpi.or.id/fm/Members/Logo_Danamerdeka_Hires-03.png"
+    },
+    {
+      "id": "47",
+      "platform_name": "Dompet Kilat",
+      "logo": "https://afpi.or.id/fm/Members-02/Logo-Dompet-Kilat.png"
+    },
+    {
+      "id": "68",
+      "platform_name": "Lumbung Dana",
+      "logo": "fm/uploads/members/88d37fa90d9018192c686d6b7ff5dcbf.png"
+    },
+    {
+      "id": "13",
+      "platform_name": "Easycash",
+      "logo": "https://afpi.or.id/fm/Members/7634_615f06f6663.png"
+    },
+    {
+      "id": "65",
+      "platform_name": "Kawan Cicil",
+      "logo": "https://afpi.or.id/fm/Members-03/kancil-logo-lores.png"
+    },
+    {
+      "id": "39",
+      "platform_name": "KlikA2C",
+      "logo": "https://afpi.or.id/fm/Members/5448_19635ba587a.jpg"
+    },
+    {
+      "id": "168",
+      "platform_name": "KlikCair",
+      "logo": "https://afpi.or.id/fm/Members/3350_f73c68b5a0c.png"
+    },
+    {
+      "id": "164",
+      "platform_name": "Restock ",
+      "logo": "https://afpi.or.id/fm/Members/2569_50959f47be7.jpeg"
+    },
+    {
+      "id": "45",
+      "platform_name": "RUPIAH CEPAT",
+      "logo": "https://afpi.or.id/fm/download-38.png"
+    },
+    {
+      "id": "83",
+      "platform_name": "SINGA FINTECH",
+      "logo": "fm/uploads/members/840629464c226576908047050c3dbac2.png"
+    },
+    {
+      "id": "166",
+      "platform_name": "Duha Syariah",
+      "logo": "https://afpi.or.id/fm/Members/9011_14eaa10036f.jpg"
+    },
+    {
+      "id": "176",
+      "platform_name": "Dumi",
+      "logo": "https://www.afpi.or.id/fm/Members/3171_9eeeb151b86.png"
+    },
+    {
+      "id": "175",
+      "platform_name": "Edufund",
+      "logo": "fm/uploads/members/edf8901d4ff33c5e0dee15ee41d0a6c4.jpeg"
+    },
+    {
+      "id": "90",
+      "platform_name": "Findaya",
+      "logo": "https://afpi.or.id/fm/download-32.png"
+    },
+    {
+      "id": "181",
+      "platform_name": "GandengTangan",
+      "logo": "https://afpi.or.id/fm/Members/6373_1ad3e9bf881.png"
+    },
+    {
+      "id": "93",
+      "platform_name": "Gradana",
+      "logo": "https://afpi.or.id/fm/download-31.png"
+    },
+    {
+      "id": "24",
+      "platform_name": "Indodana",
+      "logo": "https://afpi.or.id/fm/Members/4031_a9d7856fce7.png"
+    },
+    {
+      "id": "94",
+      "platform_name": "Indofund",
+      "logo": "https://afpi.or.id/fm/Logo_Indofund_BOLD.png"
+    },
+    {
+      "id": "207",
+      "platform_name": "Indosaku",
+      "logo": "https://afpi.or.id/fm/WhatsApp-Image-2020-12-14-at-11.08.46.jpg"
+    },
+    {
+      "id": "41",
+      "platform_name": "KrediFazz",
+      "logo": "fm/uploads/members/d84bf9321e0287837807cc46eb09bf1d.png"
+    },
+    {
+      "id": "124",
+      "platform_name": "Kredinesia",
+      "logo": "https://afpi.or.id/fm/download-28.png"
+    },
+    {
+      "id": "147",
+      "platform_name": "KrediOne",
+      "logo": "fm/uploads/members/b9030b09cd83051bf0cedbd7fc338ac8.png"
+    },
+    {
+      "id": "22",
+      "platform_name": "Esta Kapital",
+      "logo": "fm/uploads/members/0893dda5a3fe31d2a08cdb198aa004e0.png"
+    },
+    {
+      "id": "161",
+      "platform_name": "Ethis",
+      "logo": "https://afpi.or.id/fm/Members/1758_9c0b2c3a7f7.png"
+    },
+    {
+      "id": "55",
+      "platform_name": "Kredit Pintar",
+      "logo": "https://afpi.or.id/fm/download-37.png"
+    },
+    {
+      "id": "59",
+      "platform_name": "Kredito",
+      "logo": "https://afpi.or.id/fm/download-36.png"
+    },
+    {
+      "id": "194",
+      "platform_name": "KreditOK",
+      "logo": "fm/uploads/members/d2ad74275e9c7d0fa3630dee6c50e176.jpeg"
+    },
+    {
+      "id": "66",
+      "platform_name": "KreditPro",
+      "logo": "https://afpi.or.id/fm/KreditPro.png"
+    },
+    {
+      "id": "48",
+      "platform_name": "Mekar",
+      "logo": "https://afpi.or.id/fm/Members-02/MEKAR-ID-LOGO.png"
+    },
+    {
+      "id": "50",
+      "platform_name": "Pintek",
+      "logo": "https://afpi.or.id/fm/Members/7008_6a1a8fdcd74.jpg"
+    },
+    {
+      "id": "54",
+      "platform_name": "Sanders One Stop Solution",
+      "logo": "https://afpi.or.id/fm/download-18.jpg"
+    },
+    {
+      "id": "49",
+      "platform_name": "UangMe",
+      "logo": "fm/uploads/members/d53bb670b746d939bed9010001d400c8.png"
+    },
+    {
+      "id": "64",
+      "platform_name": "Finmas",
+      "logo": "https://afpi.or.id/fm/Members/9160_b7c191815d2.jpg"
+    },
+    {
+      "id": "136",
+      "platform_name": "FinPlus",
+      "logo": "https://afpi.or.id/fm/download-27.png"
+    },
+    {
+      "id": "56",
+      "platform_name": "FINTAG",
+      "logo": "https://afpi.or.id/fm/Members/7540_3e97463f3d1.png"
+    },
+    {
+      "id": "9",
+      "platform_name": "OVO Finansial",
+      "logo": "fm/uploads/members/12099a12492ab76b6abb05eb445769c6.jpeg"
+    },
+    {
+      "id": "29",
+      "platform_name": "iGrow",
+      "logo": "https://www.afpi.or.id/fm/Members/iGrow-logo.png"
+    },
+    {
+      "id": "73",
+      "platform_name": "Pinjam Gampang",
+      "logo": "https://afpi.or.id/fm/Members/7403_2bdd7b171a5.png"
+    },
+    {
+      "id": "19",
+      "platform_name": "PinjamanGo",
+      "logo": "https://afpi.or.id/fm/Members/3554_9dda341bafb.png"
+    },
+    {
+      "id": "78",
+      "platform_name": "Lahan Sikam",
+      "logo": "https://afpi.or.id/fm/Members-04/Logo_LahanSikam.jpg"
+    },
+    {
+      "id": "155",
+      "platform_name": "Papitupi Syariah",
+      "logo": "https://afpi.or.id/fm/Members/2949_033b4938256.png"
+    },
+    {
+      "id": "86",
+      "platform_name": "Pohon Dana",
+      "logo": "fm/uploads/members/80ea5f08370b339acfdeede9e31068d8.jpeg"
+    },
+    {
+      "id": "25",
+      "platform_name": "Invoila",
+      "logo": "https://afpi.or.id/fm/download-43.png"
+    },
+    {
+      "id": "154",
+      "platform_name": "IVOJI",
+      "logo": "fm/uploads/members/282d4bfba66ca72385853315ce049aa3.jpeg"
+    },
+    {
+      "id": "23",
+      "platform_name": "JULO",
+      "logo": "https://afpi.or.id/fm/download-1.png"
+    },
+    {
+      "id": "160",
+      "platform_name": "Pijar",
+      "logo": "fm/uploads/members/f6db27f12ad90f779358756225a7df95.jpeg"
+    },
+    {
+      "id": "121",
+      "platform_name": "Pinjam Modal",
+      "logo": "https://afpi.or.id/fm/download-29.png"
+    },
+    {
+      "id": "44",
+      "platform_name": "PinjamDuit",
+      "logo": "https://afpi.or.id/fm/Members-02/PinjamDuit_Logo.png"
+    },
+    {
+      "id": "105",
+      "platform_name": "Pinjamin",
+      "logo": "fm/uploads/members/8ffb2fde65f2a87809576afdacebb401.jpeg"
+    },
+    {
+      "id": "174",
+      "platform_name": "PinjamYuk",
+      "logo": "https://afpi.or.id/fm/Members/9779_8c8c1bec3c6.png"
+    },
+    {
+      "id": "88",
+      "platform_name": "SPinjam",
+      "logo": "https://afpi.or.id/fm/Members/9263_1094a0e63a4.png"
+    },
+    {
+      "id": "184",
+      "platform_name": "Klik Kami",
+      "logo": "https://afpi.or.id/fm/download-21.png"
+    },
+    {
+      "id": "117",
+      "platform_name": "KlikUMKM",
+      "logo": "https://afpi.or.id/fm/download-13.jpg"
+    },
+    {
+      "id": "62",
+      "platform_name": "KoinP2P",
+      "logo": "fm/uploads/members/5783823a1b33232156613f714cc92eb0.png"
+    },
+    {
+      "id": "119",
+      "platform_name": "Komunal",
+      "logo": "https://afpi.or.id/fm/download-30.png"
+    },
+    {
+      "id": "84",
+      "platform_name": "KTA Kilat",
+      "logo": "fm/uploads/members/e90ff8ef3db4251318ca765620a142eb.png"
+    },
+    {
+      "id": "82",
+      "platform_name": "Modal Nasional",
+      "logo": "https://afpi.or.id/fm/download-17.jpg"
+    },
+    {
+      "id": "72",
+      "platform_name": "Modal Rakyat",
+      "logo": "https://afpi.or.id/fm/download-34.png"
+    },
+    {
+      "id": "32",
+      "platform_name": "Modalku",
+      "logo": "https://afpi.or.id/fm/download-41.png"
+    },
+    {
+      "id": "189",
+      "platform_name": "Solusiku",
+      "logo": "https://afpi.or.id/fm/download-18.png"
+    },
+    {
+      "id": "57",
+      "platform_name": "tokomodal",
+      "logo": "https://afpi.or.id/fm/Members/1791_92fffba0b9a.png"
+    },
+    {
+      "id": "8",
+      "platform_name": "SamaKita",
+      "logo": "https://afpi.or.id/fm/Samakita.jpg.png"
+    },
+    {
+      "id": "186",
+      "platform_name": "Qazwa",
+      "logo": "fm/uploads/members/537f6cf109c4a85e46bcb8be802876a9.jpeg"
+    },
+    {
+      "id": "198",
+      "platform_name": "Samir",
+      "logo": "https://afpi.or.id/fm/Members/1534_41f43f1779f.png"
+    }
+  ]
+}

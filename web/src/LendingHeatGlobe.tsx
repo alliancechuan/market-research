@@ -9,6 +9,25 @@ import {
   playFinanceChartUrl,
   summarizeNbfcForCountry,
 } from "./data/countryZoomDetails";
+import {
+  MapSection,
+  MapKV,
+  MapDetailShell,
+  MapChip,
+  MapSvgFrame,
+  MapTooltip,
+  SteppedLegend,
+  MapSideLegend,
+  MapMuted,
+  MapExtLink,
+  useMapChrome,
+  Button,
+  heatColorRemoved,
+  MapCountryMacroBrief,
+  RankBarList,
+  type MapLegendPlacement,
+} from "./HeatMapChrome";
+import { formatCountryLanguageLine } from "./data/countryLanguage";
 
 type CountryProps = { name?: string };
 
@@ -102,6 +121,9 @@ const N3_TO_A2: Record<string, string> = {
   "752": "SE",
   "616": "PL",
   "372": "IE",
+  "643": "RU",
+  "344": "HK",
+  "702": "SG",
 };
 
 function normId(id: string | number | undefined): string {
@@ -120,39 +142,6 @@ export function aggregateLendingUsdBn(): Record<string, number> {
   return out;
 }
 
-function heatColor(t: number): string {
-  const stops: [number, string][] = [
-    [0, "#fecaca"],
-    [0.25, "#f87171"],
-    [0.5, "#ef4444"],
-    [0.75, "#b91c1c"],
-    [1, "#7f1d1d"],
-  ];
-  const x = Math.min(1, Math.max(0, t));
-  for (let i = 1; i < stops.length; i++) {
-    if (x <= stops[i][0]) {
-      const [a0, c0] = stops[i - 1];
-      const [a1, c1] = stops[i];
-      const u = (x - a0) / (a1 - a0 || 1);
-      return lerpHex(c0, c1, u);
-    }
-  }
-  return stops[stops.length - 1][1];
-}
-
-function lerpHex(a: string, b: string, t: number): string {
-  const pa = hexRgb(a);
-  const pb = hexRgb(b);
-  const r = Math.round(pa[0] + (pb[0] - pa[0]) * t);
-  const g = Math.round(pa[1] + (pb[1] - pa[1]) * t);
-  const bl = Math.round(pa[2] + (pb[2] - pa[2]) * t);
-  return `rgb(${r},${g},${bl})`;
-}
-
-function hexRgb(h: string): [number, number, number] {
-  const s = h.replace("#", "");
-  return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
-}
 
 type HoverInfo = {
   a2: string;
@@ -162,66 +151,49 @@ type HoverInfo = {
   y: number;
 };
 
-function CountryDetailPanel({ code, onClose }: { code: string; onClose: () => void }) {
+function CountryDetailPanel({
+  code,
+  onClose,
+  overlay = false,
+}: {
+  code: string;
+  onClose: () => void;
+  overlay?: boolean;
+}) {
+  const { c } = useMapChrome();
   const zoom = COUNTRY_ZOOM_BY_CODE[code];
   const nbfc = summarizeNbfcForCountry(code);
   const name = COUNTRY_LABEL_ZH[code] ?? code;
   const chartUrl = zoom?.source_url || playFinanceChartUrl(code);
+  const langLine = formatCountryLanguageLine(code);
 
   return (
-    <div
-      style={{
-        flex: "1 1 320px",
-        minWidth: 280,
-        maxWidth: 420,
-        maxHeight: 560,
-        overflow: "auto",
-        border: "1px solid #e2e8f0",
-        borderRadius: 12,
-        background: "#fff",
-        padding: 14,
-      }}
+    <MapDetailShell
+      title={`${name} · ${code}`}
+      subtitle={
+        langLine
+          ? `${langLine} · 放大详情 · 点击「返回全球」退出`
+          : "放大详情 · 点击「返回全球」退出"
+      }
+      onClose={onClose}
+      overlay={overlay}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
-            {name} · {code}
-          </div>
-          <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>放大详情 · 点击「返回全球」退出</div>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            border: "1px solid #cbd5e1",
-            background: "#f8fafc",
-            borderRadius: 8,
-            padding: "6px 10px",
-            fontSize: 12,
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-          }}
-        >
-          返回全球
-        </button>
-      </div>
-
-      <Section title="人口情况">
+      <MapSection title="人口情况">
         {zoom ? (
           <>
-            <KV k="人口（约）" v={`${zoom.population_millions.toLocaleString()} 百万`} />
-            <KV k="人口结构" v={zoom.demographic_note} />
-            <KV k="人口信源" v={zoom.population_source} />
+            <MapKV k="人口（约）" v={`${zoom.population_millions.toLocaleString()} 百万`} />
+            <MapKV k="人口结构" v={zoom.demographic_note} />
+            <MapKV k="人口信源" v={zoom.population_source} />
           </>
         ) : (
-          <div style={{ fontSize: 12, color: "#64748b" }}>暂无人口摘要</div>
+          <MapMuted>暂无人口摘要</MapMuted>
         )}
-      </Section>
+      </MapSection>
 
-      <Section title="NBFC / 等效非银">
+      <MapSection title="NBFC / 等效非银">
         {nbfc ? (
           <>
-            <KV
+            <MapKV
               k="放贷总量(USD)"
               v={
                 nbfc.lendingUsdBn > 0
@@ -229,21 +201,22 @@ function CountryDetailPanel({ code, onClose }: { code: string; onClose: () => vo
                   : "—"
               }
             />
-            <KV k="机构数量口径" v={nbfc.nbfcCountDisplay} />
+            <MapKV k="机构数量口径" v={nbfc.nbfcCountDisplay} />
             <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
               {nbfc.rows.map((r) => (
                 <div
                   key={`${r.category}-${r.as_of}`}
                   style={{
-                    background: "#f8fafc",
-                    borderRadius: 8,
+                    background: c.fillSoft,
+                    borderRadius: 6,
+                    border: `1px solid ${c.panelBorder}`,
                     padding: "8px 10px",
                     fontSize: 12,
-                    color: "#334155",
+                    color: c.textSecondary,
                     lineHeight: 1.5,
                   }}
                 >
-                  <div style={{ fontWeight: 600, color: "#0f172a" }}>{r.category}</div>
+                  <div style={{ fontWeight: 600, color: c.text }}>{r.category}</div>
                   <div>监管：{r.regulator || "—"}</div>
                   <div>机构数：{r.nbfc_count || "—"}</div>
                   <div>放贷：{r.loan_book_total || "—"}</div>
@@ -255,76 +228,47 @@ function CountryDetailPanel({ code, onClose }: { code: string; onClose: () => vo
             </div>
           </>
         ) : (
-          <div style={{ fontSize: 12, color: "#64748b" }}>暂无 NBFC 统计</div>
+          <MapMuted>暂无 NBFC 统计</MapMuted>
         )}
-      </Section>
+      </MapSection>
 
-      <Section title="Google Play · Finance · Free">
+      <MapSection title="Google Play · Finance · Free">
         {zoom?.available === false ? (
-          <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
-            {zoom.note || "该地区无官方 Google Play。"}
-          </div>
+          <MapMuted>{zoom.note || "该地区无官方 Google Play。"}</MapMuted>
         ) : (
           <>
-            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 6 }}>
-              快照 {zoom?.as_of || "—"} ·{" "}
-              <a href={chartUrl} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>
-                打开 Play Finance 榜单
-              </a>
+            <div style={{ fontSize: 11, color: c.textTertiary, marginBottom: 6 }}>
+              快照 {zoom?.as_of || "—"} · <MapExtLink href={chartUrl}>打开 Play Finance 榜单</MapExtLink>
             </div>
-            <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#1e293b", lineHeight: 1.65 }}>
+            <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: c.text, lineHeight: 1.65 }}>
               {(zoom?.top_free_finance || []).map((app) => (
                 <li key={`${app.rank}-${app.name}`}>
-                  {app.url ? (
-                    <a href={app.url} target="_blank" rel="noreferrer" style={{ color: "#0f172a" }}>
-                      {app.name}
-                    </a>
-                  ) : (
-                    app.name
-                  )}
-                  <span style={{ color: "#94a3b8" }}> · {app.developer}</span>
+                  {app.url ? <MapExtLink href={app.url}>{app.name}</MapExtLink> : app.name}
+                  <span style={{ color: c.textTertiary }}> · {app.developer}</span>
                 </li>
               ))}
             </ol>
           </>
         )}
-      </Section>
-    </div>
+      </MapSection>
+      <MapCountryMacroBrief code={code} />
+    </MapDetailShell>
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <div
-        style={{
-          fontSize: 12,
-          fontWeight: 700,
-          color: "#334155",
-          marginBottom: 6,
-          borderBottom: "1px solid #e2e8f0",
-          paddingBottom: 4,
-        }}
-      >
-        {title}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function KV({ k, v }: { k: string; v: string }) {
-  return (
-    <div style={{ display: "flex", gap: 8, fontSize: 12, lineHeight: 1.5, marginBottom: 2 }}>
-      <span style={{ color: "#64748b", minWidth: 88, flexShrink: 0 }}>{k}</span>
-      <span style={{ color: "#0f172a" }}>{v}</span>
-    </div>
-  );
-}
-
-/** 红色：市场放贷总量热力图 */
-export function LendingHeatGlobe({ height = 420 }: { height?: number }) {
+export function LendingHeatGlobe({
+  height = 420,
+  fill = false,
+  legendPlacement = "side",
+}: {
+  height?: number;
+  fill?: boolean;
+  legendPlacement?: MapLegendPlacement;
+}) {
+  const { theme, c } = useMapChrome();
   const width = Math.round(height * 2.05);
+  const bottomLegend = fill || legendPlacement === "bottom";
+  const place: MapLegendPlacement = bottomLegend ? "bottom" : "side";
   const lending = useMemo(() => aggregateLendingUsdBn(), []);
   const values = useMemo(() => Object.values(lending), [lending]);
   const maxBn = useMemo(() => Math.max(...values, 1), [values]);
@@ -395,15 +339,62 @@ export function LendingHeatGlobe({ height = 420 }: { height?: number }) {
   );
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "stretch" }}>
+    <div
+      style={
+        bottomLegend
+          ? fill
+            ? {
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+                height: "100%",
+                minHeight: 0,
+                gap: 10,
+                overflow: "hidden",
+              }
+            : {
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+                gap: 12,
+              }
+          : fill
+            ? {
+                position: "relative",
+                width: "100%",
+                height: "100%",
+                minHeight: 0,
+                overflow: "hidden",
+              }
+            : {
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 20,
+                alignItems: "stretch",
+              }
+      }
+    >
       <div
-        style={{
-          position: "relative",
-          width: "100%",
-          maxWidth: width,
-          margin: "0 auto",
-          flex: "1 1 560px",
-        }}
+        style={
+          fill
+            ? bottomLegend
+              ? {
+                  position: "relative",
+                  flex: "1 1 0",
+                  minHeight: 0,
+                  width: "100%",
+                  overflow: "hidden",
+                  borderRadius: 8,
+                }
+              : { position: "absolute", inset: 0 }
+            : {
+                position: "relative",
+                width: "100%",
+                maxWidth: width,
+                margin: "0 auto",
+                flex: bottomLegend ? undefined : "1 1 560px",
+              }
+        }
       >
         {focus ? (
           <div
@@ -417,51 +408,17 @@ export function LendingHeatGlobe({ height = 420 }: { height?: number }) {
               alignItems: "center",
             }}
           >
-            <button
-              type="button"
-              onClick={() => setFocus(null)}
-              style={{
-                border: "1px solid #cbd5e1",
-                background: "rgba(255,255,255,0.95)",
-                borderRadius: 8,
-                padding: "6px 10px",
-                fontSize: 12,
-                cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(15,23,42,0.08)",
-              }}
-            >
-              ← 返回全球
-            </button>
-            <span
-              style={{
-                fontSize: 12,
-                color: "#0f172a",
-                background: "rgba(255,255,255,0.92)",
-                borderRadius: 8,
-                padding: "6px 10px",
-                border: "1px solid #e2e8f0",
-              }}
-            >
-              已放大：{COUNTRY_LABEL_ZH[focus] ?? focus}
-            </span>
+            <Button variant="secondary" onClick={() => setFocus(null)}>
+              返回全球
+            </Button>
+            <MapChip>已放大：{COUNTRY_LABEL_ZH[focus] ?? focus}</MapChip>
           </div>
         ) : null}
 
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          width="100%"
-          height="auto"
-          style={{
-            display: "block",
-            background: "#f1f5f9",
-            borderRadius: 12,
-            boxShadow: "0 8px 28px rgba(15,23,42,0.08)",
-          }}
-        >
-          <rect width={width} height={height} fill="#f1f5f9" />
-          {outline ? <path d={outline} fill="#e2e8f0" /> : null}
+        <MapSvgFrame width={width} height={height} fill={fill}>
+          {outline ? <path d={outline} fill={c.ocean} /> : null}
           {graticulePath ? (
-            <path d={graticulePath} fill="none" stroke="rgba(148,163,184,0.35)" strokeWidth={0.6} />
+            <path d={graticulePath} fill="none" stroke={c.graticule} strokeWidth={0.6} />
           ) : null}
           {countries.features.map((f, i) => {
             const a2 = a2Of(f);
@@ -470,12 +427,8 @@ export function LendingHeatGlobe({ height = 420 }: { height?: number }) {
             if (!d) return null;
             const isFocus = focus != null && a2 === focus;
             const dimmed = focus != null && !isFocus;
-            const fill = bn > 0 ? heatColor(intensity(bn)) : "#cbd5e1";
-            const stroke = isFocus
-              ? "#0f172a"
-              : bn > 0
-                ? "rgba(127,29,29,0.45)"
-                : "rgba(100,116,139,0.35)";
+            const fill = bn > 0 ? heatColorRemoved(intensity(bn), theme) : c.emptyLand;
+            const stroke = isFocus ? c.text : c.landStroke;
             return (
               <path
                 key={`${f.id ?? i}`}
@@ -520,99 +473,53 @@ export function LendingHeatGlobe({ height = 420 }: { height?: number }) {
               />
             );
           })}
-          {outline ? (
-            <path d={outline} fill="none" stroke="rgba(100,116,139,0.4)" strokeWidth={1} />
-          ) : null}
-        </svg>
+          {outline ? <path d={outline} fill="none" stroke={c.outline} strokeWidth={1} /> : null}
+        </MapSvgFrame>
 
         {hover && !focus ? (
-          <div
-            style={{
-              position: "absolute",
-              left: Math.min(hover.x + 12, width - 180),
-              top: Math.max(8, hover.y - 48),
-              background: "rgba(255,255,255,0.96)",
-              color: "#0f172a",
-              border: "1px solid #e2e8f0",
-              padding: "8px 10px",
-              borderRadius: 8,
-              fontSize: 12,
-              pointerEvents: "none",
-              minWidth: 140,
-              boxShadow: "0 6px 20px rgba(15,23,42,0.12)",
-            }}
+          <MapTooltip
+            left={Math.min(hover.x + 12, width - 180)}
+            top={Math.max(8, hover.y - 48)}
+            accent="removed"
           >
             <div style={{ fontWeight: 600 }}>{hover.name}</div>
-            <div style={{ color: "#475569" }}>放贷总量 ≈ USD {hover.usdBn.toFixed(2)} bn</div>
-            <div style={{ color: "#94a3b8", marginTop: 2 }}>点击放大查看详情</div>
-          </div>
+            <div style={{ color: c.textSecondary }}>放贷总量 ≈ USD {hover.usdBn.toFixed(2)} bn</div>
+            <div style={{ color: c.textTertiary, marginTop: 2 }}>点击放大查看详情</div>
+          </MapTooltip>
+        ) : null}
+
+        {focus && bottomLegend ? (
+          <CountryDetailPanel code={focus} onClose={() => setFocus(null)} overlay />
         ) : null}
       </div>
 
-      {focus ? (
+      {focus && !bottomLegend ? (
         <CountryDetailPanel code={focus} onClose={() => setFocus(null)} />
-      ) : (
-        <div style={{ flex: "1 1 200px", minWidth: 180, alignSelf: "center" }}>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: "#334155" }}>热力图例</div>
-          <div
-            style={{
-              height: 12,
-              borderRadius: 6,
-              background: "linear-gradient(90deg,#fecaca,#ef4444,#7f1d1d)",
-              marginBottom: 6,
-            }}
+      ) : null}
+      {!focus ? (
+        <MapSideLegend title="热力图例" placement={place}>
+          <SteppedLegend
+            label="非银/等效放贷总量(USD) · 少 → 多（灰阶分档）"
+            kind="gray"
+            compact={bottomLegend}
           />
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 11,
-              color: "#64748b",
-              marginBottom: 16,
-            }}
-          >
-            <span>少</span>
-            <span>放贷总量(USD) 越多越红</span>
-            <span>多</span>
+          <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 8, marginTop: bottomLegend ? 8 : 0 }}>
+            口径：各国 NBFC/等效非银信贷放贷存量粗算（非资管 AUM）· {ranked.length} 国 · 点击横条可放大
           </div>
-          <div style={{ fontSize: 12, color: "#475569", marginBottom: 8 }}>
-            有放贷总量(USD) · {ranked.length} 国 · 点击国家可放大
-          </div>
-          <ol
-            style={{
-              margin: 0,
-              paddingLeft: 18,
-              fontSize: 12,
-              color: "#1e293b",
-              lineHeight: 1.7,
-              maxHeight: 280,
-              overflow: "auto",
-            }}
-          >
-            {ranked.map(([code, bn]) => (
-              <li key={code}>
-                <button
-                  type="button"
-                  onClick={() => setFocus(code)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    color: "#2563eb",
-                    cursor: "pointer",
-                    font: "inherit",
-                    textDecoration: "underline",
-                  }}
-                >
-                  {COUNTRY_LABEL_ZH[code] ?? code}
-                </button>
-                {" · "}
-                USD {bn >= 10 ? bn.toFixed(1) : bn.toFixed(2)} bn
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
+          <RankBarList
+            compact={false}
+            maxVisible={bottomLegend ? 20 : undefined}
+            scaleHint="条长 ∝ 非银放贷 USD bn（相对列表最大值；非 AUM）"
+            onSelect={(code) => setFocus(code)}
+            items={ranked.map(([code, bn]) => ({
+              key: code,
+              label: COUNTRY_LABEL_ZH[code] ?? code,
+              value: bn,
+              valueLabel: `USD ${bn >= 10 ? bn.toFixed(1) : bn.toFixed(2)} bn`,
+            }))}
+          />
+        </MapSideLegend>
+      ) : null}
     </div>
   );
 }

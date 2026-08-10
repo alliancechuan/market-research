@@ -1,5 +1,7 @@
+import { useMemo, useState, type MouseEvent } from "react";
 import { useHostTheme, Text, Stack, Grid } from "./shims/cursor-canvas";
 import { mapChrome } from "./heatMapTheme";
+import { FX_HISTORY, resolveFxSeries, type FxHistoryCountry } from "./data/fxHistory";
 
 /** 与 Atlas CountryMacroSnap 对齐的最小字段（避免循环依赖） */
 export type MacroChartSnap = {
@@ -278,13 +280,237 @@ export function IncomeSectorCharts({ snap, countryLabel }: { snap: MacroChartSna
   );
 }
 
-export function FxCaCharts({ snap, countryLabel }: { snap: MacroChartSnap; countryLabel: string }) {
+function formatFxValue(v: number): string {
+  if (v >= 1000) return v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  if (v >= 100) return v.toFixed(1);
+  if (v >= 10) return v.toFixed(2);
+  return v.toFixed(3);
+}
+
+/** A 股习惯：红涨绿跌；方向按「本币对美元强弱」（报价升≠本币涨） */
+const FX_UP = "#E53935";
+const FX_DOWN = "#1B8F4A";
+
+function fxLocalStrengthChgPct(series: FxHistoryCountry): number {
+  const pts = series.points;
+  if (!pts.length) return 0;
+  const first = pts[0]!.v;
+  const last = pts[pts.length - 1]!.v;
+  if (!first) return 0;
+  const quoteChg = ((last - first) / first) * 100;
+  // 本币/USD 上升 = 本币贬；美国卡 USD/EUR 上升 = 美元升
+  return series.quote === "usd_per_eur" ? quoteChg : -quoteChg;
+}
+
+function FxChgBadge({ strengthChg }: { strengthChg: number }) {
+  const flat = Math.abs(strengthChg) < 0.05;
+  const up = strengthChg > 0;
+  const color = flat ? undefined : up ? FX_UP : FX_DOWN;
+  const arrow = flat ? "–" : up ? "▲" : "▼";
+  const sign = flat ? "" : up ? "+" : "";
+  const word = flat ? "持平" : up ? "本币升" : "本币贬";
+  return (
+    <span style={{ display: "inline-flex", alignItems: "baseline", gap: 4, fontSize: 12, fontWeight: 600, color: color }}>
+      <span aria-hidden style={{ fontSize: 11, lineHeight: 1 }}>
+        {arrow}
+      </span>
+      <span>
+        {sign}
+        {Math.abs(strengthChg).toFixed(1)}%
+      </span>
+      <span style={{ fontWeight: 400, opacity: 0.85 }}>{word}</span>
+    </span>
+  );
+}
+
+const FX_HISTORY_RANGE_HINT = "随机游走示意 · 约 5 年";
+
+function seriesSpanLabel(series: FxHistoryCountry): string {
+  if (series.synthetic) return "约 5 年";
+  const pts = series.points;
+  if (pts.length < 2) return "区间";
+  const a = Date.parse(pts[0]!.d);
+  const b = Date.parse(pts[pts.length - 1]!.d);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return "区间";
+  const y = (b - a) / (365.25 * 24 * 3600 * 1000);
+  return y >= 1.5 ? `约 ${y.toFixed(1)} 年` : `约 ${(y * 12).toFixed(0)} 个月`;
+}
+
+function seriesDateRange(series: FxHistoryCountry): string {
+  const pts = series.points;
+  if (pts.length < 2) return FX_HISTORY.meta.range;
+  return `${pts[0]!.d}..${pts[pts.length - 1]!.d}`;
+}
+
+/** 共同货币区说明：避免西非多国「曲线长一样」被当成示意 bug */
+function sharedCcyNote(ccy: string): string | null {
+  const u = ccy.toUpperCase();
+  if (u === "XOF") return "西非法郎共同区（多国同币，曲线会高度相似）";
+  if (u === "XAF") return "中非法郎共同区（多国同币，曲线会高度相似）";
+  if (u === "NAD") return "与兰特联动较紧（南非兰特区关联）";
+  return null;
+}
+
+/** Cursor 面板风格：细线 + 浅填充；悬停显示时点刻度；涨跌用 A 股红绿箭头 */
+function FxTrendPanel({
+  countryLabel,
+  series,
+}: {
+  countryLabel: string;
+  series: FxHistoryCountry;
+}) {
+  const theme = useHostTheme();
+  const c = mapChrome(theme);
+  const pts = series.points;
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
+  const strengthChg = fxLocalStrengthChgPct(series);
+  const flat = Math.abs(strengthChg) < 0.05;
+  const up = strengthChg > 0;
+  const stroke = flat ? c.accent : up ? FX_UP : FX_DOWN;
+  const fill = flat ? "rgba(80,140,180,0.10)" : up ? "rgba(229,57,53,0.10)" : "rgba(27,143,74,0.10)";
+
+  const W = 640;
+  const H = 120;
+  const padX = 6;
+  const padY = 12;
+  const ys = useMemo(() => pts.map((p) => p.v), [pts]);
+  const lo = Math.min(...ys);
+  const hi = Math.max(...ys);
+  const span = hi - lo || Math.abs(lo) * 0.02 || 1;
+  const xAt = (i: number) => padX + (i / Math.max(1, pts.length - 1)) * (W - padX * 2);
+  const yAt = (v: number) => padY + (1 - (v - lo) / span) * (H - padY * 2);
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${xAt(i).toFixed(1)},${yAt(p.v).toFixed(1)}`).join(" ");
+  const area = `${line} L${xAt(pts.length - 1).toFixed(1)},${(H - padY).toFixed(1)} L${xAt(0).toFixed(1)},${(H - padY).toFixed(1)} Z`;
+
+  const activeIdx = hoverIdx ?? pts.length - 1;
+  const active = pts[activeIdx]!;
+  const spanLabel = seriesSpanLabel(series);
+
+  const shared = sharedCcyNote(series.ccy);
+  const subtitle = series.synthetic
+    ? `示意 · ${series.pair} · ${FX_HISTORY_RANGE_HINT}`
+    : `周抽样 · ${series.pair} · ${seriesDateRange(series)}${shared ? ` · ${shared}` : ""}`;
+
+  const onMove = (e: MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const t = (e.clientX - rect.left) / rect.width;
+    const i = Math.round(t * (pts.length - 1));
+    setHoverIdx(Math.max(0, Math.min(pts.length - 1, i)));
+  };
+
+  const tipLeftPct = (activeIdx / Math.max(1, pts.length - 1)) * 100;
+
+  return (
+    <Panel
+      title={`${countryLabel} · 汇率走势`}
+      subtitle={subtitle}
+      footer={
+        series.synthetic
+          ? series.note
+          : `${series.source ?? "Frankfurter"} · ${series.unit}${series.note ? ` · ${series.note}` : ""} · 箭头按本币强弱（红涨绿跌）· 悬停看时点`
+      }
+    >
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+        <div>
+          <span style={{ fontSize: 22, fontWeight: 600, color: hoverIdx != null ? stroke : c.text }}>
+            {formatFxValue(active.v)}
+          </span>
+          <span style={{ fontSize: 11, color: c.textTertiary, marginLeft: 8 }}>{series.unit}</span>
+          {hoverIdx != null ? (
+            <span style={{ fontSize: 11, color: c.textSecondary, marginLeft: 10 }}>{active.d}</span>
+          ) : null}
+        </div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <FxChgBadge strengthChg={strengthChg} />
+          <span style={{ fontSize: 11, color: c.textTertiary }}>{spanLabel}</span>
+        </div>
+      </div>
+      <div
+        style={{ position: "relative", width: "100%", marginTop: 4, cursor: "crosshair" }}
+        onMouseMove={onMove}
+        onMouseLeave={() => setHoverIdx(null)}
+      >
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={112} preserveAspectRatio="none" aria-hidden>
+          <line x1={padX} x2={W - padX} y1={H / 2} y2={H / 2} stroke={c.panelBorder} strokeWidth={1} />
+          <path d={area} fill={fill} stroke="none" />
+          <path d={line} fill="none" stroke={stroke} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+          {hoverIdx != null ? (
+            <>
+              <line
+                x1={xAt(hoverIdx)}
+                x2={xAt(hoverIdx)}
+                y1={padY}
+                y2={H - padY}
+                stroke={c.textTertiary}
+                strokeWidth={1}
+                strokeDasharray="3 3"
+              />
+              <circle cx={xAt(hoverIdx)} cy={yAt(pts[hoverIdx]!.v)} r={3.5} fill={stroke} stroke={c.panelBg} strokeWidth={1.5} />
+            </>
+          ) : null}
+        </svg>
+        {hoverIdx != null ? (
+          <div
+            style={{
+              position: "absolute",
+              top: 4,
+              left: `${tipLeftPct}%`,
+              transform: tipLeftPct > 72 ? "translateX(-100%)" : tipLeftPct < 28 ? "translateX(0)" : "translateX(-50%)",
+              pointerEvents: "none",
+              padding: "4px 8px",
+              borderRadius: 4,
+              border: `1px solid ${c.panelBorder}`,
+              background: c.panelBg,
+              fontSize: 11,
+              color: c.textSecondary,
+              whiteSpace: "nowrap",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+              zIndex: 2,
+            }}
+          >
+            <div style={{ fontWeight: 600, color: c.text }}>{active.d}</div>
+            <div>
+              {formatFxValue(active.v)}
+              <span style={{ color: c.textTertiary, marginLeft: 6 }}>{series.unit}</span>
+            </div>
+          </div>
+        ) : null}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: c.textTertiary }}>
+        <span>{pts[0]?.d}</span>
+        <span>
+          低 {formatFxValue(lo)} · 高 {formatFxValue(hi)}
+        </span>
+        <span>{pts[pts.length - 1]?.d}</span>
+      </div>
+    </Panel>
+  );
+}
+
+export function FxCaCharts({
+  snap,
+  countryLabel,
+  countryCode,
+}: {
+  snap: MacroChartSnap;
+  countryLabel: string;
+  countryCode?: string;
+}) {
   const theme = useHostTheme();
   const c = mapChrome(theme);
   const ca = parseCaGdp(snap.currentAccount);
   const res = parseReservesUsdBn(snap.fxReserves);
   const vol = firstNumber(snap.fxVolInYear);
   const { score, caPts, resPts, volPts, known } = fxResilienceParts(ca, res, vol);
+  const fxSeries = countryCode
+    ? resolveFxSeries(countryCode, {
+        fxTrend: snap.fxTrend,
+        fxHint: snap.fxHint,
+        fxVolInYear: snap.fxVolInYear,
+      })
+    : undefined;
 
   const notes: string[] = [];
   if (ca != null) {
@@ -311,8 +537,6 @@ export function FxCaCharts({ snap, countryLabel }: { snap: MacroChartSnap; count
   }
   if (vol != null) {
     notes.push(vol >= 15 ? `年内汇率波动约 ±${vol}%，偏大` : `年内汇率波动约 ±${vol}%`);
-  } else {
-    notes.push("年内汇率波动尚未录入（多数国暂缺，拉不开差距）");
   }
   if (known < 2) notes.push("分项不足，示意分仅供对照");
 
@@ -364,78 +588,89 @@ export function FxCaCharts({ snap, countryLabel }: { snap: MacroChartSnap; count
   const fxLevelAsOf = extractAsOf(snap.fxTrend) || extractAsOf(snap.fxHint);
 
   return (
-    <Grid columns={3} gap={8}>
-      <Panel
-        title={`${countryLabel} · 经常账户`}
-        subtitle={`时段 · CA/GDP${caAsOf ? ` · ${caAsOf}` : ""}`}
-        footer={ca != null ? (ca >= 0 ? "顺差/平衡偏稳" : "逆差") : "—"}
-      >
-        <div style={{ fontSize: 22, fontWeight: 600, color: ca != null && ca < 0 ? c.removed : c.added }}>
-          {ca != null ? `${ca}%` : "—"}
-        </div>
-        <div style={{ marginTop: 8, height: 6, background: theme.fill.quaternary, position: "relative" }}>
-          <div
-            style={{
-              position: "absolute",
-              left: "50%",
-              top: 0,
-              bottom: 0,
-              width: 1,
-              background: c.panelBorder,
-            }}
-          />
-          {ca != null ? (
+    <Stack gap={8}>
+      {fxSeries ? (
+        <FxTrendPanel countryLabel={countryLabel} series={fxSeries} />
+      ) : (
+        <Panel title={`${countryLabel} · 汇率走势`} subtitle="暂无可用序列" footer={snap.fxTrend || snap.fxHint || "—"}>
+          <Text size="small" tone="tertiary">
+            缺公开周序列，且宏观卡未同时给出对美元水平与年内波动，无法示意。
+          </Text>
+        </Panel>
+      )}
+      <Grid columns={3} gap={8}>
+        <Panel
+          title={`${countryLabel} · 经常账户`}
+          subtitle={`时段 · CA/GDP${caAsOf ? ` · ${caAsOf}` : ""}`}
+          footer={ca != null ? (ca >= 0 ? "顺差/平衡偏稳" : "逆差") : "—"}
+        >
+          <div style={{ fontSize: 22, fontWeight: 600, color: ca != null && ca < 0 ? c.removed : c.added }}>
+            {ca != null ? `${ca}%` : "—"}
+          </div>
+          <div style={{ marginTop: 8, height: 6, background: theme.fill.quaternary, position: "relative" }}>
             <div
               style={{
                 position: "absolute",
+                left: "50%",
                 top: 0,
                 bottom: 0,
-                left: ca < 0 ? `${50 - Math.min(45, Math.abs(ca) * 10)}%` : "50%",
-                width: `${Math.min(45, Math.abs(ca) * 10)}%`,
-                background: ca < 0 ? c.removed : c.added,
+                width: 1,
+                background: c.panelBorder,
               }}
             />
-          ) : null}
-        </div>
-      </Panel>
-      <Panel
-        title={`${countryLabel} · 外汇储备`}
-        subtitle={`时点 · 亿美元${resAsOf ? ` · ${resAsOf}` : ""}`}
-        footer={
-          snap.fxTrend || snap.fxHint
-            ? `汇率水平（时点）${fxLevelAsOf ? ` · ${fxLevelAsOf}` : ""}：${snap.fxTrend || snap.fxHint}`
-            : "—"
-        }
-      >
-        <div style={{ fontSize: 22, fontWeight: 600, color: c.text }}>{res != null ? res.toLocaleString() : "—"}</div>
-        <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 6 }}>
-          波动（时段·年内）{snap.fxVolInYear ? `${splitValue(snap.fxVolInYear)}${volAsOf ? ` · ${volAsOf}` : ""}` : "—"}
-        </div>
-      </Panel>
-      <Panel
-        title={`${countryLabel} · 汇兑韧性`}
-        subtitle={`示意分 ${score}/100 · 非评级 · 混用时段+时点`}
-        footer={stress}
-      >
-        <div style={{ height: 8, background: theme.fill.quaternary, marginTop: 4 }}>
-          <div
-            style={{
-              width: `${score}%`,
-              height: "100%",
-              background: score >= 75 ? c.added : score >= 55 ? c.accent : c.removed,
-            }}
-          />
-        </div>
-        <Stack gap={4} style={{ marginTop: 8 }}>
-          {partRow("经常账户", caPts, ca != null)}
-          {partRow("外储规模", resPts, res != null)}
-          {partRow("汇率波动", volPts, vol != null)}
-        </Stack>
-        <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 8, lineHeight: 1.4 }}>
-          {notes.slice(0, 3).join("；")}
-        </div>
-      </Panel>
-    </Grid>
+            {ca != null ? (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  bottom: 0,
+                  left: ca < 0 ? `${50 - Math.min(45, Math.abs(ca) * 10)}%` : "50%",
+                  width: `${Math.min(45, Math.abs(ca) * 10)}%`,
+                  background: ca < 0 ? c.removed : c.added,
+                }}
+              />
+            ) : null}
+          </div>
+        </Panel>
+        <Panel
+          title={`${countryLabel} · 外汇储备`}
+          subtitle={`时点 · 亿美元${resAsOf ? ` · ${resAsOf}` : ""}`}
+          footer={
+            snap.fxTrend || snap.fxHint
+              ? `汇率水平（时点）${fxLevelAsOf ? ` · ${fxLevelAsOf}` : ""}：${snap.fxTrend || snap.fxHint}`
+              : "—"
+          }
+        >
+          <div style={{ fontSize: 22, fontWeight: 600, color: c.text }}>{res != null ? res.toLocaleString() : "—"}</div>
+          <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 6 }}>
+            波动（时段·年内）{snap.fxVolInYear ? `${splitValue(snap.fxVolInYear)}${volAsOf ? ` · ${volAsOf}` : ""}` : "—"}
+          </div>
+        </Panel>
+        <Panel
+          title={`${countryLabel} · 汇兑韧性`}
+          subtitle={`示意分 ${score}/100 · 非评级 · 混用时段+时点`}
+          footer={stress}
+        >
+          <div style={{ height: 8, background: theme.fill.quaternary, marginTop: 4 }}>
+            <div
+              style={{
+                width: `${score}%`,
+                height: "100%",
+                background: score >= 75 ? c.added : score >= 55 ? c.accent : c.removed,
+              }}
+            />
+          </div>
+          <Stack gap={4} style={{ marginTop: 8 }}>
+            {partRow("经常账户", caPts, ca != null)}
+            {partRow("外储规模", resPts, res != null)}
+            {partRow("汇率波动", volPts, vol != null)}
+          </Stack>
+          <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 8, lineHeight: 1.4 }}>
+            {notes.slice(0, 3).join("；")}
+          </div>
+        </Panel>
+      </Grid>
+    </Stack>
   );
 }
 

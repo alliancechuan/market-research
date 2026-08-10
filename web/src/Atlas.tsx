@@ -20289,7 +20289,7 @@ function CountryMacroPanel({ country }: { country: CountryCode }) {
             [snap.currentAccount, snap.fxReserves, snap.fxTrend || snap.fxHint]
               .filter(Boolean)
               .join("；") || "—",
-          body: <FxCaCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} />,
+          body: <FxCaCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} countryCode={code} />,
         },
         {
           id: "credit",
@@ -23420,14 +23420,14 @@ function BigScreenOverlay({
           ? "市场放贷热力图"
           : "展业热力图";
   const subtitle = marketEco
-    ? `面填=市场放贷；圆点=${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}样本数 · 可对照市场空间`
+    ? `琥珀点=市场放贷；蓝点=${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}样本数 · 浅底透图`
     : ecoOn
-      ? `${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}：面填=各国样本数 · 点击国家放大`
+      ? `${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}：蓝点=各国样本数 · 浅底透图`
       : both
-        ? "面填灰阶=市场放贷；圆点=展业在贷 · 图层开关不重载底图"
+        ? "琥珀点=市场放贷；蓝点=展业在贷 · 浅底透图 · 图层开关不重载底图"
         : showMarket
-          ? "市场放贷总量(USD)：灰阶分档浅→深 · 点击有数据国家可放大"
-          : "展业在贷：面填深浅 · 点击国家查看已投平台";
+          ? "市场放贷：琥珀点色/点径 · 浅底透图 · 点击有数据国家可放大"
+          : "展业在贷：蓝点色/点径 · 浅底透图 · 点击国家查看已投平台";
 
   const globe = (
     <CombinedHeatGlobe

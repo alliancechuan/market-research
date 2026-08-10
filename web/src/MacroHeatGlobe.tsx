@@ -24,9 +24,9 @@ import {
   MapKV,
   useMapChrome,
   Button,
-  heatColorRemoved,
   type MapLegendPlacement,
 } from "./HeatMapChrome";
+import { heatColorWarm, heatColorAdded } from "./heatMapTheme";
 import { summarizeNbfcForCountry } from "./data/countryZoomDetails";
 import { INVESTED_BY_CODE, formatUsdCompact } from "./data/producerHoldings";
 
@@ -205,8 +205,21 @@ function MacroDetailPanel({
   );
 }
 
+type DotPoint = {
+  a2: string;
+  name: string;
+  value: number;
+  raw: string;
+  x: number;
+  y: number;
+  t: number;
+  r: number;
+  hasInvested: boolean;
+  hasLending: boolean;
+};
+
 /**
- * 宏观因子地域分布图：单因子色阶面填。
+ * 宏观因子地域分布图：浅底透图 + 色点主层（参考点状风险图）。
  * 与放贷/已投图并列——宏观定风险中枢，点击看全套因子 + 放贷/已投对照。
  */
 export function MacroHeatGlobe({
@@ -228,6 +241,7 @@ export function MacroHeatGlobe({
   const vals = useMemo(() => Object.values(metric.byCode), [metric]);
   const minV = useMemo(() => (vals.length ? Math.min(...vals) : 0), [vals]);
   const maxV = useMemo(() => (vals.length ? Math.max(...vals) : 1), [vals]);
+  const warmRisk = metric.sense === "high_risk";
 
   const intensity = (v: number) => {
     if (!(maxV > minV)) return 1;
@@ -288,10 +302,48 @@ export function MacroHeatGlobe({
   }, [focusFeature, width, height]);
 
   const ranked = useMemo(
-    () =>
-      Object.entries(metric.byCode).sort((a, b) => b[1] - a[1]),
+    () => Object.entries(metric.byCode).sort((a, b) => b[1] - a[1]),
     [metric],
   );
+
+  const dots = useMemo(() => {
+    const out: DotPoint[] = [];
+    for (const f of countries.features) {
+      const a2 = a2Of(f);
+      if (!a2) continue;
+      const v = metric.byCode[a2];
+      if (v == null) continue;
+      const cen = pathGen.centroid(f);
+      if (!cen || !Number.isFinite(cen[0]) || !Number.isFinite(cen[1])) continue;
+      const t = intensity(v);
+      const r = 3.2 + t * (fill ? 7.5 : 5.5);
+      const nbfc = summarizeNbfcForCountry(a2);
+      out.push({
+        a2,
+        name: COUNTRY_LABEL_ZH[a2] ?? f.properties?.name ?? a2,
+        value: v,
+        raw: metric.rawByCode[a2] ?? "",
+        x: cen[0],
+        y: cen[1],
+        t,
+        r,
+        hasInvested: Boolean(INVESTED_BY_CODE[a2]),
+        hasLending: Boolean(nbfc && nbfc.lendingUsdBn > 0),
+      });
+    }
+    // 大点压小点，避免小国被盖住看不见
+    out.sort((a, b) => a.r - b.r);
+    return out;
+  }, [countries, metric, pathGen, fill, minV, maxV]);
+
+  const callouts = useMemo(() => {
+    if (focus || !warmRisk) return [] as DotPoint[];
+    const byCode = new Map(dots.map((d) => [d.a2, d]));
+    const top = ranked.slice(0, 3).map(([code]) => byCode.get(code)).filter(Boolean) as DotPoint[];
+    return top;
+  }, [dots, ranked, focus, warmRisk]);
+
+  const dotFill = (t: number) => (warmRisk ? heatColorWarm(t) : heatColorAdded(t, theme));
 
   return (
     <div
@@ -373,25 +425,24 @@ export function MacroHeatGlobe({
         <MapSvgFrame width={width} height={height} fill={fill}>
           {outline ? <path d={outline} fill={c.ocean} /> : null}
           {graticulePath ? (
-            <path d={graticulePath} fill="none" stroke={c.graticule} strokeWidth={0.6} />
+            <path d={graticulePath} fill="none" stroke={c.graticule} strokeWidth={0.45} opacity={0.55} />
           ) : null}
+          {/* 浅色底图：不按因子面填，留给点阵透底 */}
           {countries.features.map((f, i) => {
             const a2 = a2Of(f);
-            const v = a2 != null ? metric.byCode[a2] : undefined;
             const d = pathGen(f);
             if (!d) return null;
             const isFocus = focus != null && a2 === focus;
             const dimmed = focus != null && !isFocus;
-            const has = v != null;
-            const fillColor = has ? heatColorRemoved(intensity(v), theme) : c.emptyLand;
+            const has = a2 != null && metric.byCode[a2] != null;
             return (
               <path
-                key={`${f.id ?? i}`}
+                key={`land-${f.id ?? i}`}
                 d={d}
-                fill={fillColor}
+                fill={isFocus ? "#E8E4DC" : c.emptyLand}
                 stroke={isFocus ? c.accent : c.landStroke}
-                strokeWidth={isFocus ? 1.4 : has ? 0.55 : 0.35}
-                opacity={dimmed ? 0.22 : 1}
+                strokeWidth={isFocus ? 1.35 : 0.35}
+                opacity={dimmed ? 0.18 : 1}
                 style={{ cursor: has ? "pointer" : "default" }}
                 onClick={() => {
                   if (a2 && has) {
@@ -399,37 +450,112 @@ export function MacroHeatGlobe({
                     setHover(null);
                   }
                 }}
+              />
+            );
+          })}
+          {/* 主层：国别质心色点（大小∝强度，色∝读数） */}
+          {dots.map((p) => {
+            const isFocus = focus != null && p.a2 === focus;
+            const dimmed = focus != null && !isFocus;
+            return (
+              <g
+                key={`dot-${p.a2}`}
+                opacity={dimmed ? 0.2 : 1}
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setFocus(p.a2);
+                  setHover(null);
+                }}
                 onMouseEnter={(ev) => {
-                  if (!a2 || v == null) {
-                    setHover(null);
-                    return;
-                  }
                   const rect = (ev.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
                   setHover({
-                    a2,
-                    name: COUNTRY_LABEL_ZH[a2] ?? f.properties?.name ?? a2,
-                    value: v,
-                    raw: metric.rawByCode[a2] ?? "",
+                    a2: p.a2,
+                    name: p.name,
+                    value: p.value,
+                    raw: p.raw,
                     x: ev.clientX - rect.left,
                     y: ev.clientY - rect.top,
                   });
                 }}
                 onMouseMove={(ev) => {
-                  if (!a2 || v == null) return;
                   const rect = (ev.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
                   setHover({
-                    a2,
-                    name: COUNTRY_LABEL_ZH[a2] ?? f.properties?.name ?? a2,
-                    value: v,
-                    raw: metric.rawByCode[a2] ?? "",
+                    a2: p.a2,
+                    name: p.name,
+                    value: p.value,
+                    raw: p.raw,
                     x: ev.clientX - rect.left,
                     y: ev.clientY - rect.top,
                   });
                 }}
                 onMouseLeave={() => setHover(null)}
-              />
+              >
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={isFocus ? p.r * 1.25 : p.r}
+                  fill={dotFill(p.t)}
+                  stroke={isFocus ? c.accent : "#FFFAF5"}
+                  strokeWidth={isFocus ? 1.6 : 0.9}
+                />
+                {/* 副层：有已投 / 市场放贷对照时叠细环 */}
+                {p.hasInvested || p.hasLending ? (
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={(isFocus ? p.r * 1.25 : p.r) + 2.4}
+                    fill="none"
+                    stroke={p.hasInvested ? c.accent : c.ink}
+                    strokeWidth={1.1}
+                    opacity={0.85}
+                  />
+                ) : null}
+              </g>
             );
           })}
+          {/* 高风险向：Top3 callout */}
+          {!focus
+            ? callouts.map((p, i) => {
+                const side = p.x > width * 0.55 ? -1 : 1;
+                const lx = p.x + side * (28 + i * 6);
+                const ly = Math.max(28, Math.min(height - 36, p.y - 22 - i * 10));
+                const label = `${COUNTRY_LABEL_ZH[p.a2] ?? p.a2} ${formatMacroValue(factor, p.value)}`;
+                return (
+                  <g key={`call-${p.a2}`} pointerEvents="none">
+                    <line
+                      x1={p.x}
+                      y1={p.y}
+                      x2={lx}
+                      y2={ly}
+                      stroke={c.textTertiary}
+                      strokeWidth={0.8}
+                      strokeDasharray="2 2"
+                    />
+                    <circle cx={p.x} cy={p.y} r={p.r + 3.5} fill="none" stroke={c.textSecondary} strokeWidth={0.9} />
+                    <rect
+                      x={side > 0 ? lx : lx - Math.min(132, 10 + label.length * 6.2)}
+                      y={ly - 11}
+                      width={Math.min(132, 10 + label.length * 6.2)}
+                      height={18}
+                      rx={3}
+                      fill={c.panelBg}
+                      stroke={c.panelBorder}
+                      strokeWidth={0.8}
+                    />
+                    <text
+                      x={side > 0 ? lx + 5 : lx - 5}
+                      y={ly + 2}
+                      textAnchor={side > 0 ? "start" : "end"}
+                      fill={c.text}
+                      fontSize={10}
+                      fontFamily="system-ui, sans-serif"
+                    >
+                      {label}
+                    </text>
+                  </g>
+                );
+              })
+            : null}
           {outline ? <path d={outline} fill="none" stroke={c.outline} strokeWidth={1} /> : null}
         </MapSvgFrame>
 
@@ -461,10 +587,10 @@ export function MacroHeatGlobe({
         <MacroDetailPanel code={focus} factorId={factor} onClose={() => setFocus(null)} />
       ) : null}
       {!focus ? (
-        <MapSideLegend title={`${metric.label} · 地域分布`} placement={place}>
+        <MapSideLegend title={`${metric.label} · 点阵分布`} placement={place}>
           <SteppedLegend
-            label={`${metric.label}（${metric.unit}）· 低 → 高`}
-            kind="gray"
+            label={`${metric.label}（${metric.unit}）· 点色/点径 低 → 高`}
+            kind={warmRisk ? "warm" : "accent"}
             compact={bottomLegend}
           />
           <div
@@ -475,8 +601,9 @@ export function MacroHeatGlobe({
               marginTop: bottomLegend ? 8 : 0,
             }}
           >
-            有读数 {metric.count} 国 · {metric.blurb}
-            {metric.sense === "high_risk" ? " · 色深=读数高（风险向）" : " · 色深=读数高（容量向）"}
+            浅底透图 · 色点 {metric.count} 国 · {metric.blurb}
+            {warmRisk ? " · 色深/点大=读数高（风险向）" : " · 色深/点大=读数高（容量向）"}
+            {" · 细环=已投或市场放贷对照"}
           </div>
           <ol
             style={{

@@ -29,12 +29,12 @@ import {
   useMapChrome,
   producerCardStyle,
   Button,
-  heatColorRemoved,
   heatColorAdded,
   MapCountryMacroBrief,
   RankBarList,
   type MapLegendPlacement,
 } from "./HeatMapChrome";
+import { heatColorWarm } from "./heatMapTheme";
 import { formatCountryLanguageLine } from "./data/countryLanguage";
 
 type CountryProps = { name?: string };
@@ -204,7 +204,7 @@ function DetailPanel({
   );
 }
 
-/** 叠加热力：面填灰阶=市场放贷强弱；圆点大小(+强调色)=已投在贷 / 生态机构数 */
+/** 叠加热力：浅底透图 + 点阵（市场琥珀 / 展业蓝 / 生态蓝） */
 export function CombinedHeatGlobe({
   height = 420,
   fill = false,
@@ -400,17 +400,35 @@ export function CombinedHeatGlobe({
     return set;
   }, [countries]);
 
+  const marketMarkers = useMemo(() => {
+    if (!marketOn) return [] as { a2: string; x: number; y: number; r: number; fill: string; bn: number }[];
+    const items: { a2: string; x: number; y: number; r: number; fill: string; bn: number }[] = [];
+    for (const f of countries.features) {
+      const a2 = a2Of(f);
+      if (!a2) continue;
+      const bn = lending[a2] ?? 0;
+      if (!(bn > 0)) continue;
+      const t = lendIntensity(bn);
+      const centroid = pathGen.centroid(f);
+      if (!centroid || !Number.isFinite(centroid[0]) || !Number.isFinite(centroid[1])) continue;
+      const r = (bothOn ? 2.8 : 3.4) + t * (fill ? 7.5 : 5.8);
+      items.push({ a2, x: centroid[0], y: centroid[1], r, fill: heatColorWarm(t), bn });
+    }
+    items.sort((a, b) => a.r - b.r);
+    return items;
+  }, [marketOn, bothOn, countries, lending, pathGen, minBn, maxBn, fill]);
+
   const markers = useMemo(() => {
+    if (!investedOn) return [] as { a2: string; x: number; y: number; r: number; fill: string; usd: number }[];
     const items: { a2: string; x: number; y: number; r: number; fill: string; usd: number }[] = [];
     for (const f of countries.features) {
       const a2 = a2Of(f);
       if (!a2 || !INVESTED_BY_CODE[a2]) continue;
       const usd = investedOutstanding[a2] ?? 0;
-      const t = invIntensity(usd);
+      const t = invIntensity(Math.max(usd, 1e-6));
       const centroid = pathGen.centroid(f);
       if (!centroid || !Number.isFinite(centroid[0]) || !Number.isFinite(centroid[1])) continue;
-      // 比例符号：半径按 √强度（近似面积正比），上限压低，避免盖住国土被误读为「整国体量」
-      const r = 2.4 + Math.sqrt(Math.max(0, t)) * 3.6; // ≈2.4–6.0
+      const r = (bothOn ? 2.6 : 3.6) + t * (fill ? 8 : 6.2);
       items.push({
         a2,
         x: centroid[0],
@@ -420,8 +438,9 @@ export function CombinedHeatGlobe({
         usd,
       });
     }
+    items.sort((a, b) => a.r - b.r);
     return items;
-  }, [countries, investedOutstanding, pathGen, minInv, maxInv, theme]);
+  }, [investedOn, bothOn, countries, investedOutstanding, pathGen, minInv, maxInv, theme, fill]);
 
   const ecoMarkers = useMemo(() => {
     if (!ecoOn) return [] as { a2: string; x: number; y: number; r: number; fill: string; n: number }[];
@@ -434,7 +453,7 @@ export function CombinedHeatGlobe({
       const t = ecoIntensity(n);
       const centroid = pathGen.centroid(f);
       if (!centroid || !Number.isFinite(centroid[0]) || !Number.isFinite(centroid[1])) continue;
-      const r = 2.6 + Math.sqrt(Math.max(0, t)) * 4.2;
+      const r = (marketEcoOn ? 2.8 : 3.4) + t * (fill ? 7.5 : 5.8);
       items.push({
         a2,
         x: centroid[0],
@@ -444,8 +463,9 @@ export function CombinedHeatGlobe({
         n,
       });
     }
+    items.sort((a, b) => a.r - b.r);
     return items;
-  }, [ecoOn, countries, ecoMap, pathGen, minEco, maxEco, theme]);
+  }, [ecoOn, marketEcoOn, countries, ecoMap, pathGen, minEco, maxEco, theme, fill]);
 
   const interactive = (a2: string | null) => {
     if (!a2) return false;
@@ -634,33 +654,21 @@ export function CombinedHeatGlobe({
             <path d={graticulePath} fill="none" stroke={c.graticule} strokeWidth={0.6} />
           ) : null}
 
+          {/* 浅色底图：不再 choropleth 面填 */}
           {countries.features.map((f, i) => {
             const a2 = a2Of(f);
-            const bn = a2 ? (lending[a2] ?? 0) : 0;
-            const invUsd = a2 ? (investedOutstanding[a2] ?? 0) : 0;
             const d = pathGen(f);
             if (!d) return null;
             const isFocus = focus != null && a2 === focus;
             const dimmed = focus != null && !isFocus;
-            const ecoN = a2 ? (ecoMap[a2] ?? 0) : 0;
-            let landFill = c.emptyLand;
-            if (ecoOnly) {
-              landFill = ecoN > 0 ? heatColorAdded(ecoIntensity(ecoN), theme) : c.emptyLand;
-            } else if (investedOnly) {
-              landFill = invUsd > 0 ? heatColorAdded(invIntensity(invUsd), theme) : c.emptyLand;
-            } else if (marketOn && bn > 0) {
-              landFill = heatColorRemoved(lendIntensity(bn), theme);
-            } else if (ecoOn && ecoN > 0 && !marketOn) {
-              landFill = heatColorAdded(ecoIntensity(ecoN), theme);
-            }
             return (
               <path
                 key={`base-${f.id ?? i}`}
                 d={d}
                 data-a2={a2 ?? undefined}
-                fill={landFill}
-                stroke={c.landStroke}
-                strokeWidth={0.35}
+                fill={isFocus ? (investedOn || ecoOn ? "#E4EAF0" : "#E8E4DC") : c.emptyLand}
+                stroke={isFocus ? c.accent : c.landStroke}
+                strokeWidth={isFocus ? 1.25 : 0.35}
                 opacity={dimmed ? 0.18 : 1}
                 style={{ cursor: interactive(a2) ? "pointer" : "inherit" }}
                 onMouseEnter={(ev) => {
@@ -699,80 +707,72 @@ export function CombinedHeatGlobe({
             );
           })}
 
-          {bothOn
-            ? countries.features.map((f, i) => {
-                const a2 = a2Of(f);
-                if (!a2 || !INVESTED_BY_CODE[a2]) return null;
-                const d = pathGen(f);
-                if (!d) return null;
-                const isFocus = focus != null && a2 === focus;
-                const dimmed = focus != null && !isFocus;
+          {/* 市场点阵 */}
+          {!focus && marketOn
+            ? marketMarkers.map((m) => {
+                const dimmed = focus != null && m.a2 !== focus;
                 return (
-                  <path
-                    key={`inv-${f.id ?? i}`}
-                    d={d}
-                    fill="none"
-                    stroke={c.accent}
-                    strokeWidth={isFocus ? 2 : 1.25}
-                    opacity={dimmed ? 0.15 : 0.85}
-                    style={{ pointerEvents: "none" }}
-                  />
+                  <g key={`mkt-${m.a2}`} style={{ pointerEvents: "none" }} opacity={dimmed ? 0.2 : 0.95}>
+                    <circle
+                      cx={m.x}
+                      cy={m.y}
+                      r={m.r}
+                      fill={m.fill}
+                      stroke="#FFFAF5"
+                      strokeWidth={0.9}
+                    />
+                  </g>
                 );
               })
             : null}
 
-          {marketEcoOn
-            ? countries.features.map((f, i) => {
-                const a2 = a2Of(f);
-                if (!a2 || !(ecoMap[a2] > 0)) return null;
-                const d = pathGen(f);
-                if (!d) return null;
-                const isFocus = focus != null && a2 === focus;
-                const dimmed = focus != null && !isFocus;
+          {/* 展业点阵（单独或叠在市场上） */}
+          {!focus && investedOn
+            ? markers.map((m) => {
+                const dimmed = focus != null && m.a2 !== focus;
                 return (
-                  <path
-                    key={`eco-outline-${f.id ?? i}`}
-                    d={d}
-                    fill="none"
-                    stroke={c.accent}
-                    strokeWidth={isFocus ? 2 : 1.15}
-                    opacity={dimmed ? 0.15 : 0.8}
-                    style={{ pointerEvents: "none" }}
-                  />
+                  <g key={`inv-${m.a2}`} style={{ pointerEvents: "none" }} opacity={dimmed ? 0.2 : 0.95}>
+                    <circle
+                      cx={m.x}
+                      cy={m.y}
+                      r={m.r}
+                      fill={m.fill}
+                      stroke="#F5FAFF"
+                      strokeWidth={bothOn ? 1.2 : 0.9}
+                    />
+                    {bothOn && (lending[m.a2] ?? 0) > 0 ? (
+                      <circle
+                        cx={m.x}
+                        cy={m.y}
+                        r={m.r + 2.2}
+                        fill="none"
+                        stroke={c.ink}
+                        strokeWidth={1}
+                        opacity={0.55}
+                      />
+                    ) : null}
+                  </g>
                 );
               })
             : null}
 
-          {!focus && bothOn
-            ? markers.map((m) => (
-                <g key={`m-${m.a2}`} style={{ pointerEvents: "none" }}>
-                  <circle
-                    cx={m.x}
-                    cy={m.y}
-                    r={m.r}
-                    fill={m.fill}
-                    stroke={c.panelBg}
-                    strokeWidth={1}
-                    opacity={0.92}
-                  />
-                </g>
-              ))
-            : null}
-
-          {!focus && (marketEcoOn || (ecoOn && !ecoOnly))
-            ? ecoMarkers.map((m) => (
-                <g key={`eco-m-${m.a2}`} style={{ pointerEvents: "none" }}>
-                  <circle
-                    cx={m.x}
-                    cy={m.y}
-                    r={m.r}
-                    fill={m.fill}
-                    stroke={c.panelBg}
-                    strokeWidth={1}
-                    opacity={0.92}
-                  />
-                </g>
-              ))
+          {/* 生态机构点阵 */}
+          {!focus && ecoOn
+            ? ecoMarkers.map((m) => {
+                const dimmed = focus != null && m.a2 !== focus;
+                return (
+                  <g key={`eco-m-${m.a2}`} style={{ pointerEvents: "none" }} opacity={dimmed ? 0.2 : 0.95}>
+                    <circle
+                      cx={m.x}
+                      cy={m.y}
+                      r={m.r}
+                      fill={m.fill}
+                      stroke="#F5FAFF"
+                      strokeWidth={marketEcoOn ? 1.2 : 0.9}
+                    />
+                  </g>
+                );
+              })
             : null}
 
           {/* 中国香港：110m 无面，锚点可点 */}
@@ -785,14 +785,21 @@ export function CombinedHeatGlobe({
             if (dimmed) return null;
             const usd = investedOutstanding.HK ?? 0;
             const ecoN = ecoMap.HK ?? 0;
-            const r = bothOn
-              ? 2.4 + Math.sqrt(Math.max(0, invIntensity(usd))) * 3.6
-              : marketEcoOn || (ecoOn && ecoN > 0)
-                ? 2.6 + Math.sqrt(Math.max(0, ecoIntensity(ecoN || 1))) * 4.2
-                : 7;
-            const dotFill = ecoOn && ecoN > 0
-              ? heatColorAdded(ecoIntensity(ecoN), theme)
-              : heatColorAdded(invIntensity(usd || 1), theme);
+            const mktBn = lending.HK ?? 0;
+            const r =
+              ecoOn && ecoN > 0
+                ? (marketEcoOn ? 2.8 : 3.4) + ecoIntensity(ecoN) * (fill ? 7.5 : 5.8)
+                : investedOn
+                  ? (bothOn ? 2.6 : 3.6) + invIntensity(Math.max(usd, 1e-6)) * (fill ? 8 : 6.2)
+                  : marketOn && mktBn > 0
+                    ? (bothOn ? 2.8 : 3.4) + lendIntensity(mktBn) * (fill ? 7.5 : 5.8)
+                    : 7;
+            const dotFill =
+              ecoOn && ecoN > 0
+                ? heatColorAdded(ecoIntensity(ecoN), theme)
+                : investedOn
+                  ? heatColorAdded(invIntensity(Math.max(usd, 1e-6)), theme)
+                  : heatColorWarm(lendIntensity(Math.max(mktBn, 1e-6)));
             return (
               <g
                 data-a2="HK"
@@ -910,29 +917,21 @@ export function CombinedHeatGlobe({
           >
             {marketOn ? (
               <SteppedLegend
-                label="面填 · 非银/等效放贷总量（灰阶浅→深；非 AUM）"
-                kind="gray"
+                label="点阵 · 非银/等效放贷（琥珀点色/点径；非 AUM）"
+                kind="warm"
                 compact={bottomLegend}
               />
             ) : null}
             {investedOn ? (
               <SteppedLegend
-                label={
-                  bothOn
-                    ? "圆点 · 展业在贷（相对大小，非国土面积）"
-                    : "面填 · 展业在贷（浅→深）"
-                }
+                label="点阵 · 展业在贷（蓝点色/点径）"
                 kind="accent"
                 compact={bottomLegend}
               />
             ) : null}
             {ecoOn ? (
               <SteppedLegend
-                label={
-                  marketEcoOn
-                    ? `圆点 · ${ecoLabel ?? "其他机构"}样本数`
-                    : `面填 · ${ecoLabel ?? "其他机构"}样本数（浅→深）`
-                }
+                label={`点阵 · ${ecoLabel ?? "其他机构"}样本数`}
                 kind="accent"
                 compact={bottomLegend}
               />
@@ -940,17 +939,17 @@ export function CombinedHeatGlobe({
           </div>
           {ecoOn ? (
             <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 8 }}>
-              {ecoLabel ?? "其他机构"}覆盖 {ecoRanked.length} 国 · 样本{" "}
+              浅底透图 · {ecoLabel ?? "其他机构"}覆盖 {ecoRanked.length} 国 · 样本{" "}
               {ecoRanked.reduce((s, [, n]) => s + n, 0)} 家 · 点击横条放大
             </div>
           ) : investedOn ? (
             <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 8 }}>
-              展业 {investedRanked.length} 国 · 基金合计{" "}
-              {formatUsdCompact(PRODUCER_HOLDINGS.total_investment_usd)} · 点击横条放大
+              浅底透图 · 展业 {investedRanked.length} 国 · 基金合计{" "}
+              {formatUsdCompact(PRODUCER_HOLDINGS.total_investment_usd)} · 点击点/横条放大
             </div>
           ) : (
             <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 8 }}>
-              有市场放贷读数 · 点击横条可放大
+              浅底透图 · 市场放贷色点 · 点击点/横条可放大
             </div>
           )}
           <RankBarList
@@ -1006,14 +1005,14 @@ export function CombinedHeatGlobe({
           <div style={{ marginTop: 12 }}>
             <MapMuted>
               {marketEcoOn
-                ? `面填=市场放贷灰阶；圆点=${ecoLabel ?? "其他机构"}样本数。可与市场对照。`
+                ? `琥珀点=市场放贷；蓝点=${ecoLabel ?? "其他机构"}样本数。切换图层不重载底图。`
                 : bothOn
-                  ? "面填=市场放贷灰阶；圆点=展业在贷规模。切换图层不重载底图。"
+                  ? "琥珀点=市场放贷；蓝点=展业在贷。切换图层不重载底图。"
                   : marketOn
-                    ? "面填=市场放贷灰阶。"
+                    ? "琥珀点色/点径=市场放贷强弱。"
                     : ecoOnly
-                      ? `面填=${ecoLabel ?? "其他机构"}样本数强弱。`
-                      : "面填=展业在贷强弱。"}
+                      ? `蓝点色/点径=${ecoLabel ?? "其他机构"}样本数强弱。`
+                      : "蓝点色/点径=展业在贷强弱。"}
             </MapMuted>
           </div>
         </MapSideLegend>

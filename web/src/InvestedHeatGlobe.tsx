@@ -23,12 +23,13 @@ import {
   useMapChrome,
   producerCardStyle,
   Button,
-  heatColorAdded,
   MapCountryMacroBrief,
   RankBarList,
   type MapLegendPlacement,
 } from "./HeatMapChrome";
+import { heatColorAdded } from "./heatMapTheme";
 import { formatCountryLanguageLine } from "./data/countryLanguage";
+import { aggregateLendingUsdBn } from "./LendingHeatGlobe";
 
 type CountryProps = { name?: string };
 
@@ -175,7 +176,7 @@ export function InvestedHeatGlobe({
     return countries.features.find((f) => a2Of(f) === focus) ?? null;
   }, [focus, countries]);
 
-  const { pathGen, outline } = useMemo(() => {
+  const { pathGen, outline, project } = useMemo(() => {
     const projection = geoNaturalEarth1();
     if (focusFeature) {
       projection.fitExtent(
@@ -195,7 +196,11 @@ export function InvestedHeatGlobe({
       );
     }
     const pathGen = geoPath(projection);
-    return { pathGen, outline: pathGen({ type: "Sphere" }) };
+    return {
+      pathGen,
+      outline: pathGen({ type: "Sphere" }),
+      project: (lon: number, lat: number) => projection([lon, lat]) as [number, number] | null,
+    };
   }, [width, height, focusFeature]);
 
   const graticulePath = useMemo(() => pathGen(geoGraticule10()), [pathGen]);
@@ -216,6 +221,8 @@ export function InvestedHeatGlobe({
     [],
   );
 
+  const marketLending = useMemo(() => aggregateLendingUsdBn(), []);
+
   const mapCodes = useMemo(() => {
     const set = new Set<string>();
     for (const f of countries.features) {
@@ -224,6 +231,79 @@ export function InvestedHeatGlobe({
     }
     return set;
   }, [countries]);
+
+  type DotPoint = {
+    a2: string;
+    name: string;
+    outstandingUsd: number;
+    investmentUsd: number;
+    producerCount: number;
+    x: number;
+    y: number;
+    t: number;
+    r: number;
+    hasMarket: boolean;
+  };
+
+  const dots = useMemo(() => {
+    const out: DotPoint[] = [];
+    const seen = new Set<string>();
+    for (const f of countries.features) {
+      const a2 = a2Of(f);
+      if (!a2) continue;
+      const inv = INVESTED_BY_CODE[a2];
+      const usd = outstanding[a2] ?? inv?.outstanding_usd_for_heat ?? 0;
+      if (!(usd > 0) && !inv) continue;
+      const cen = pathGen.centroid(f);
+      if (!cen || !Number.isFinite(cen[0]) || !Number.isFinite(cen[1])) continue;
+      const t = intensity(Math.max(usd, 1e-6));
+      out.push({
+        a2,
+        name: COUNTRY_LABEL_ZH[a2] ?? inv?.country_zh ?? f.properties?.name ?? a2,
+        outstandingUsd: inv?.outstanding_usd_for_heat ?? usd,
+        investmentUsd: inv?.investment_usd ?? 0,
+        producerCount: inv?.producers.length ?? 0,
+        x: cen[0],
+        y: cen[1],
+        t,
+        r: 3.6 + t * (fill ? 8.5 : 6.5),
+        hasMarket: Boolean(marketLending[a2] && marketLending[a2] > 0),
+      });
+      seen.add(a2);
+    }
+    // 香港：110m 底图无独立面，锚点标出
+    if (INVESTED_BY_CODE.HK && !seen.has("HK")) {
+      const xy = project(114.17, 22.32);
+      if (xy) {
+        const inv = INVESTED_BY_CODE.HK;
+        const usd = inv.outstanding_usd_for_heat;
+        const t = intensity(Math.max(usd, 1e-6));
+        out.push({
+          a2: "HK",
+          name: COUNTRY_LABEL_ZH.HK ?? inv.country_zh ?? "香港",
+          outstandingUsd: usd,
+          investmentUsd: inv.investment_usd,
+          producerCount: inv.producers.length,
+          x: xy[0],
+          y: xy[1],
+          t,
+          r: 3.6 + t * (fill ? 8.5 : 6.5),
+          hasMarket: Boolean(marketLending.HK && marketLending.HK > 0),
+        });
+      }
+    }
+    out.sort((a, b) => a.r - b.r);
+    return out;
+  }, [countries, outstanding, pathGen, project, fill, minUsd, maxUsd, marketLending]);
+
+  const callouts = useMemo(() => {
+    if (focus) return [] as DotPoint[];
+    const byCode = new Map(dots.map((d) => [d.a2, d]));
+    return ranked
+      .slice(0, 3)
+      .map((row) => byCode.get(row.country_code))
+      .filter(Boolean) as DotPoint[];
+  }, [dots, ranked, focus]);
 
   return (
     <div
@@ -307,7 +387,7 @@ export function InvestedHeatGlobe({
         <MapSvgFrame width={width} height={height} fill={fill}>
           {outline ? <path d={outline} fill={c.ocean} /> : null}
           {graticulePath ? (
-            <path d={graticulePath} fill="none" stroke={c.graticule} strokeWidth={0.6} />
+            <path d={graticulePath} fill="none" stroke={c.graticule} strokeWidth={0.45} opacity={0.55} />
           ) : null}
           {countries.features.map((f, i) => {
             const a2 = a2Of(f);
@@ -316,58 +396,129 @@ export function InvestedHeatGlobe({
             if (!d) return null;
             const isFocus = focus != null && a2 === focus;
             const dimmed = focus != null && !isFocus;
-            const fill = usd > 0 ? heatColorAdded(intensity(usd), theme) : c.emptyLand;
-            const stroke = isFocus ? c.added : usd > 0 ? c.added : c.landStroke;
+            const clickable = Boolean(a2 && (usd > 0 || INVESTED_BY_CODE[a2]));
             return (
               <path
-                key={`${f.id ?? i}`}
+                key={`land-${f.id ?? i}`}
                 d={d}
-                fill={fill}
-                stroke={stroke}
-                strokeWidth={isFocus ? 1.4 : usd > 0 ? 0.55 : 0.35}
-                opacity={dimmed ? 0.22 : 1}
-                style={{ cursor: usd > 0 || INVESTED_BY_CODE[a2 || ""] ? "pointer" : "default" }}
+                fill={isFocus ? "#E4EAF0" : c.emptyLand}
+                stroke={isFocus ? c.added : c.landStroke}
+                strokeWidth={isFocus ? 1.35 : 0.35}
+                opacity={dimmed ? 0.18 : 1}
+                style={{ cursor: clickable ? "pointer" : "default" }}
                 onClick={() => {
-                  if (a2 && (usd > 0 || INVESTED_BY_CODE[a2])) {
+                  if (clickable && a2) {
                     setFocus(a2);
                     setHover(null);
                   }
                 }}
+              />
+            );
+          })}
+          {dots.map((p) => {
+            const isFocus = focus != null && p.a2 === focus;
+            const dimmed = focus != null && !isFocus;
+            const rr = isFocus ? p.r * 1.25 : p.r;
+            return (
+              <g
+                key={`dot-${p.a2}`}
+                opacity={dimmed ? 0.2 : 1}
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setFocus(p.a2);
+                  setHover(null);
+                }}
                 onMouseEnter={(ev) => {
-                  if (!a2 || !(usd > 0 || INVESTED_BY_CODE[a2])) {
-                    setHover(null);
-                    return;
-                  }
-                  const inv = INVESTED_BY_CODE[a2];
                   const rect = (ev.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
                   setHover({
-                    a2,
-                    name: COUNTRY_LABEL_ZH[a2] ?? inv?.country_zh ?? f.properties?.name ?? a2,
-                    outstandingUsd: inv?.outstanding_usd_for_heat ?? usd,
-                    investmentUsd: inv?.investment_usd ?? 0,
-                    producerCount: inv?.producers.length ?? 0,
+                    a2: p.a2,
+                    name: p.name,
+                    outstandingUsd: p.outstandingUsd,
+                    investmentUsd: p.investmentUsd,
+                    producerCount: p.producerCount,
                     x: ev.clientX - rect.left,
                     y: ev.clientY - rect.top,
                   });
                 }}
                 onMouseMove={(ev) => {
-                  if (!a2 || !(usd > 0 || INVESTED_BY_CODE[a2])) return;
-                  const inv = INVESTED_BY_CODE[a2];
                   const rect = (ev.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
                   setHover({
-                    a2,
-                    name: COUNTRY_LABEL_ZH[a2] ?? inv?.country_zh ?? f.properties?.name ?? a2,
-                    outstandingUsd: inv?.outstanding_usd_for_heat ?? usd,
-                    investmentUsd: inv?.investment_usd ?? 0,
-                    producerCount: inv?.producers.length ?? 0,
+                    a2: p.a2,
+                    name: p.name,
+                    outstandingUsd: p.outstandingUsd,
+                    investmentUsd: p.investmentUsd,
+                    producerCount: p.producerCount,
                     x: ev.clientX - rect.left,
                     y: ev.clientY - rect.top,
                   });
                 }}
                 onMouseLeave={() => setHover(null)}
-              />
+              >
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={rr}
+                  fill={heatColorAdded(p.t, theme)}
+                  stroke={isFocus ? c.added : "#F5FAFF"}
+                  strokeWidth={isFocus ? 1.6 : 0.9}
+                />
+                {p.hasMarket ? (
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={rr + 2.4}
+                    fill="none"
+                    stroke={c.ink}
+                    strokeWidth={1.1}
+                    opacity={0.75}
+                  />
+                ) : null}
+              </g>
             );
           })}
+          {!focus
+            ? callouts.map((p, i) => {
+                const side = p.x > width * 0.55 ? -1 : 1;
+                const lx = p.x + side * (28 + i * 6);
+                const ly = Math.max(28, Math.min(height - 36, p.y - 22 - i * 10));
+                const label = `${COUNTRY_LABEL_ZH[p.a2] ?? p.a2} ${formatUsdCompact(p.outstandingUsd)}`;
+                const tw = Math.min(140, 12 + label.length * 6.4);
+                return (
+                  <g key={`call-${p.a2}`} pointerEvents="none">
+                    <line
+                      x1={p.x}
+                      y1={p.y}
+                      x2={lx}
+                      y2={ly}
+                      stroke={c.textTertiary}
+                      strokeWidth={0.8}
+                      strokeDasharray="2 2"
+                    />
+                    <circle cx={p.x} cy={p.y} r={p.r + 3.5} fill="none" stroke={c.added} strokeWidth={0.9} />
+                    <rect
+                      x={side > 0 ? lx : lx - tw}
+                      y={ly - 11}
+                      width={tw}
+                      height={18}
+                      rx={3}
+                      fill={c.panelBg}
+                      stroke={c.panelBorder}
+                      strokeWidth={0.8}
+                    />
+                    <text
+                      x={side > 0 ? lx + 5 : lx - 5}
+                      y={ly + 2}
+                      textAnchor={side > 0 ? "start" : "end"}
+                      fill={c.text}
+                      fontSize={10}
+                      fontFamily="system-ui, sans-serif"
+                    >
+                      {label}
+                    </text>
+                  </g>
+                );
+              })
+            : null}
           {outline ? <path d={outline} fill="none" stroke={c.outline} strokeWidth={1} /> : null}
         </MapSvgFrame>
 
@@ -403,8 +554,8 @@ export function InvestedHeatGlobe({
         />
       ) : null}
       {!focus ? (
-        <MapSideLegend title="已投图例" placement={place}>
-          <SteppedLegend label="在贷余额 · 少 → 多" kind="added" compact={bottomLegend} />
+        <MapSideLegend title="展业 · 点阵图例" placement={place}>
+          <SteppedLegend label="在贷余额 · 点色/点径 少 → 多" kind="added" compact={bottomLegend} />
           <div
             style={{
               fontSize: 12,
@@ -413,8 +564,8 @@ export function InvestedHeatGlobe({
               marginTop: bottomLegend ? 8 : 0,
             }}
           >
-            已投 {ranked.length} 国 · 基金合计 {formatUsdCompact(PRODUCER_HOLDINGS.total_investment_usd)} ·
-            点击横条放大
+            浅底透图 · 色点 {ranked.length} 国 · 基金合计 {formatUsdCompact(PRODUCER_HOLDINGS.total_investment_usd)}
+            · 墨细环=市场放贷对照 · 点击点/横条放大
           </div>
           <RankBarList
             compact={false}

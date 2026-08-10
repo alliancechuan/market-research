@@ -6,6 +6,7 @@ import { useHostTheme, Text, Button, Link, Stack, Row, mergeStyle } from "./shim
 import {
   heatStopsAdded,
   heatStopsRemoved,
+  heatStopsWarm,
   mapChrome,
   heatColorAdded,
   heatColorRemoved,
@@ -16,6 +17,7 @@ import {
   synthesizeCashLoanBrief,
 } from "./data/countryMacro";
 import { formatCountryLanguageLine, getCountryLanguage } from "./data/countryLanguage";
+import { resolveFxSeries } from "./data/fxHistory";
 
 export function MapSection({
   title,
@@ -275,14 +277,18 @@ export function SteppedLegend({
   compact = false,
 }: {
   label: string;
-  kind: "removed" | "added" | "gray" | "accent";
+  kind: "removed" | "added" | "gray" | "accent" | "warm";
   /** 底部/融入图例时更扁 */
   compact?: boolean;
 }) {
   const theme = useHostTheme();
   const c = mapChrome(theme);
   const stops =
-    kind === "added" || kind === "accent" ? heatStopsAdded(theme) : heatStopsRemoved(theme);
+    kind === "warm"
+      ? heatStopsWarm()
+      : kind === "added" || kind === "accent"
+        ? heatStopsAdded(theme)
+        : heatStopsRemoved(theme);
   return (
     <div
       style={{
@@ -521,6 +527,8 @@ export function MapExtLink({ href, children }: { href: string; children: ReactNo
 /** 国别详情：宏观因子快照（与 CRM 宏观页同库） */
 export function MapCountryMacroBrief({ code }: { code: string }) {
   const snap = getCountryMacro(code);
+  const theme = useHostTheme();
+  const c = mapChrome(theme);
   if (!snap) {
     return (
       <MapSection title="宏观因子">
@@ -529,6 +537,11 @@ export function MapCountryMacroBrief({ code }: { code: string }) {
     );
   }
   const lang = getCountryLanguage(code);
+  const fx = resolveFxSeries(code, {
+    fxTrend: snap.fxTrend,
+    fxHint: snap.fxHint,
+    fxVolInYear: snap.fxVolInYear,
+  });
   const rows: { k: string; v?: string }[] = [
     { k: "对照时点", v: snap.asOf },
     { k: "语言区", v: formatCountryLanguageLine(code) },
@@ -550,8 +563,56 @@ export function MapCountryMacroBrief({ code }: { code: string }) {
     { k: "准入简评", v: synthesizeCashLoanBrief(snap) },
     { k: "补充", v: displayCreditNote(snap) },
   ];
+
+  let spark: ReactNode = null;
+  if (fx?.points?.length) {
+    const pts = fx.points;
+    const W = 240;
+    const H = 44;
+    const ys = pts.map((p) => p.v);
+    const lo = Math.min(...ys);
+    const hi = Math.max(...ys);
+    const span = hi - lo || 1;
+    const line = pts
+      .map((p, i) => {
+        const x = (i / Math.max(1, pts.length - 1)) * W;
+        const y = 2 + (1 - (p.v - lo) / span) * (H - 4);
+        return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(" ");
+    const quoteChg = pts[0]!.v !== 0 ? ((pts[pts.length - 1]!.v - pts[0]!.v) / pts[0]!.v) * 100 : 0;
+    const strengthChg = fx.quote === "usd_per_eur" ? quoteChg : -quoteChg;
+    const flat = Math.abs(strengthChg) < 0.05;
+    const up = strengthChg > 0;
+    const FX_UP = "#E53935";
+    const FX_DOWN = "#1B8F4A";
+    const stroke = flat ? c.accent : up ? FX_UP : FX_DOWN;
+    const arrow = flat ? "–" : up ? "▲" : "▼";
+    const word = flat ? "持平" : up ? "本币升" : "本币贬";
+    spark = (
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: c.textTertiary, marginBottom: 4 }}>
+          <span>
+            汇率走势 · {fx.pair}
+            {fx.synthetic ? "（示意）" : ""}
+          </span>
+          <span style={{ color: stroke, fontWeight: 600, display: "inline-flex", alignItems: "baseline", gap: 3 }}>
+            <span aria-hidden>{arrow}</span>
+            {flat ? "" : up ? "+" : ""}
+            {Math.abs(strengthChg).toFixed(1)}%
+            <span style={{ fontWeight: 400 }}>{word}</span>
+          </span>
+        </div>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={40} preserveAspectRatio="none" aria-hidden>
+          <path d={line} fill="none" stroke={stroke} strokeWidth={1.4} strokeLinejoin="round" />
+        </svg>
+      </div>
+    );
+  }
+
   return (
     <MapSection title="宏观因子">
+      {spark}
       {rows
         .filter((r) => r.v && r.v.trim())
         .map((r) => (

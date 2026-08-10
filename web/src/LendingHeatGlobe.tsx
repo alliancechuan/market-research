@@ -22,12 +22,13 @@ import {
   MapExtLink,
   useMapChrome,
   Button,
-  heatColorRemoved,
   MapCountryMacroBrief,
   RankBarList,
   type MapLegendPlacement,
 } from "./HeatMapChrome";
+import { heatColorWarm } from "./heatMapTheme";
 import { formatCountryLanguageLine } from "./data/countryLanguage";
+import { INVESTED_BY_CODE } from "./data/producerHoldings";
 
 type CountryProps = { name?: string };
 
@@ -265,7 +266,7 @@ export function LendingHeatGlobe({
   fill?: boolean;
   legendPlacement?: MapLegendPlacement;
 }) {
-  const { theme, c } = useMapChrome();
+  const { c } = useMapChrome();
   const width = Math.round(height * 2.05);
   const bottomLegend = fill || legendPlacement === "bottom";
   const place: MapLegendPlacement = bottomLegend ? "bottom" : "side";
@@ -337,6 +338,51 @@ export function LendingHeatGlobe({
     () => Object.entries(lending).sort((a, b) => b[1] - a[1]),
     [lending],
   );
+
+  type DotPoint = {
+    a2: string;
+    name: string;
+    usdBn: number;
+    x: number;
+    y: number;
+    t: number;
+    r: number;
+    hasInvested: boolean;
+  };
+
+  const dots = useMemo(() => {
+    const out: DotPoint[] = [];
+    for (const f of countries.features) {
+      const a2 = a2Of(f);
+      if (!a2) continue;
+      const bn = lending[a2] ?? 0;
+      if (!(bn > 0)) continue;
+      const cen = pathGen.centroid(f);
+      if (!cen || !Number.isFinite(cen[0]) || !Number.isFinite(cen[1])) continue;
+      const t = intensity(bn);
+      out.push({
+        a2,
+        name: COUNTRY_LABEL_ZH[a2] ?? f.properties?.name ?? a2,
+        usdBn: bn,
+        x: cen[0],
+        y: cen[1],
+        t,
+        r: 3.4 + t * (fill ? 8 : 6),
+        hasInvested: Boolean(INVESTED_BY_CODE[a2]),
+      });
+    }
+    out.sort((a, b) => a.r - b.r);
+    return out;
+  }, [countries, lending, pathGen, fill, minBn, maxBn]);
+
+  const callouts = useMemo(() => {
+    if (focus) return [] as DotPoint[];
+    const byCode = new Map(dots.map((d) => [d.a2, d]));
+    return ranked
+      .slice(0, 3)
+      .map(([code]) => byCode.get(code))
+      .filter(Boolean) as DotPoint[];
+  }, [dots, ranked, focus]);
 
   return (
     <div
@@ -418,7 +464,7 @@ export function LendingHeatGlobe({
         <MapSvgFrame width={width} height={height} fill={fill}>
           {outline ? <path d={outline} fill={c.ocean} /> : null}
           {graticulePath ? (
-            <path d={graticulePath} fill="none" stroke={c.graticule} strokeWidth={0.6} />
+            <path d={graticulePath} fill="none" stroke={c.graticule} strokeWidth={0.45} opacity={0.55} />
           ) : null}
           {countries.features.map((f, i) => {
             const a2 = a2Of(f);
@@ -427,16 +473,14 @@ export function LendingHeatGlobe({
             if (!d) return null;
             const isFocus = focus != null && a2 === focus;
             const dimmed = focus != null && !isFocus;
-            const fill = bn > 0 ? heatColorRemoved(intensity(bn), theme) : c.emptyLand;
-            const stroke = isFocus ? c.text : c.landStroke;
             return (
               <path
-                key={`${f.id ?? i}`}
+                key={`land-${f.id ?? i}`}
                 d={d}
-                fill={fill}
-                stroke={stroke}
-                strokeWidth={isFocus ? 1.4 : bn > 0 ? 0.55 : 0.35}
-                opacity={dimmed ? 0.22 : 1}
+                fill={isFocus ? "#E8E4DC" : c.emptyLand}
+                stroke={isFocus ? c.accent : c.landStroke}
+                strokeWidth={isFocus ? 1.35 : 0.35}
+                opacity={dimmed ? 0.18 : 1}
                 style={{ cursor: bn > 0 ? "pointer" : "default" }}
                 onClick={() => {
                   if (a2 && bn > 0) {
@@ -444,35 +488,109 @@ export function LendingHeatGlobe({
                     setHover(null);
                   }
                 }}
+              />
+            );
+          })}
+          {dots.map((p) => {
+            const isFocus = focus != null && p.a2 === focus;
+            const dimmed = focus != null && !isFocus;
+            const rr = isFocus ? p.r * 1.25 : p.r;
+            return (
+              <g
+                key={`dot-${p.a2}`}
+                opacity={dimmed ? 0.2 : 1}
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setFocus(p.a2);
+                  setHover(null);
+                }}
                 onMouseEnter={(ev) => {
-                  if (!a2 || !(bn > 0)) {
-                    setHover(null);
-                    return;
-                  }
                   const rect = (ev.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
                   setHover({
-                    a2,
-                    name: COUNTRY_LABEL_ZH[a2] ?? f.properties?.name ?? a2,
-                    usdBn: bn,
+                    a2: p.a2,
+                    name: p.name,
+                    usdBn: p.usdBn,
                     x: ev.clientX - rect.left,
                     y: ev.clientY - rect.top,
                   });
                 }}
                 onMouseMove={(ev) => {
-                  if (!a2 || !(bn > 0)) return;
                   const rect = (ev.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
                   setHover({
-                    a2,
-                    name: COUNTRY_LABEL_ZH[a2] ?? f.properties?.name ?? a2,
-                    usdBn: bn,
+                    a2: p.a2,
+                    name: p.name,
+                    usdBn: p.usdBn,
                     x: ev.clientX - rect.left,
                     y: ev.clientY - rect.top,
                   });
                 }}
                 onMouseLeave={() => setHover(null)}
-              />
+              >
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={rr}
+                  fill={heatColorWarm(p.t)}
+                  stroke={isFocus ? c.accent : "#FFFAF5"}
+                  strokeWidth={isFocus ? 1.6 : 0.9}
+                />
+                {p.hasInvested ? (
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={rr + 2.4}
+                    fill="none"
+                    stroke={c.accent}
+                    strokeWidth={1.1}
+                    opacity={0.9}
+                  />
+                ) : null}
+              </g>
             );
           })}
+          {!focus
+            ? callouts.map((p, i) => {
+                const side = p.x > width * 0.55 ? -1 : 1;
+                const lx = p.x + side * (28 + i * 6);
+                const ly = Math.max(28, Math.min(height - 36, p.y - 22 - i * 10));
+                const label = `${COUNTRY_LABEL_ZH[p.a2] ?? p.a2} USD ${p.usdBn >= 10 ? p.usdBn.toFixed(1) : p.usdBn.toFixed(2)}bn`;
+                const tw = Math.min(148, 12 + label.length * 6.4);
+                return (
+                  <g key={`call-${p.a2}`} pointerEvents="none">
+                    <line
+                      x1={p.x}
+                      y1={p.y}
+                      x2={lx}
+                      y2={ly}
+                      stroke={c.textTertiary}
+                      strokeWidth={0.8}
+                      strokeDasharray="2 2"
+                    />
+                    <circle cx={p.x} cy={p.y} r={p.r + 3.5} fill="none" stroke={c.textSecondary} strokeWidth={0.9} />
+                    <rect
+                      x={side > 0 ? lx : lx - tw}
+                      y={ly - 11}
+                      width={tw}
+                      height={18}
+                      rx={3}
+                      fill={c.panelBg}
+                      stroke={c.panelBorder}
+                      strokeWidth={0.8}
+                    />
+                    <text
+                      x={side > 0 ? lx + 5 : lx - 5}
+                      y={ly + 2}
+                      textAnchor={side > 0 ? "start" : "end"}
+                      fill={c.text}
+                      fontSize={10}
+                      fontFamily="system-ui, sans-serif"
+                    >
+                      {label}
+                    </text>
+                  </g>
+                );
+              })
+            : null}
           {outline ? <path d={outline} fill="none" stroke={c.outline} strokeWidth={1} /> : null}
         </MapSvgFrame>
 
@@ -497,14 +615,14 @@ export function LendingHeatGlobe({
         <CountryDetailPanel code={focus} onClose={() => setFocus(null)} />
       ) : null}
       {!focus ? (
-        <MapSideLegend title="热力图例" placement={place}>
+        <MapSideLegend title="市场 · 点阵图例" placement={place}>
           <SteppedLegend
-            label="非银/等效放贷总量(USD) · 少 → 多（灰阶分档）"
-            kind="gray"
+            label="非银/等效放贷(USD) · 点色/点径 少 → 多"
+            kind="warm"
             compact={bottomLegend}
           />
           <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 8, marginTop: bottomLegend ? 8 : 0 }}>
-            口径：各国 NBFC/等效非银信贷放贷存量粗算（非资管 AUM）· {ranked.length} 国 · 点击横条可放大
+            浅底透图 · 色点 {ranked.length} 国 · NBFC/等效放贷存量粗算（非 AUM）· 蓝细环=已有展业对照 · 点击点/横条放大
           </div>
           <RankBarList
             compact={false}

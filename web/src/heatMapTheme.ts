@@ -66,6 +66,24 @@ export function heatColorAdded(t: number, theme: CanvasHostTheme): string {
   return lerpHex("#D9E6F0", tip, 0.25 + x * 0.75);
 }
 
+/**
+ * 宏观点阵风险色：浅沙 → 琥珀 → 锈橙（不透明）。
+ * 用于「浅底 + 点阵」大屏，避免整国 choropleth 压死底图。
+ */
+const WARM_STOPS = ["#E8DCC8", "#D4A574", "#C07840", "#9A4A22", "#6B2C12"] as const;
+
+export function heatColorWarm(t: number): string {
+  const x = Math.min(1, Math.max(0, t));
+  const n = WARM_STOPS.length - 1;
+  const i = Math.min(n - 1, Math.floor(x * n));
+  const local = x * n - i;
+  return lerpHex(WARM_STOPS[i], WARM_STOPS[i + 1], local);
+}
+
+export function heatStopsWarm(): string[] {
+  return [...WARM_STOPS];
+}
+
 export function heatStopsGray(_theme?: CanvasHostTheme): string[] {
   return [...GRAY_STOPS];
 }

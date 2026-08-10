@@ -15,6 +15,7 @@ import {
   displayCreditNote,
   getCountryMacro,
   synthesizeCashLoanBrief,
+  buildCashLoanMacroGroups,
 } from "./data/countryMacro";
 import { formatCountryLanguageLine, getCountryLanguage } from "./data/countryLanguage";
 import { resolveFxSeries } from "./data/fxHistory";
@@ -524,7 +525,7 @@ export function MapExtLink({ href, children }: { href: string; children: ReactNo
   return <Link href={href}>{children}</Link>;
 }
 
-/** 国别详情：宏观因子快照（与 CRM 宏观页同库） */
+/** 国别详情：按现金贷决策序分组（与 CRM 宏观卡同逻辑） */
 export function MapCountryMacroBrief({ code }: { code: string }) {
   const snap = getCountryMacro(code);
   const theme = useHostTheme();
@@ -542,27 +543,9 @@ export function MapCountryMacroBrief({ code }: { code: string }) {
     fxHint: snap.fxHint,
     fxVolInYear: snap.fxVolInYear,
   });
-  const rows: { k: string; v?: string }[] = [
-    { k: "对照时点", v: snap.asOf },
-    { k: "语言区", v: formatCountryLanguageLine(code) },
-    { k: "产品常用语", v: lang?.productHint },
-    { k: "GDP同比", v: snap.gdpYoY },
-    { k: "人均GDP", v: snap.gdpPerCapitaUsd },
-    { k: "人均收入", v: snap.incomePerCapita },
-    { k: "通胀", v: snap.inflation },
-    { k: "政策利率", v: snap.policyRate },
-    { k: "失业率", v: snap.unemployment },
-    { k: "总人口", v: snap.population },
-    { k: "就业/人口", v: snap.employedToPop },
-    { k: "居民杠杆", v: snap.householdDebtToGdp },
-    { k: "年内汇率波动", v: snap.fxVolInYear },
-    { k: "经常账户", v: snap.currentAccount },
-    { k: "外汇储备", v: snap.fxReserves },
-    { k: "汇率", v: snap.fxTrend || snap.fxHint },
-    { k: "信贷水位", v: snap.privCreditOrConsumer },
-    { k: "准入简评", v: synthesizeCashLoanBrief(snap) },
-    { k: "补充", v: displayCreditNote(snap) },
-  ];
+  const groups = buildCashLoanMacroGroups(snap);
+  const brief = synthesizeCashLoanBrief(snap);
+  const note = displayCreditNote(snap);
 
   let spark: ReactNode = null;
   if (fx?.points?.length) {
@@ -611,13 +594,24 @@ export function MapCountryMacroBrief({ code }: { code: string }) {
   }
 
   return (
-    <MapSection title="宏观因子">
+    <MapSection title="现金贷宏观">
       {spark}
-      {rows
-        .filter((r) => r.v && r.v.trim())
-        .map((r) => (
-          <MapKV key={r.k} k={r.k} v={r.v!} />
-        ))}
+      <MapKV k="对照时点" v={snap.asOf || "—"} />
+      {formatCountryLanguageLine(code) ? <MapKV k="语言区" v={formatCountryLanguageLine(code)!} /> : null}
+      {lang?.productHint ? <MapKV k="产品常用语" v={lang.productHint} /> : null}
+      <div style={{ margin: "8px 0", fontSize: 12, lineHeight: 1.5, color: c.textSecondary }}>{brief}</div>
+      {groups.map((g) => (
+        <div key={g.id} style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: c.textSecondary, marginBottom: 2 }}>
+            {g.step} {g.title}
+          </div>
+          <div style={{ fontSize: 11, color: c.textTertiary, marginBottom: 4, lineHeight: 1.4 }}>{g.soWhat}</div>
+          {g.metrics.map((m) => (
+            <MapKV key={`${g.id}-${m.label}`} k={m.label} v={m.value} />
+          ))}
+        </div>
+      ))}
+      {note ? <MapKV k="补充" v={note} /> : null}
     </MapSection>
   );
 }

@@ -47,7 +47,7 @@ import { MACRO_MAP_FACTORS, type MacroMapFactorId } from "./data/macroMapMetrics
 import { VitalPyramid } from "./VitalPyramid";
 import { getVitalCountry } from "./data/vitalSeries";
 import { CreditDebtCharts, FxCaCharts, IncomeSectorCharts } from "./MacroFactorCharts";
-import { MORNING_BRIEF_36KR } from "./data/morningBrief36kr";
+import { MORNING_BRIEF_36KR, BRIEF_PRIMARY_IDS } from "./data/morningBrief36kr";
 import {
   PAYMENT_KIND_BLURB,
   PAYMENT_KIND_LABEL,
@@ -65,9 +65,11 @@ import {
 } from "./data/equityInvestorRoster";
 import { AGENT_SCENE_LEAVES, AI_PRODUCT_RANK_36KR } from "./data/aiProductRank36kr";
 import {
+  buildCashLoanMacroGroups,
   displayCreditNote,
   getCountryMacro,
   synthesizeCashLoanBrief,
+  type CashLoanMacroGroup,
 } from "./data/countryMacro";
 import {
   COUNTRY_LANGUAGE,
@@ -20240,6 +20242,104 @@ function CompareHubPanel({ dense = false }: { dense?: boolean }) {
   );
 }
 
+function CashLoanFlagDot({ flag }: { flag?: "watch" | "hot" | "ok" }) {
+  if (!flag) return null;
+  const color = flag === "hot" ? "#E53935" : flag === "watch" ? "#D97706" : "#1B8F4A";
+  const label = flag === "hot" ? "高压" : flag === "watch" ? "留意" : "偏稳";
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        fontSize: 10,
+        fontWeight: 600,
+        color,
+        marginLeft: 6,
+        verticalAlign: "middle",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function CashLoanMacroGroupBlock({
+  group,
+  chart,
+  defaultOpen,
+}: {
+  group: CashLoanMacroGroup;
+  chart?: ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const theme = useHostTheme();
+  const [open, setOpen] = useState(Boolean(defaultOpen && chart));
+  return (
+    <div
+      style={{
+        border: `1px solid ${theme.stroke.tertiary}`,
+        borderRadius: 8,
+        padding: "10px 12px",
+        background: theme.bg.elevated,
+      }}
+    >
+      <Row gap={8} align="center" justify="space-between" wrap>
+        <Text size="small" weight="medium">
+          <span style={{ color: theme.text.tertiary, marginRight: 6 }}>{group.step}</span>
+          {group.title}
+        </Text>
+        {chart ? (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            style={{
+              border: "none",
+              background: "transparent",
+              color: theme.text.tertiary,
+              font: "inherit",
+              fontSize: 12,
+              cursor: "pointer",
+            }}
+          >
+            {open ? "收起图 ▾" : "展开图 ▸"}
+          </button>
+        ) : null}
+      </Row>
+      <div style={{ fontSize: 12, color: theme.text.secondary, lineHeight: 1.45, marginTop: 4 }}>
+        {group.soWhat}
+      </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+          gap: 8,
+          marginTop: 10,
+        }}
+      >
+        {group.metrics.map((m) => (
+          <div key={`${group.id}-${m.label}`} style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 11, color: theme.text.tertiary }}>
+              {m.label}
+              <CashLoanFlagDot flag={m.flag} />
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: theme.text.primary,
+                lineHeight: 1.4,
+                marginTop: 2,
+                wordBreak: "break-word",
+              }}
+            >
+              {m.value}
+            </div>
+          </div>
+        ))}
+      </div>
+      {open && chart ? <div style={{ marginTop: 12 }}>{chart}</div> : null}
+    </div>
+  );
+}
+
 function CountryMacroPanel({ country }: { country: CountryCode }) {
   if (country === "all") return null;
   const code = country as Exclude<CountryCode, "all">;
@@ -20249,63 +20349,27 @@ function CountryMacroPanel({ country }: { country: CountryCode }) {
   const langLine = formatCountryLanguageLine(code);
   const langInfo = getCountryLanguage(code);
   const teUrl = teIndicatorsUrl(code);
-  const [factorFold, setFactorFold] = useCanvasState<string>(`macroFactorFold_${code}`, "");
-  const toggleFactor = (id: string) => setFactorFold(factorFold === id ? "" : id);
   const theme = useHostTheme();
+  const groups = snap ? buildCashLoanMacroGroups(snap) : [];
 
-  const factorRows: {
-    id: string;
-    title: string;
-    summary: string;
-    body?: ReactNode;
-  }[] = snap
-    ? [
-        {
-          id: "pop_emp",
-          title: "人口与就业",
-          summary:
-            [snap.population, snap.ageStructure, snap.unemployment, snap.employmentNote]
-              .filter(Boolean)
-              .join("；") || "—",
-          body: getVitalCountry(code) ? (
-            <VitalPyramid country={code} countryLabel={COUNTRY_LABEL[code]} />
-          ) : (
-            <Text size="small" tone="tertiary">
-              暂无该国出生队列数据，无法展开入职/退休与就业预测图。
-            </Text>
-          ),
-        },
-        {
-          id: "income_sector",
-          title: "收入与三产",
-          summary:
-            [snap.incomePerCapita, snap.sectorMix].filter(Boolean).join("；") || "—",
-          body: <IncomeSectorCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} />,
-        },
-        {
-          id: "fx_ca",
-          title: "外汇与经常账户",
-          summary:
-            [snap.currentAccount, snap.fxReserves, snap.fxTrend || snap.fxHint]
-              .filter(Boolean)
-              .join("；") || "—",
-          body: <FxCaCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} countryCode={code} />,
-        },
-        {
-          id: "credit",
-          title: "信贷水位",
-          summary:
-            [
-              snap.privCreditOrConsumer,
-              snap.householdDebtToGdp || snap.debtToGdp,
-              snap.consumerConfidence ? `信心${snap.consumerConfidence}` : "",
-            ]
-              .filter(Boolean)
-              .join("；") || "—",
-          body: <CreditDebtCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} />,
-        },
-      ]
-    : [];
+  const chartById: Record<string, ReactNode> = snap
+    ? {
+        fx_cross: <FxCaCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} countryCode={code} />,
+        borrower: (
+          <Stack gap={10}>
+            {getVitalCountry(code) ? (
+              <VitalPyramid country={code} countryLabel={COUNTRY_LABEL[code]} />
+            ) : (
+              <Text size="small" tone="tertiary">
+                暂无出生队列，人口结构图略。
+              </Text>
+            )}
+            <IncomeSectorCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} />
+          </Stack>
+        ),
+        credit_heat: <CreditDebtCharts snap={snap} countryLabel={COUNTRY_LABEL[code]} />,
+      }
+    : {};
 
   return (
     <Stack gap={8}>
@@ -20319,7 +20383,7 @@ function CountryMacroPanel({ country }: { country: CountryCode }) {
                 </Pill>
               ) : null}
               <Pill tone="neutral" size="sm">
-                TE
+                现金贷视角
               </Pill>
             </Row>
           }
@@ -20327,103 +20391,38 @@ function CountryMacroPanel({ country }: { country: CountryCode }) {
           {COUNTRY_LABEL[code]}
         </CardHeader>
         <CardBody>
-          <Stack gap={8}>
+          <Stack gap={10}>
             {snap ? (
-              <Stack gap={8}>
+              <Stack gap={10}>
                 <Text size="small" tone="tertiary">
                   对照时点 · {snap.asOf}
                   {langLine ? ` · ${langLine}` : ""}
                   {langInfo?.productHint ? ` · 产品常用语 ${langInfo.productHint}` : ""}
                 </Text>
-                <Grid columns={4} gap={10}>
-                  {snap.gdpYoY ? <MacroStat raw={snap.gdpYoY} label="GDP同比" /> : null}
-                  {snap.gdpPerCapitaUsd ? (
-                    <MacroStat raw={snap.gdpPerCapitaUsd} label="人均GDP" />
-                  ) : null}
-                  {snap.inflation ? <MacroStat raw={snap.inflation} label="通胀" /> : null}
-                  {snap.policyRate ? <MacroStat raw={snap.policyRate} label="政策利率" /> : null}
-                </Grid>
-                {(snap.employedToPop ||
-                  snap.incomePerCapita ||
-                  snap.householdDebtToGdp ||
-                  snap.fxVolInYear) ? (
-                  <Grid columns={4} gap={10}>
-                    <MacroStat raw={snap.employedToPop ?? "—"} label="就业人口/人口" />
-                    <MacroStat raw={snap.incomePerCapita ?? "—"} label="人均收入" />
-                    <MacroStat raw={snap.householdDebtToGdp ?? "—"} label="居民杠杆率" />
-                    <MacroStat raw={snap.fxVolInYear ?? "—"} label="年内汇率波动率" />
-                  </Grid>
-                ) : null}
-
-                <Stack gap={0}>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "120px 1fr 16px",
-                      gap: 8,
-                      padding: "6px 0",
-                      borderBottom: `1px solid ${theme.stroke.tertiary}`,
-                      fontSize: 12,
-                      color: theme.text.tertiary,
-                    }}
-                  >
-                    <span>因子组</span>
-                    <span>读数</span>
-                    <span />
+                <div
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    border: `1px solid ${theme.stroke.tertiary}`,
+                    background: theme.fill.quaternary,
+                  }}
+                >
+                  <div style={{ fontSize: 11, color: theme.text.tertiary, marginBottom: 4 }}>
+                    现金贷准入简评 · 决策序 ①监管基建 → ②汇兑 → ③客群 → ④过热 → ⑤压测
                   </div>
-                  {factorRows.map((row) => {
-                    const open = factorFold === row.id;
-                    const expandable = Boolean(row.body);
-                    return (
-                      <div key={row.id}>
-                        <button
-                          type="button"
-                          onClick={() => (expandable ? toggleFactor(row.id) : undefined)}
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "120px 1fr 16px",
-                            gap: 8,
-                            width: "100%",
-                            textAlign: "left",
-                            padding: "10px 0",
-                            border: "none",
-                            borderBottom: `1px solid ${theme.stroke.tertiary}`,
-                            background: open ? theme.fill.quaternary : "transparent",
-                            cursor: expandable ? "pointer" : "default",
-                            color: theme.text.primary,
-                            font: "inherit",
-                          }}
-                          title={expandable ? (open ? "收起" : "展开图表") : undefined}
-                        >
-                          <span style={{ fontSize: 13, fontWeight: 600 }}>{row.title}</span>
-                          <span
-                            style={{
-                              fontSize: 12,
-                              color: theme.text.secondary,
-                              lineHeight: 1.45,
-                            }}
-                          >
-                            {row.summary}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: 12,
-                              color: theme.text.tertiary,
-                              textAlign: "right",
-                            }}
-                          >
-                            {expandable ? (open ? "▾" : "▸") : ""}
-                          </span>
-                        </button>
-                        {open && row.body ? (
-                          <div style={{ padding: "10px 0 14px" }}>{row.body}</div>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </Stack>
-
-                <DetailField label="宏观简评" value={macroBrief} />
+                  <div style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.primary }}>{macroBrief}</div>
+                  <div style={{ fontSize: 11, color: theme.text.tertiary, marginTop: 6 }}>
+                    ①牌照/利率上限/催收见「监管」页，宏观卡从②起读。
+                  </div>
+                </div>
+                {groups.map((g) => (
+                  <CashLoanMacroGroupBlock
+                    key={g.id}
+                    group={g}
+                    chart={chartById[g.id]}
+                    defaultOpen={g.id === "fx_cross"}
+                  />
+                ))}
                 {macroNote ? <DetailField label="补充" value={macroNote} /> : null}
               </Stack>
             ) : (
@@ -20435,7 +20434,7 @@ function CountryMacroPanel({ country }: { country: CountryCode }) {
                   </Text>
                 ) : null}
                 <Text size="small" tone="secondary">
-                  尚未落该国扩展快照。按总览「国别宏观因子总表」采人口/年龄/就业、人均GDP与收入、外储、经常账户、汇率、三产后回写 COUNTRY_MACRO。
+                  尚未落该国扩展快照。按总览「国别宏观因子总表」采数后回写 COUNTRY_MACRO。
                 </Text>
               </Stack>
             )}
@@ -22565,15 +22564,345 @@ function qualityTone(q: NbfcDataQuality): "success" | "warning" | "neutral" | "i
 
 function briefThemeBlurb(id: string, summary: string): string {
   const map: Record<string, string> = {
-    reggeo: "展业六国当地监管（印/印尼/泰/菲/墨/港）；非国内证监会监控。",
-    macro: "利率、汇率与资金成本，影响现金贷定价和锁汇。",
-    credit: "信贷与行业整顿信号，和融资热度要分开看。",
-    infra: "支付、保险与结算通道，影响开户和合规沟通。",
-    capital: "上市与募资窗口，偏资金面情绪。",
-    overseas: "出海平台与流量规则，影响场景信贷挂载。",
-    other: "其余快讯，需要时再展开扫一眼。",
+    reg_license: "已投属地牌照/名录/催收——直接决定能否展业。",
+    asset_price: "资产质量与定价锚；融资热≠风险已好转。",
+    fx_macro: "利率、汇率、通胀——资金成本与锁汇。",
+    other_weak: "弱相关背景，默认少看。",
+    // 兼容旧 JSON
+    reggeo: "展业属地监管。",
+    macro: "利率汇率与资金成本。",
+    credit: "信贷与行业整顿。",
+    infra: "支付与结算通道。",
+    capital: "上市募资窗口。",
+    overseas: "出海平台与流量。",
+    other: "其余快讯。",
   };
   return map[id] || summary.slice(0, 36);
+}
+
+type AtlasRole = "am" | "boss" | "roadshow";
+
+const ATLAS_ROLE_LABEL: Record<AtlasRole, string> = {
+  am: "客户经理",
+  boss: "老板",
+  roadshow: "路演只读",
+};
+
+function AtlasRoleSwitch({
+  role,
+  onChange,
+}: {
+  role: AtlasRole;
+  onChange: (r: AtlasRole) => void;
+}) {
+  return (
+    <Row gap={6} wrap align="center">
+      <Text size="small" tone="tertiary">
+        视角
+      </Text>
+      {(["am", "boss", "roadshow"] as AtlasRole[]).map((r) => (
+        <FilterChip
+          key={r}
+          label={ATLAS_ROLE_LABEL[r]}
+          active={role === r}
+          onClick={() => onChange(r)}
+        />
+      ))}
+    </Row>
+  );
+}
+
+function BossWatchBar({ verdict, strongCount }: { verdict: string; strongCount: number }) {
+  const theme = useHostTheme();
+  return (
+    <div
+      style={{
+        padding: "12px 14px",
+        borderRadius: 8,
+        border: `1px solid ${theme.stroke.tertiary}`,
+        background: theme.fill.quaternary,
+      }}
+    >
+      <div style={{ fontSize: 11, color: theme.text.tertiary, marginBottom: 4 }}>
+        本周该盯 · 消费信贷强相关 {strongCount} 条
+      </div>
+      <div style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.primary }}>{verdict}</div>
+    </div>
+  );
+}
+
+function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
+  const brief = MORNING_BRIEF_36KR;
+  const theme = useHostTheme();
+  const dayKey = brief.displayDate || brief.coverageDate || "na";
+  const [openId, setOpenId] = useCanvasState<string>(`mornOpen_${dayKey}`, "");
+  const [readIds, setReadIds] = useCanvasState<string>(`mornRead_${dayKey}`, "");
+  const [openPlayer, setOpenPlayer] = useCanvasState<string>(`mornPlayer_${dayKey}`, "");
+  const [readPlayers, setReadPlayers] = useCanvasState<string>(`mornPlayerRead_${dayKey}`, "");
+  const [showWeak, setShowWeak] = useCanvasState<string>(`mornWeak_${dayKey}`, "");
+  const readSet = new Set(readIds.split("|").filter(Boolean));
+  const readPlayerSet = new Set(readPlayers.split("|").filter(Boolean));
+  const playerHits = role === "roadshow" ? [] : buildPlayerBriefHits(brief, credits);
+
+  const primaryThemes = brief.themes.filter(
+    (t) => t.primary !== false && (BRIEF_PRIMARY_IDS as readonly string[]).includes(t.id),
+  );
+  const weakThemes = brief.themes.filter((t) => t.id === "other_weak" || t.primary === false);
+  // 兼容旧七桶：非 primary ids 也进弱相关展示区之外的主区
+  const legacyPrimary = brief.themes.filter(
+    (t) =>
+      !primaryThemes.includes(t) &&
+      t.id !== "other_weak" &&
+      t.primary !== false &&
+      !(BRIEF_PRIMARY_IDS as readonly string[]).includes(t.id),
+  );
+  const mainThemes = primaryThemes.length ? primaryThemes : legacyPrimary.length ? legacyPrimary : brief.themes.filter((t) => t.id !== "other_weak");
+
+  function openTheme(id: string) {
+    const next = openId === id ? "" : id;
+    setOpenId(next);
+    if (next) setOpenPlayer("");
+    if (next && !readSet.has(id)) {
+      setReadIds([...readSet, id].join("|"));
+    }
+  }
+
+  function openPlayerCard(key: string) {
+    const next = openPlayer === key ? "" : key;
+    setOpenPlayer(next);
+    if (next) setOpenId("");
+    if (next && !readPlayerSet.has(key)) {
+      setReadPlayers([...readPlayerSet, key].join("|"));
+    }
+  }
+
+  const openRow = brief.themes.find((r) => r.id === openId) ?? null;
+  const openPlayerHit = playerHits.find((p) => p.key === openPlayer) ?? null;
+  const strongCount = brief.stats.strong ?? brief.stats.focusHit ?? 0;
+
+  const themeCards = (rows: typeof brief.themes) => (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
+        gap: 10,
+      }}
+    >
+      {rows.map((row) => {
+        const unread = readSet.has(row.id) ? 0 : row.count;
+        const active = openId === row.id;
+        return (
+          <button
+            key={row.id}
+            type="button"
+            onClick={() => openTheme(row.id)}
+            style={{
+              position: "relative",
+              textAlign: "left",
+              padding: "12px 12px 14px",
+              borderRadius: 10,
+              border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+              background: active ? theme.fill.quaternary : theme.bg.elevated,
+              cursor: "pointer",
+              color: theme.text.primary,
+              font: "inherit",
+              minHeight: 88,
+            }}
+            title={active ? "收起" : "查看快讯"}
+          >
+            <UnreadBadge count={unread} />
+            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6, paddingRight: 8 }}>
+              {row.title.replace("·", " · ")}
+            </div>
+            <div style={{ fontSize: 12, lineHeight: 1.45, color: theme.text.secondary, fontWeight: 400 }}>
+              {briefThemeBlurb(row.id, row.summary)}
+            </div>
+            <div style={{ fontSize: 11, color: theme.text.tertiary, marginTop: 6 }}>{row.count} 条</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <Card>
+      <CardHeader>{brief.headline}</CardHeader>
+      <CardBody>
+        <Stack gap={14}>
+          <Text size="small" tone="tertiary">
+            {brief.publishAt ? `发布 ${brief.publishAt}` : `整理 ${brief.generatedAt}`}
+            {brief.windowStart && brief.windowEnd ? ` · ${brief.windowStart}–${brief.windowEnd}` : ""}
+            {` · 共 ${brief.stats.coverageTotal} 条`}
+            {strongCount ? ` · 强相关 ${strongCount}` : ""}
+            {playerHits.length ? ` · 挂到 ${playerHits.length} 家玩家` : ""}
+          </Text>
+          {brief.lede ? (
+            <Text size="small" tone="secondary">
+              {brief.lede}
+            </Text>
+          ) : null}
+
+          {(role === "boss" || role === "am") && brief.overallVerdict ? (
+            <BossWatchBar verdict={brief.overallVerdict} strongCount={strongCount} />
+          ) : null}
+
+          {role === "roadshow" ? (
+            <Text size="small" tone="tertiary">
+              路演只读：仅展示消费信贷三板块摘要，不展开玩家挂靠与内部备注。
+            </Text>
+          ) : null}
+
+          <Text size="small" weight="medium">
+            消费信贷三板块
+          </Text>
+          {themeCards(mainThemes)}
+
+          {weakThemes.length && role !== "roadshow" ? (
+            <Stack gap={8}>
+              <button
+                type="button"
+                onClick={() => setShowWeak(showWeak ? "" : "1")}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  padding: 0,
+                  textAlign: "left",
+                  cursor: "pointer",
+                  font: "inherit",
+                  color: theme.text.tertiary,
+                  fontSize: 12,
+                }}
+              >
+                {showWeak ? "收起弱相关 ▾" : `展开弱相关（${weakThemes.reduce((n, t) => n + t.count, 0)} 条）▸`}
+              </button>
+              {showWeak ? themeCards(weakThemes) : null}
+            </Stack>
+          ) : null}
+
+          {playerHits.length && role === "am" ? (
+            <Stack gap={8}>
+              <Text size="small" weight="medium">
+                玩家相关快讯
+              </Text>
+              <Text size="small" tone="tertiary">
+                按标题关键词挂到 CRM 玩家；红点为未读。
+              </Text>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
+                  gap: 10,
+                }}
+              >
+                {playerHits.slice(0, 24).map((p) => {
+                  const unread = readPlayerSet.has(p.key) ? 0 : p.items.length;
+                  const active = openPlayer === p.key;
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => openPlayerCard(p.key)}
+                      style={{
+                        position: "relative",
+                        textAlign: "left",
+                        padding: "12px 12px 14px",
+                        borderRadius: 10,
+                        border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+                        background: active ? theme.fill.quaternary : theme.bg.elevated,
+                        cursor: "pointer",
+                        color: theme.text.primary,
+                        font: "inherit",
+                        minHeight: 72,
+                      }}
+                    >
+                      <UnreadBadge count={unread} />
+                      <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, paddingRight: 8 }}>
+                        {p.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: theme.text.secondary }}>{p.items.length} 条相关</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </Stack>
+          ) : null}
+
+          {openPlayerHit ? (
+            <Stack gap={10}>
+              <Row gap={8} align="center" justify="space-between" wrap>
+                <Text size="small" weight="medium">
+                  {openPlayerHit.label} · {openPlayerHit.items.length} 条
+                </Text>
+                <Text size="small" tone="tertiary">
+                  再点卡片可收起
+                </Text>
+              </Row>
+              <div
+                style={{
+                  maxHeight: 280,
+                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                {openPlayerHit.items.map((s, i) => (
+                  <div
+                    key={`${openPlayerHit.key}-${i}-${s.title}`}
+                    style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.secondary }}
+                  >
+                    <span style={{ color: theme.text.tertiary, marginRight: 8 }}>{s.time || "·"}</span>
+                    {s.title}
+                  </div>
+                ))}
+              </div>
+            </Stack>
+          ) : openRow ? (
+            <Stack gap={10}>
+              <Row gap={8} align="center" justify="space-between" wrap>
+                <Text size="small" weight="medium">
+                  {openRow.title} · {openRow.count} 条
+                </Text>
+                <Text size="small" tone="tertiary">
+                  点击卡片可收起
+                </Text>
+              </Row>
+              <div style={{ fontSize: 13, lineHeight: 1.6, color: theme.text.secondary }}>{openRow.commentary}</div>
+              {openRow.sources?.length ? (
+                <div
+                  style={{
+                    maxHeight: 280,
+                    overflowY: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                    paddingTop: 4,
+                  }}
+                >
+                  {openRow.sources.map((s, i) => (
+                    <div
+                      key={`${openRow.id}-${i}-${s.title}`}
+                      style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.secondary }}
+                    >
+                      <span style={{ color: theme.text.tertiary, marginRight: 8 }}>{s.time || "·"}</span>
+                      {s.title}
+                      {s.cashLoanHint ? (
+                        <span style={{ color: theme.text.tertiary, marginLeft: 8 }}>· {s.cashLoanHint}</span>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </Stack>
+          ) : (
+            <Text size="small" tone="tertiary">
+              点板块查看快讯；弱相关默认折叠。右上角红点为未读。
+            </Text>
+          )}
+        </Stack>
+      </CardBody>
+    </Card>
+  );
 }
 
 function UnreadBadge({ count }: { count: number }) {
@@ -22677,250 +23006,6 @@ function buildPlayerBriefHits(
   return [...byKey.values()].sort((a, b) => b.items.length - a.items.length);
 }
 
-function MorningBriefHome() {
-  const brief = MORNING_BRIEF_36KR;
-  const theme = useHostTheme();
-  const dayKey = brief.displayDate || brief.coverageDate || "na";
-  const [openId, setOpenId] = useCanvasState<string>(`mornOpen_${dayKey}`, "");
-  const [readIds, setReadIds] = useCanvasState<string>(`mornRead_${dayKey}`, "");
-  const [openPlayer, setOpenPlayer] = useCanvasState<string>(`mornPlayer_${dayKey}`, "");
-  const [readPlayers, setReadPlayers] = useCanvasState<string>(`mornPlayerRead_${dayKey}`, "");
-  const readSet = new Set(readIds.split("|").filter(Boolean));
-  const readPlayerSet = new Set(readPlayers.split("|").filter(Boolean));
-  const playerHits = buildPlayerBriefHits(brief, credits);
-
-  function openTheme(id: string) {
-    const next = openId === id ? "" : id;
-    setOpenId(next);
-    if (next) setOpenPlayer("");
-    if (next && !readSet.has(id)) {
-      setReadIds([...readSet, id].join("|"));
-    }
-  }
-
-  function openPlayerCard(key: string) {
-    const next = openPlayer === key ? "" : key;
-    setOpenPlayer(next);
-    if (next) setOpenId("");
-    if (next && !readPlayerSet.has(key)) {
-      setReadPlayers([...readPlayerSet, key].join("|"));
-    }
-  }
-
-  const openRow = brief.themes.find((r) => r.id === openId) ?? null;
-  const openPlayerHit = playerHits.find((p) => p.key === openPlayer) ?? null;
-
-  return (
-    <Card>
-      <CardHeader>{brief.headline}</CardHeader>
-      <CardBody>
-        <Stack gap={14}>
-          <Text size="small" tone="tertiary">
-            {brief.publishAt ? `发布 ${brief.publishAt}` : `整理 ${brief.generatedAt}`}
-            {brief.windowStart && brief.windowEnd
-              ? ` · ${brief.windowStart}–${brief.windowEnd}`
-              : ""}
-            {` · ${brief.stats.coverageTotal} 条`}
-            {playerHits.length ? ` · 挂到 ${playerHits.length} 家玩家` : ""}
-          </Text>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
-              gap: 10,
-            }}
-          >
-            {brief.themes.map((row) => {
-              const unread = readSet.has(row.id) ? 0 : row.count;
-              const active = openId === row.id;
-              return (
-                <button
-                  key={row.id}
-                  type="button"
-                  onClick={() => openTheme(row.id)}
-                  style={{
-                    position: "relative",
-                    textAlign: "left",
-                    padding: "12px 12px 14px",
-                    borderRadius: 10,
-                    border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
-                    background: active ? theme.fill.quaternary : theme.bg.elevated,
-                    cursor: "pointer",
-                    color: theme.text.primary,
-                    font: "inherit",
-                    minHeight: 88,
-                  }}
-                  title={active ? "收起" : "查看快讯"}
-                >
-                  <UnreadBadge count={unread} />
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      marginBottom: 6,
-                      paddingRight: 8,
-                    }}
-                  >
-                    {row.title.replace("·", " · ")}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      lineHeight: 1.45,
-                      color: theme.text.secondary,
-                      fontWeight: 400,
-                    }}
-                  >
-                    {briefThemeBlurb(row.id, row.summary)}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {playerHits.length ? (
-            <Stack gap={8}>
-              <Text size="small" weight="medium">
-                玩家相关快讯
-              </Text>
-              <Text size="small" tone="tertiary">
-                按标题关键词挂到 CRM 玩家（如 CEO/人事/融资提及品牌名）；红点为未读条数。
-              </Text>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
-                  gap: 10,
-                }}
-              >
-                {playerHits.slice(0, 24).map((p) => {
-                  const unread = readPlayerSet.has(p.key) ? 0 : p.items.length;
-                  const active = openPlayer === p.key;
-                  return (
-                    <button
-                      key={p.key}
-                      type="button"
-                      onClick={() => openPlayerCard(p.key)}
-                      style={{
-                        position: "relative",
-                        textAlign: "left",
-                        padding: "12px 12px 14px",
-                        borderRadius: 10,
-                        border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
-                        background: active ? theme.fill.quaternary : theme.bg.elevated,
-                        cursor: "pointer",
-                        color: theme.text.primary,
-                        font: "inherit",
-                        minHeight: 72,
-                      }}
-                    >
-                      <UnreadBadge count={unread} />
-                      <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, paddingRight: 8 }}>
-                        {p.label}
-                      </div>
-                      <div style={{ fontSize: 12, color: theme.text.secondary }}>
-                        {p.items.length} 条相关
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </Stack>
-          ) : null}
-
-          {openPlayerHit ? (
-            <Stack gap={10}>
-              <Row gap={8} align="center" justify="space-between" wrap>
-                <Text size="small" weight="medium">
-                  {openPlayerHit.label} · {openPlayerHit.items.length} 条
-                </Text>
-                <Text size="small" tone="tertiary">
-                  再点卡片可收起
-                </Text>
-              </Row>
-              <div
-                style={{
-                  maxHeight: 280,
-                  overflowY: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
-                {openPlayerHit.items.map((s, i) => (
-                  <div
-                    key={`${openPlayerHit.key}-${i}-${s.title}`}
-                    style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.secondary }}
-                  >
-                    <span style={{ color: theme.text.tertiary, marginRight: 8 }}>
-                      {s.time || "·"}
-                    </span>
-                    {s.title}
-                  </div>
-                ))}
-              </div>
-            </Stack>
-          ) : openRow ? (
-            <Stack gap={10}>
-              <Row gap={8} align="center" justify="space-between" wrap>
-                <Text size="small" weight="medium">
-                  {openRow.title} · {openRow.count} 条
-                </Text>
-                <Text size="small" tone="tertiary">
-                  点击卡片可收起
-                </Text>
-              </Row>
-              <div
-                style={{
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  color: theme.text.secondary,
-                }}
-              >
-                {openRow.commentary}
-              </div>
-              {openRow.sources?.length ? (
-                <div
-                  style={{
-                    maxHeight: 280,
-                    overflowY: "auto",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                    paddingTop: 4,
-                  }}
-                >
-                  {openRow.sources.map((s, i) => (
-                    <div
-                      key={`${openRow.id}-${i}-${s.title}`}
-                      style={{
-                        fontSize: 13,
-                        lineHeight: 1.5,
-                        color: theme.text.secondary,
-                      }}
-                    >
-                      <span style={{ color: theme.text.tertiary, marginRight: 8 }}>
-                        {s.time || "·"}
-                      </span>
-                      {s.title}
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </Stack>
-          ) : (
-            <Text size="small" tone="tertiary">
-              点主题或玩家卡片查看快讯；右上角红点为未读，点开后清除。
-            </Text>
-          )}
-        </Stack>
-      </CardBody>
-    </Card>
-  );
-}
-
-/** 把备注里的 URL 拆成可点链接，便于「其他」列阅读 */
 function linkifyText(text: string, linkColor: string): ReactNode[] {
   const re = /(https?:\/\/[^\s；;，,）)\]]+)/g;
   const parts: ReactNode[] = [];
@@ -23915,6 +24000,7 @@ export default function Canvas() {
   type AtlasHub = "home" | "scenes" | "macro" | "compare" | InstitutionType;
   const [appTab, setAppTab] = useCanvasState<AppTab>("appTab1", "crm");
   const [hub, setHub] = useCanvasState<AtlasHub>("hub7", "home");
+  const [atlasRole, setAtlasRole] = useCanvasState<AtlasRole>("atlasRole", "am");
   const isInstHub =
     hub !== "home" && hub !== "scenes" && hub !== "macro" && hub !== "compare";
   const [region, setRegion] = useCanvasState<Region>("region5", "all");
@@ -24389,6 +24475,17 @@ export default function Canvas() {
 
       {hub === "home" ? (
         <Stack gap={16}>
+          <AtlasRoleSwitch role={atlasRole} onChange={setAtlasRole} />
+          {atlasRole === "boss" ? (
+            <Text size="small" tone="tertiary">
+              老板视角：先看「本周该盯」与消费信贷三板块；地图与机构库按需下钻。
+            </Text>
+          ) : null}
+          {atlasRole === "roadshow" ? (
+            <Text size="small" tone="tertiary">
+              路演只读：隐藏玩家挂靠；机密访谈/尽调需登录后另开（水印后续）。
+            </Text>
+          ) : null}
           {kw ? (
             <Stack gap={12}>
               <H2>搜索结果 · {searchHitCount}</H2>
@@ -24635,7 +24732,7 @@ export default function Canvas() {
           </Grid>
 
           <Divider />
-          <MorningBriefHome />
+          <MorningBriefHome role={atlasRole} />
         </Stack>
       ) : null}
 

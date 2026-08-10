@@ -47,23 +47,98 @@ LIST_URL = "https://gateway.36kr.com/api/mis/nav/newsflash/list"
 SSR_URL = "https://www.36kr.com/newsflashes"
 
 FOCUS = re.compile(
-    r"信贷|金融|支付|银行|融资|牌照|监管|利率|消费贷|钱包|借钱|贷款|保险|证券|"
-    r"IPO|港交所|上市|募资|外汇|黄金|央行|储备|宏观|通胀|GDP|"
-    r"东南亚|出海|跨境|Grab|Shopee|TikTok|电商|外卖|出行|"
-    r"平台经济|数字金融|fintech|NBFC|小贷|消金|网贷|"
-    r"美联储|加息|降息|汇率|人民币|港币|美元",
+    r"信贷|金融|支付|银行|融资|牌照|监管|利率|消费贷|现金贷|钱包|借钱|贷款|保险|"
+    r"外汇|央行|储备|宏观|通胀|GDP|就业|催收|征信|多头|不良|NPL|ABS|ABN|小贷|消金|网贷|助贷|"
+    r"东南亚|出海|跨境|NBFC|fintech|美联储|加息|降息|汇率|人民币|港币|美元|"
+    r"利率上限|持牌|名录|OLP|SOFOM|LPBBTI",
+    re.I,
+)
+
+# 消费信贷强相关（进三主板块）
+CC_STRONG = re.compile(
+    r"消费贷|现金贷|小贷|消金|网贷|助贷|借钱|个人贷|零售贷|"
+    r"NBFC|OLP|SOFOM|LPBBTI|P-Loan|Nano Finance|"
+    r"利率上限|催收|征信|多头|不良|NPL|逾期|"
+    r"ABS|ABN|消费金融|持牌|牌照|名录|"
+    r"数据本地化|反洗钱",
+    re.I,
+)
+
+# 汇兑/宏观对现金贷定价与锁汇有用
+CC_FX_MACRO = re.compile(
+    r"央行|政策利率|基准利率|加息|降息|美联储|"
+    r"汇率|外汇|锁汇|汇兑|储备|外储|"
+    r"通胀|CPI|就业|失业|GDP|宏观",
+    re.I,
+)
+
+# 弱相关：可看但默认折叠
+CC_WEAK = re.compile(
+    r"支付|钱包|银行|保险|证券|数字金融|fintech|"
+    r"IPO|港交所|上市|募资|融资|"
+    r"东南亚|出海|跨境|Grab|Shopee|TikTok|电商|外卖|出行",
+    re.I,
+)
+
+# 噪音：与消费信贷决策无关
+CC_NOISE = re.compile(
+    r"黄金|白银|贵金属|光伏|硅料|英伟达|AI数据中心|算力|"
+    r"星环聚能|核聚变|SpaceX|Cursor|Grok|"
+    r"景区内自驾|爷爷不泡茶|旅游景区|"
+    r"半导体上游|美股科技巨头|"
+    r"新能源集中报价|抱团抬价",
     re.I,
 )
 
 BUCKET_ORDER = [
-    "监管·展业属地",
-    "宏观·货币",
-    "信贷·监管",
-    "支付·金融基建",
-    "资本·融资",
-    "出海·平台",
-    "其他",
+    "监管·牌照",
+    "资产·定价",
+    "汇兑·宏观",
+    "其他·弱相关",
 ]
+
+BUCKET_META = {
+    "监管·牌照": {
+        "id": "reg_license",
+        "verdict": "已投属地牌照/利率上限/催收与名录变动，直接决定能否展业。",
+    },
+    "资产·定价": {
+        "id": "asset_price",
+        "verdict": "资产质量、融资与定价锚；融资热≠风险已好转。",
+    },
+    "汇兑·宏观": {
+        "id": "fx_macro",
+        "verdict": "利率、汇率与通胀影响资金成本、锁汇与现金贷定价天花板。",
+    },
+    "其他·弱相关": {
+        "id": "other_weak",
+        "verdict": "弱相关或背景扫描，默认折叠；需要时再展开。",
+    },
+}
+
+
+def classify_relevance(text: str) -> str:
+    """strong | weak | noise"""
+    if CC_NOISE.search(text) and not (CC_STRONG.search(text) or CC_FX_MACRO.search(text)):
+        return "noise"
+    if is_reg_ops_flash(text) or CC_STRONG.search(text):
+        return "strong"
+    if CC_FX_MACRO.search(text):
+        return "strong"
+    if CC_WEAK.search(text) or FOCUS.search(text):
+        return "weak"
+    return "noise"
+
+
+def cash_loan_hint(text: str, bucket_name: str) -> str:
+    if bucket_name == "监管·牌照":
+        return "核对当地牌照/名录是否仍有效"
+    if bucket_name == "资产·定价":
+        return "看对定价、额度与资产质量的影响"
+    if bucket_name == "汇兑·宏观":
+        return "联动资金成本与锁汇"
+    return "弱相关，作背景"
+
 
 # 展业属地 = 大屏「展业」热力图国家（producer-holdings），非全球任意监管
 OPS_HOLDINGS_PATH = Path(__file__).resolve().parents[1] / "src/data/producer-holdings.json"
@@ -144,10 +219,40 @@ def is_reg_ops_flash(text: str) -> bool:
     # 点名属地 + 监管动作，或点名属地监管机构
     if REG_ACTION.search(text) or OPS_REGULATOR.search(text):
         return True
-    # 属地国名 + 金融牌照/信贷关键词（弱命中，仍限定已投国）
-    if re.search(r"牌照|信贷|贷款|消金|小贷|NBFC|OLP|SOFOM|P2P|LPBBTI", text, re.I):
+    # 属地国名 + 金融牌照/信贷/保监关键词（弱命中，仍限定已投国）
+    if re.search(
+        r"牌照|信贷|贷款|消金|小贷|NBFC|OLP|SOFOM|P2P|LPBBTI|保监|金管|金融|税务",
+        text,
+        re.I,
+    ):
         return True
     return False
+
+
+def bucket(r: dict) -> str:
+    t = r["title"] + " " + r.get("content", "")
+    rel = classify_relevance(t)
+    if is_reg_ops_flash(t) or (
+        match_ops_market(t)
+        and re.search(r"牌照|监管|名录|持牌|利率上限|催收|保监|金管|条例|办法", t, re.I)
+    ):
+        return "监管·牌照"
+    if CC_FX_MACRO.search(t) or re.search(
+        r"利率|汇率|通胀|央行|加息|降息|外汇|锁汇|外储|债券发行", t, re.I
+    ):
+        # 黄金白银等噪音即使带「利率」也进弱相关
+        if CC_NOISE.search(t) and not CC_STRONG.search(t):
+            return "其他·弱相关"
+        return "汇兑·宏观"
+    if CC_STRONG.search(t) or re.search(
+        r"信贷|贷款|消金|小贷|NPL|不良|ABS|ABN|消费贷|现金贷|助贷", t, re.I
+    ):
+        return "资产·定价"
+    if rel == "noise":
+        return "其他·弱相关"
+    if CC_WEAK.search(t) and re.search(r"支付|消费|银行通道|征信", t, re.I):
+        return "资产·定价"
+    return "其他·弱相关"
 
 
 def http_get(url: str) -> str:
@@ -275,55 +380,6 @@ def fetch_items(max_pages: int, window_start_ms: int) -> list[dict]:
     return uniq
 
 
-def bucket(r: dict) -> str:
-    t = r["title"] + r["content"]
-    if is_reg_ops_flash(t):
-        return "监管·展业属地"
-    if re.search(r"央行|外汇|黄金|储备|利率|美联储|汇率|宏观|GDP|通胀|加息|降息", t):
-        return "宏观·货币"
-    if re.search(r"信贷|贷款|消金|小贷|借钱|消费贷|NBFC|牌照|监管", t):
-        return "信贷·监管"
-    if re.search(r"支付|钱包|银行|保险|证券|数字金融|fintech", t, re.I):
-        return "支付·金融基建"
-    if re.search(r"IPO|港交所|上市|募资|融资", t):
-        return "资本·融资"
-    if re.search(r"东南亚|出海|跨境|Grab|Shopee|TikTok|电商|外卖", t, re.I):
-        return "出海·平台"
-    return "其他"
-
-
-BUCKET_META = {
-    "监管·展业属地": {
-        "id": "reggeo",
-        "verdict": "只看展业热力图六国（印度/印尼/泰国/菲律宾/墨西哥/中国香港）当地监管动态；国内证监会与交易所监控不进此桶。公开源少见时本桶可为空。",
-    },
-    "宏观·货币": {
-        "id": "macro",
-        "verdict": "利率与汇率影响资金成本、锁汇与现金贷定价天花板。",
-    },
-    "信贷·监管": {
-        "id": "credit",
-        "verdict": "资产质量与行业整顿影响信贷原生玩家风险中枢。",
-    },
-    "支付·金融基建": {
-        "id": "infra",
-        "verdict": "支付/征信/银行通道变动影响获客闭环与结算路径。",
-    },
-    "资本·融资": {
-        "id": "capital",
-        "verdict": "融资与上市窗口影响生态机构与资金参与方活跃度，不直接等同放贷风险偏好。",
-    },
-    "出海·平台": {
-        "id": "overseas",
-        "verdict": "场景平台税政与流量政策外生冲击场景原生信贷挂载。",
-    },
-    "其他": {
-        "id": "other",
-        "verdict": "背景扫描，与展业属地/牌照交叉后再入库。",
-    },
-}
-
-
 def build_brief(
     rows: list[dict],
     *,
@@ -333,7 +389,6 @@ def build_brief(
 ) -> dict:
     start_ms = int(window_start.timestamp() * 1000)
     end_ms = int(window_end.timestamp() * 1000)
-    # [window_start, window_end) — 对齐每日 06:00 定点截断
     window = [
         r
         for r in rows
@@ -341,41 +396,49 @@ def build_brief(
     ]
     window.sort(key=lambda x: -x["publishTime"])
 
-    # 全量入桶；FOCUS 仅用于组内排序与信号标签
     enriched = []
     for r in window:
-        hits = FOCUS.findall(r["title"] + " " + r["content"])
+        text = r["title"] + " " + r.get("content", "")
+        hits = FOCUS.findall(text)
+        bname = bucket(r)
+        rel = classify_relevance(text)
+        if bname == "其他·弱相关" and rel == "strong":
+            rel = "weak"
         enriched.append(
             {
                 **r,
-                "score": len(hits),
+                "score": len(hits) + (3 if rel == "strong" else 0),
                 "tags": list(dict.fromkeys(hits)),
-                "focus": bool(hits),
+                "focus": rel == "strong",
+                "relevance": rel,
+                "bucket": bname,
+                "cashLoanHint": cash_loan_hint(text, bname),
             }
         )
 
     by_b: dict[str, list] = {}
     for r in enriched:
-        by_b.setdefault(bucket(r), []).append(r)
+        by_b.setdefault(r["bucket"], []).append(r)
 
     themes = []
     for name in BUCKET_ORDER:
         lst = by_b.get(name) or []
-        # 展业属地桶始终保留：无命中时明示「今日公开聚合源无当地监管快讯」
-        if not lst and name != "监管·展业属地":
+        # 三主板块空桶也保留，明示今日无强相关
+        if not lst and name == "其他·弱相关":
             continue
         lst.sort(key=lambda x: (-x["score"], -x["publishTime"]))
         meta = BUCKET_META.get(name) or {"id": name, "verdict": "按窗口快讯续盯。"}
-        # 摘要取组内前 3 条标题（展示用）；sources 为全量
         top = lst[:3]
         if lst:
             summary = scrub_public_text("；".join(r["title"][:36] for r in top))
             if len(summary) > 96:
                 summary = summary[:94] + "…"
-        else:
+        elif name == "监管·牌照":
             codes = load_ops_market_codes()
             labels = "、".join(OPS_LABEL.get(c, c) for c in codes)
-            summary = f"今日公开聚合源未见{labels}当地监管快讯（属地官网优先）"
+            summary = f"今日未见{labels}当地牌照/监管强相关快讯"
+        else:
+            summary = "今日该板块暂无强相关快讯"
 
         tag_count: dict[str, int] = {}
         for r in lst:
@@ -388,7 +451,7 @@ def build_brief(
 
         facts = []
         for r in top:
-            first = re.split(r"[。！？]", r["content"])[0].strip()
+            first = re.split(r"[。！？]", r.get("content") or "")[0].strip()
             if first and first != r["title"]:
                 facts.append(first[:80])
         commentary = meta["verdict"]
@@ -403,48 +466,47 @@ def build_brief(
                 "summary": summary,
                 "signals": signals,
                 "commentary": commentary[:420],
+                "primary": name != "其他·弱相关",
                 "sources": [
                     {
                         "title": r["title"],
                         "url": "",
                         "time": r["time"],
+                        "relevance": r.get("relevance") or "weak",
+                        "cashLoanHint": r.get("cashLoanHint") or "",
                     }
                     for r in lst
                 ],
             }
         )
 
-    # —— CRM 综合评述：短句分行，监管一条 + 至多三条要点 + 一条动作 ——
-    reg_rows = by_b.get("监管·展业属地") or []
+    reg_rows = by_b.get("监管·牌照") or []
     ops_hits: dict[str, list] = {}
     for r in reg_rows:
-        mkt = match_ops_market(r["title"] + r["content"]) or "其它属地"
+        mkt = match_ops_market(r["title"] + " " + r.get("content", "")) or "其它属地"
         ops_hits.setdefault(mkt, []).append(r)
 
-    # 白话短评：先监管，再一两句宏观/信贷，无标签、无「动作」
     if reg_rows:
         ops_only = [k for k in ops_hits if k != "其它属地"]
         if ops_only:
             mkts = "、".join(ops_only[:3])
-            overall = f"{mkts}今天有监管或牌照相关消息，先看当地玩家牌照还是否有效。"
+            overall = f"{mkts}有监管/牌照相关消息，先核当地玩家牌照与名录。"
         else:
-            overall = (
-                f"今天有 {len(reg_rows)} 条监管/牌照相关快讯（多在其它市场），"
-                "已投市场仍按日常核对牌照与名录即可。"
-            )
+            overall = f"今日有 {len(reg_rows)} 条监管·牌照向快讯，已投市场照常核名录。"
     else:
-        overall = (
-            "已投市场（印尼、印度、泰国、菲律宾、墨西哥、香港）今天没有看到明显的监管新规，牌照和名录照常核对即可。"
-        )
+        overall = "已投市场今日未见明显牌照/监管强相关快讯，名录照常核对。"
+
     bits = []
-    if next((t for t in themes if t["id"] == "macro"), None):
-        bits.append("利率和汇率仍会影响资金成本和锁汇，现金贷定价要跟着看")
-    if next((t for t in themes if t["id"] == "credit"), None):
-        bits.append("融资回暖也不等于信贷风险已经好转")
+    if by_b.get("汇兑·宏观"):
+        bits.append("利率汇率仍影响资金成本与锁汇，现金贷定价跟着看")
+    if by_b.get("资产·定价"):
+        bits.append("资产与定价信号勿与泛融资热度混为一谈")
     if bits:
         overall = overall.rstrip("。") + "；" + "；".join(bits[:2]) + "。"
 
-    focus_n = sum(1 for r in enriched if r["focus"])
+    strong_n = sum(1 for r in enriched if r["relevance"] == "strong")
+    weak_n = sum(1 for r in enriched if r["relevance"] == "weak")
+    noise_n = sum(1 for r in enriched if r["relevance"] == "noise")
 
     ws = window_start.strftime("%Y-%m-%d %H:%M")
     we = window_end.strftime("%Y-%m-%d %H:%M")
@@ -459,19 +521,58 @@ def build_brief(
         "generatedAt": datetime.now(CST).strftime("%Y-%m-%d %H:%M"),
         "stats": {
             "coverageTotal": len(window),
-            "relevant": len(window),
-            "focusHit": focus_n,
+            "relevant": strong_n + weak_n,
+            "strong": strong_n,
+            "weak": weak_n,
+            "noise": noise_n,
+            "focusHit": strong_n,
             "regOpsCount": len(reg_rows),
             "themeCount": len(themes),
             "windowHours": 24,
             "cutoffHourCst": 6,
         },
-        "headline": f"行业晨报 · {display}",
-        "lede": "",
+        "headline": f"消费信贷晨报 · {display}",
+        "lede": "只突出与牌照、资产定价、汇兑宏观强相关的快讯；其余收入弱相关。",
         "overallVerdict": overall,
         "themes": themes,
         "moreUrl": "",
     }
+
+
+def reclassify_existing_json(path: Path) -> dict:
+    """无网络：用已有 JSON 的标题重分桶（缺正文时仅按标题）。"""
+    old = json.loads(path.read_text(encoding="utf-8"))
+    rows = []
+    base_date = old.get("displayDate") or old.get("coverageDate") or "2026-08-09"
+    for th in old.get("themes") or []:
+        for s in th.get("sources") or []:
+            title = scrub_public_text(s.get("title") or "")
+            if not title:
+                continue
+            hhmm = s.get("time") or "12:00"
+            try:
+                dt = datetime.strptime(f"{base_date} {hhmm}", "%Y-%m-%d %H:%M").replace(tzinfo=CST)
+            except Exception:
+                dt = datetime.strptime(base_date, "%Y-%m-%d").replace(tzinfo=CST)
+            rows.append(
+                {
+                    "id": f"{th.get('id')}-{title[:24]}",
+                    "title": title,
+                    "content": "",
+                    "publishTime": int(dt.timestamp() * 1000),
+                    "date": base_date,
+                    "time": hhmm,
+                    "url": "",
+                }
+            )
+    as_of = datetime.strptime(base_date, "%Y-%m-%d").date()
+    window_end = datetime(as_of.year, as_of.month, as_of.day, 6, 0, 0, tzinfo=CST)
+    # 标题重分时放宽窗口：用整天
+    window_start = window_end - timedelta(hours=24)
+    # 保证 publishTime 落在窗内：统一拨到 window_start+1h 起
+    for i, r in enumerate(rows):
+        r["publishTime"] = int(window_start.timestamp() * 1000) + (i + 1) * 60_000
+    return build_brief(rows, window_start=window_start, window_end=window_end, display=base_date)
 
 
 def resolve_as_of(now: datetime, as_of_arg: str | None) -> datetime.date:
@@ -492,12 +593,27 @@ def main() -> None:
     )
     ap.add_argument("--max-pages", type=int, default=80)
     ap.add_argument(
+        "--reclassify",
+        action="store_true",
+        help="不抓网，仅按现有 JSON 标题重分为消费信贷三板块",
+    )
+    ap.add_argument(
         "--out",
         default=str(
             Path(__file__).resolve().parents[1] / "src/data/morning-brief-36kr.json"
         ),
     )
     args = ap.parse_args()
+    out = Path(args.out)
+
+    if args.reclassify:
+        brief = reclassify_existing_json(out)
+        out.write_text(json.dumps(brief, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(
+            f"reclassified {out} · total={brief['stats']['coverageTotal']} "
+            f"strong={brief['stats'].get('strong', 0)} themes={brief['stats']['themeCount']}"
+        )
+        return
 
     now = datetime.now(CST)
     as_of = resolve_as_of(now, args.as_of)
@@ -518,12 +634,11 @@ def main() -> None:
         window_end=window_end,
         display=display,
     )
-    out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(brief, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(
         f"wrote {out} · total={brief['stats']['coverageTotal']} "
-        f"focus={brief['stats'].get('focusHit', 0)} themes={brief['stats']['themeCount']}"
+        f"strong={brief['stats'].get('strong', 0)} themes={brief['stats']['themeCount']}"
     )
 
 

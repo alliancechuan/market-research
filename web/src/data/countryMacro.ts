@@ -121,3 +121,108 @@ export function synthesizeCashLoanBrief(snap: CountryMacroSnap): string {
 
   return `${bits.slice(0, 5).join("；")}。准入仍先验牌照/利率上限与锁汇（总表决策序）。`;
 }
+
+export type CashLoanMacroMetric = {
+  label: string;
+  value: string;
+  /** watch=留意 hot=高压 ok=偏稳 */
+  flag?: "watch" | "hot" | "ok";
+};
+
+/** 按现金贷决策序排列的国别宏观组（①监管在监管页，此处从②起） */
+export type CashLoanMacroGroup = {
+  id: string;
+  step: string;
+  title: string;
+  /** 指标对消费信贷/现金贷的直接用途 */
+  soWhat: string;
+  metrics: CashLoanMacroMetric[];
+};
+
+function metric(label: string, value: string | undefined, flag?: CashLoanMacroMetric["flag"]): CashLoanMacroMetric | null {
+  const v = (value || "").trim();
+  if (!v) return null;
+  return { label, value: v, flag };
+}
+
+/**
+ * 把国别快照按「消费信贷怎么用」分组，便于卡片上直接读业务含义。
+ * 决策序：①监管基建（本函数不含）→②汇兑→③客群偿还→④信贷过热→⑤景气定价压测。
+ */
+export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroGroup[] {
+  const gdpPc = firstNumber(snap.gdpPerCapitaUsd);
+  const infl = firstNumber(snap.inflation);
+  const rate = firstNumber(snap.policyRate);
+  const hh = firstNumber(snap.householdDebtToGdp);
+  const unemp = firstNumber(snap.unemployment);
+  const gdpYoY = firstNumber(snap.gdpYoY);
+  const fxVol = firstNumber(snap.fxVolInYear?.replace("±", ""));
+  const caM = (snap.currentAccount || "").match(/CA\/GDP约?\s*(-?\d+(?:\.\d+)?)\s*%/i);
+  const ca = caM ? Number(caM[1]) : null;
+
+  const fxFlag: CashLoanMacroMetric["flag"] =
+    fxVol != null && fxVol >= 12 ? "hot" : fxVol != null && fxVol >= 6 ? "watch" : fxVol != null ? "ok" : undefined;
+  const inflFlag: CashLoanMacroMetric["flag"] =
+    infl != null && infl >= 12 ? "hot" : infl != null && infl >= 6 ? "watch" : infl != null ? "ok" : undefined;
+  const hhFlag: CashLoanMacroMetric["flag"] =
+    hh != null && hh >= 55 ? "hot" : hh != null && hh >= 45 ? "watch" : hh != null ? "ok" : undefined;
+  const gdpPcFlag: CashLoanMacroMetric["flag"] =
+    gdpPc != null && gdpPc < 2000 ? "hot" : gdpPc != null && gdpPc >= 12000 ? "watch" : gdpPc != null ? "ok" : undefined;
+
+  const groups: CashLoanMacroGroup[] = [
+    {
+      id: "fx_cross",
+      step: "②",
+      title: "汇兑与跨境",
+      soWhat: "能不能锁汇、资金进出是否顺；波幅大则定价与拨备要留汇兑缓冲。",
+      metrics: [
+        metric("外汇储备", snap.fxReserves),
+        metric("经常账户", snap.currentAccount, ca != null && ca <= -5 ? "hot" : ca != null && ca < 0 ? "watch" : ca != null ? "ok" : undefined),
+        metric("年内汇率波动", snap.fxVolInYear, fxFlag),
+        metric("汇率水平", snap.fxTrend || snap.fxHint),
+        metric("政策利率", snap.policyRate, rate != null && rate >= 10 ? "watch" : undefined),
+      ].filter(Boolean) as CashLoanMacroMetric[],
+    },
+    {
+      id: "borrower",
+      step: "③",
+      title: "客群与偿还",
+      soWhat: "谁在借、收入稳不稳；就业弱/一产高则逾期季节性与收入波动更大。",
+      metrics: [
+        metric("总人口", snap.population),
+        metric("年龄结构", snap.ageStructure),
+        metric("失业率", snap.unemployment, unemp != null && unemp >= 8 ? "hot" : undefined),
+        metric("就业/人口", snap.employedToPop),
+        metric("人均收入", snap.incomePerCapita),
+        metric("人均GDP", snap.gdpPerCapitaUsd, gdpPcFlag),
+        metric("三产结构", snap.sectorMix),
+        metric("消费者信心", snap.consumerConfidence),
+        metric("就业备注", snap.employmentNote),
+      ].filter(Boolean) as CashLoanMacroMetric[],
+    },
+    {
+      id: "credit_heat",
+      step: "④",
+      title: "信贷过热",
+      soWhat: "市场还能不能加杠杆；居民杠杆近过热带则新客与额度应更紧。",
+      metrics: [
+        metric("居民杠杆率", snap.householdDebtToGdp, hhFlag),
+        metric("消费/私营信贷", snap.privCreditOrConsumer),
+        metric("政府债务/GDP", snap.debtToGdp),
+      ].filter(Boolean) as CashLoanMacroMetric[],
+    },
+    {
+      id: "stress",
+      step: "⑤",
+      title: "景气与定价压测",
+      soWhat: "定价锚与贷后压测：高息高通胀抬资金成本，GDP偏弱则vintage更易恶化。",
+      metrics: [
+        metric("GDP同比", snap.gdpYoY, gdpYoY != null && gdpYoY < 1 ? "watch" : undefined),
+        metric("通胀", snap.inflation, inflFlag),
+        metric("政策利率", snap.policyRate, rate != null && rate >= 10 ? "hot" : undefined),
+      ].filter(Boolean) as CashLoanMacroMetric[],
+    },
+  ];
+
+  return groups.filter((g) => g.metrics.length > 0);
+}

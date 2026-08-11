@@ -1,0 +1,58 @@
+{
+  "asOf": "2026-08-10",
+  "note": "消费信贷信源分层。T2 名册与 Atlas 信贷种子对齐（全量数百家，按洲际×出身），非仅中资可比公司。竞争情报摸排优先各国领先数字银行、支付牌照、线上信贷机构（见 country-license-credit-priority）。",
+  "tiers": [
+    {
+      "id": "T1",
+      "rank": 1,
+      "nameZh": "监管通告与名录",
+      "cadence": "日/周",
+      "use": "晨报主位 · 展业国定向",
+      "examples": ["RBI/OJK/BOT/SEC·BSP/CNBV·Condusef/HKMA·放债人", "协会名录 AFPI"],
+      "dataKey": "cc-source-watchlist / cc-watch-digest"
+    },
+    {
+      "id": "T2",
+      "rank": 2,
+      "nameZh": "上市定期披露",
+      "cadence": "季/年 + 重大公告",
+      "use": "玩家卡 KPI 槽 · 资产质量与规模核对",
+      "examples": ["10-Q/6-K/年报 KPI", "成交量/在贷/90+ 逾期", "国别分部"],
+      "dataKey": "listed-player-disclosure"
+    },
+    {
+      "id": "T3",
+      "rank": 3,
+      "nameZh": "协会与行业统计",
+      "cadence": "月/季",
+      "use": "国别资产池对照",
+      "examples": ["OJK fintech 统计", "互金协会", "本国消金协会"]
+    },
+    {
+      "id": "T4",
+      "rank": 4,
+      "nameZh": "定向财经新闻",
+      "cadence": "日",
+      "use": "监管线索辅证（须点开原文）",
+      "examples": ["Google News 监管关键词", "BusinessWorld / Kompas 等本地财经"]
+    },
+    {
+      "id": "T5",
+      "rank": 5,
+      "nameZh": "场景/格局研报",
+      "cadence": "专题",
+      "use": "份额·GMV·退出事件短注",
+      "examples": ["墨腾创投", "本地券商行业章"]
+    },
+    {
+      "id": "T6",
+      "rank": 6,
+      "nameZh": "国内泛财经辅扫",
+      "cadence": "日",
+      "use": "默认折叠；弱相关",
+      "examples": ["36氪晨报"],
+      "dataKey": "morning-brief-36kr"
+    }
+  ],
+  "fieldTags": ["国别", "主体", "字段", "时点", "置信度"]
+}

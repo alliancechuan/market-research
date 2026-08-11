@@ -1,0 +1,89 @@
+{
+  "asOf": "2026-08-10",
+  "note": "消费信贷定向信源：仅展业热力图六国（MX/TH/ID/PH/HK/IN）。晨报主位用（T1）；排序见 cc-source-tiers；上市披露见 listed-player-disclosure（T2）；36氪为 T6 弱相关。",
+  "markets": [
+    {
+      "code": "IN",
+      "nameZh": "印度",
+      "regulator": "RBI",
+      "queries": [
+        "RBI NBFC regulation OR circular",
+        "RBI digital lending guidelines",
+        "India NBFC NPL OR consumer credit"
+      ],
+      "portals": [
+        { "title": "RBI 出版物/通告", "url": "https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx" },
+        { "title": "RBI NBFC 名录", "url": "https://www.rbi.org.in/scripts/bs_nbfclist.aspx" }
+      ]
+    },
+    {
+      "code": "ID",
+      "nameZh": "印尼",
+      "regulator": "OJK",
+      "queries": [
+        "OJK pinjaman online OR fintech lending",
+        "OJK LPBBTI OR peer to peer lending",
+        "Indonesia multifinance NPL"
+      ],
+      "portals": [
+        { "title": "OJK 融资/金融科技统计", "url": "https://ojk.go.id/id/kanal/iknb/data-dan-statistik/fintech/default.aspx" },
+        { "title": "AFPI", "url": "https://afpi.or.id/" }
+      ]
+    },
+    {
+      "code": "TH",
+      "nameZh": "泰国",
+      "regulator": "BOT",
+      "queries": [
+        "Bank of Thailand personal loan OR nano finance",
+        "Thailand BOT debt collection OR interest rate cap",
+        "Thailand consumer finance regulation"
+      ],
+      "portals": [
+        { "title": "BOT 新闻与通告", "url": "https://www.bot.or.th/en/news-and-media.html" }
+      ]
+    },
+    {
+      "code": "PH",
+      "nameZh": "菲律宾",
+      "regulator": "SEC/BSP",
+      "queries": [
+        "Philippines SEC lending company OR financing company",
+        "BSP consumer credit OR digital banks Philippines",
+        "Philippines online lending regulation"
+      ],
+      "portals": [
+        { "title": "SEC 菲律宾", "url": "https://www.sec.gov.ph/" },
+        { "title": "BSP", "url": "https://www.bsp.gov.ph/" }
+      ]
+    },
+    {
+      "code": "MX",
+      "nameZh": "墨西哥",
+      "regulator": "CNBV/Condusef",
+      "queries": [
+        "CNBV SOFOM OR fintech Mexico",
+        "Mexico Condusef credito al consumo",
+        "Banxico tasa interes consumo"
+      ],
+      "portals": [
+        { "title": "CNBV", "url": "https://www.gob.mx/cnbv" },
+        { "title": "CONDUSEF", "url": "https://www.condusef.gob.mx/" }
+      ]
+    },
+    {
+      "code": "HK",
+      "nameZh": "中国香港",
+      "regulator": "HKMA/CRL",
+      "queries": [
+        "HKMA money lenders OR virtual bank",
+        "Hong Kong licensed money lender",
+        "HKMA consumer credit OR personal loan"
+      ],
+      "portals": [
+        { "title": "金管局新闻", "url": "https://www.hkma.gov.hk/eng/news-and-media/press-releases/" },
+        { "title": "放债人登记", "url": "https://www.cr.gov.hk/en/services/money-lenders.htm" }
+      ]
+    }
+  ]
+}

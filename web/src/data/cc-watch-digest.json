@@ -1,0 +1,185 @@
+{
+  "source": "展业国消费信贷定向扫描",
+  "generatedAt": "2026-08-10 22:40",
+  "displayDate": "2026-08-10",
+  "note": "主位：已投六国（MX/TH/ID/PH/HK/IN）监管与消金规则线索。Google News RSS 本环境不可达，本轮为人工核验门户/通告；后续脚本可覆盖。36氪降为弱相关辅扫。",
+  "stats": { "marketCount": 6, "itemTotal": 14 },
+  "overallVerdict": "本周优先盯：①印尼 OJK POJK 8/2026（Pindar 日交易数据上报）；②菲律宾 SEC 8/1 重开线上借贷平台牌照并抬高资本；③香港放债人 8/1 起 DSR/禁止推荐人等新牌照条件。印度 DLG/ECL、泰国利率上限与墨西哥 SIPRES/CAT 作常备核验。",
+  "markets": [
+    {
+      "code": "ID",
+      "nameZh": "印尼",
+      "regulator": "OJK",
+      "portals": [
+        { "title": "OJK 融资/金融科技统计", "url": "https://ojk.go.id/id/kanal/iknb/data-dan-statistik/fintech/default.aspx" },
+        { "title": "AFPI", "url": "https://afpi.or.id/" }
+      ],
+      "count": 3,
+      "cashLoanHint": "核 LPBBTI/Pindar 日报与数据本地化义务；合规成本与牌照续存直接相关",
+      "items": [
+        {
+          "title": "OJK 发布 POJK 8/2026：LPBBTI（Pindar）须经监管系统完整、及时报送交易数据，违者可行政制裁",
+          "url": "https://ojk.go.id/id/berita-dan-kegiatan/siaran-pers/Pages/POJK-8-Tahun-2026-Pelaporan-dan-Permintaan-Data-Transaksi-Pendanaan-oleh-Penyelenggara-LPBBTI.aspx",
+          "published": "2026-08-05",
+          "source": "OJK 新闻稿",
+          "query": "OJK POJK 8/2026"
+        },
+        {
+          "title": "媒体解读：Pinjol 须每日向 OJK 报送全量交易；过渡期仍向协会 Fintech Data Center 报送",
+          "url": "https://money.kompas.com/read/2026/08/05/115451426/pinjol-kini-wajib-laporkan-seluruh-transaksi-ke-ojk-apa-dampaknya",
+          "published": "2026-08-05",
+          "source": "Kompas",
+          "query": "pinjaman online OJK"
+        },
+        {
+          "title": "Kontan：POJK 8/2026 覆盖 Pusdafil/FDC 与借款人信息调取机制",
+          "url": "https://keuangan.kontan.co.id/news/ojk-terbitkan-pojk-82026-atur-pelaporan-data-transaksi-pendanaan-fintech-lending",
+          "published": "2026-07",
+          "source": "Kontan",
+          "query": "OJK LPBBTI"
+        }
+      ]
+    },
+    {
+      "code": "PH",
+      "nameZh": "菲律宾",
+      "regulator": "SEC/BSP",
+      "portals": [
+        { "title": "SEC 菲律宾", "url": "https://www.sec.gov.ph/" },
+        { "title": "BSP", "url": "https://www.bsp.gov.ph/" }
+      ],
+      "count": 3,
+      "cashLoanHint": "线上借贷平台重开注册+抬高资本；催收看 SEC→BSP 监管移交动向",
+      "items": [
+        {
+          "title": "SEC MC 20/2026：2026-08-01 起解除线上借贷平台（OLP）五年禁令，按平台数分级抬高实缴资本，单主体最多 5 个 OLP",
+          "url": "https://bworldonline.com/banking-finance/2026/07/31/767073/sec-expects-hundreds-to-vie-for-online-lending-platform-licenses-as-application-window-reopens/",
+          "published": "2026-07-31",
+          "source": "BusinessWorld",
+          "query": "SEC online lending platform"
+        },
+        {
+          "title": "Mondaq 法评：解除禁令≠自动批准；披露、业务计划、消费者保护与持续监管仍适用",
+          "url": "https://www.mondaq.com/financial-services/1815602/sec-lifts-five-year-moratorium-on-online-lending-platforms-and-issues-new-regulatory-framework",
+          "published": "2026-07",
+          "source": "Mondaq",
+          "query": "SEC Memorandum Circular 20"
+        },
+        {
+          "title": "BSP：一旦取得线上放贷全面监管权，将优先整治掠夺性放贷与不当催收",
+          "url": "https://bworldonline.com/top-stories/2026/08/03/767549/bsp-to-crack-down-on-online-lenders-unfair-debt-collection-practices/",
+          "published": "2026-08-03",
+          "source": "BusinessWorld",
+          "query": "BSP online lenders collection"
+        }
+      ]
+    },
+    {
+      "code": "HK",
+      "nameZh": "中国香港",
+      "regulator": "HKMA/CRL",
+      "portals": [
+        { "title": "公司注册处·放债人", "url": "https://www.cr.gov.hk/en/services/money-lenders.htm" },
+        { "title": "HKMA", "url": "https://www.hkma.gov.hk/" }
+      ],
+      "count": 2,
+      "cashLoanHint": "现金贷主线看放债人牌照条件（DSR/禁止推荐人）；数字银行牌照暂不新增",
+      "items": [
+        {
+          "title": "财库局放债人咨询结论：拟 2026-08-01 起对新牌照条件生效——低收入无抵押个贷按 DSR 上限定贷额/期，并禁止要求借款人提供推荐人",
+          "url": "https://www.fstb.gov.hk/fsb/en/publication/consult/doc/ConsultationConclusionsMoneyLenders-e.pdf",
+          "published": "2026-03-13",
+          "source": "FSTB",
+          "query": "Hong Kong money lenders DSR"
+        },
+        {
+          "title": "HKMA：现有 8 家数字银行牌照视为充足，暂无新发虚拟/数字银行牌照计划",
+          "url": "https://asianbankingandfinance.net/news/hkma-rules-out-new-virtual-banking-licenses",
+          "published": "2024 review / 仍适用 2026",
+          "source": "ABF / HKMA",
+          "query": "HKMA virtual bank licence"
+        }
+      ]
+    },
+    {
+      "code": "IN",
+      "nameZh": "印度",
+      "regulator": "RBI",
+      "portals": [
+        { "title": "RBI 出版物/通告", "url": "https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx" },
+        { "title": "RBI NBFC 名录", "url": "https://www.rbi.org.in/scripts/bs_nbfclist.aspx" }
+      ],
+      "count": 3,
+      "cashLoanHint": "数字借贷 Directions 2025 + DLG 计入 ECL（2026-02）影响 NBFC–LSP 合作资本效率",
+      "items": [
+        {
+          "title": "RBI (Digital Lending) Directions, 2025：整合数字借贷规则；覆盖银行与 NBFC 等受监管主体",
+          "url": "https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12848&Mode=0",
+          "published": "2025",
+          "source": "RBI",
+          "query": "RBI digital lending directions"
+        },
+        {
+          "title": "2026-02-13 起：NBFC 可将符合条件的 Default Loss Guarantee（DLG）纳入 ECL 拨备计算（须为贷款合同内生安排）",
+          "url": "https://enterslice.com/learning/rbi-eases-dlg-rules-nbfcs-digital-lending/",
+          "published": "2026-02",
+          "source": "行业解读（待对照 RBI 原文）",
+          "query": "RBI DLG NBFC ECL"
+        },
+        {
+          "title": "RBI DLG Master Directions 说明与组合上限示例（5% 覆盖等）",
+          "url": "https://www.rbi.org.in/scriptS/BS_ViewMasDirections.aspx?id=12957",
+          "published": "现行",
+          "source": "RBI",
+          "query": "RBI DLG master directions"
+        }
+      ]
+    },
+    {
+      "code": "TH",
+      "nameZh": "泰国",
+      "regulator": "BOT",
+      "portals": [
+        { "title": "BOT 新闻与通告", "url": "https://www.bot.or.th/en/news-and-media.html" }
+      ],
+      "count": 2,
+      "cashLoanHint": "P-Loan / Nano 利率上限与禁止提前还款费仍是定价硬约束",
+      "items": [
+        {
+          "title": "BOT 利率上限摘要：P-Loan 有效利率上限约 25%/24%（有车贷抵押），Nano Finance 33%，信用卡 16%",
+          "url": "https://www.bot.or.th/content/dam/bot/documents/th/our-services/bot-license-check/interest.pdf",
+          "published": "现行",
+          "source": "BOT",
+          "query": "BOT personal loan nano finance"
+        },
+        {
+          "title": "BOT 通知：个人贷/Nano 禁止收取提前还款费（Responsible Lending）",
+          "url": "https://www.nishimura.com/en/knowledge/publications/the-bank-of-thailand-prohibits-the-pre-payment-fee-for-personal-loan-and-nano-finance",
+          "published": "2023 起 / 仍执行",
+          "source": "Nishimura / BOT",
+          "query": "BOT prepayment fee"
+        }
+      ]
+    },
+    {
+      "code": "MX",
+      "nameZh": "墨西哥",
+      "regulator": "CNBV/Condusef",
+      "portals": [
+        { "title": "CNBV", "url": "https://www.gob.mx/cnbv" },
+        { "title": "CONDUSEF SIPRES", "url": "https://webapps.condusef.gob.mx/SIPRES/jsp/pub/index.jsp" }
+      ],
+      "count": 1,
+      "cashLoanHint": "展业前核 SIPRES 登记与 CAT 披露；SOFOM ENR≠CNBV 审慎监管",
+      "items": [
+        {
+          "title": "CONDUSEF：Fintech/SOFOM 须可在 SIPRES 核验；ITF（钱包/众筹）不得直接放贷——信贷主体走 SOFOM/银行路径",
+          "url": "https://www.condusef.gob.mx/?idc=2053&idcat=1&p=contenido",
+          "published": "现行",
+          "source": "CONDUSEF",
+          "query": "Condusef SIPRES SOFOM"
+        }
+      ]
+    }
+  ]
+}

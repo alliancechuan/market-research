@@ -1,0 +1,484 @@
+{
+  "note": "手填 KPI 覆盖层；build_player_disclosure_roster.py 合并",
+  "players": [
+    {
+      "id": "grab",
+      "groupKeys": [
+        "Grab Holdings/Grab（Grab·SEA）"
+      ],
+      "nameZh": "Grab",
+      "ticker": "GRAB.O",
+      "exchange": "NASDAQ",
+      "region": "se-asia",
+      "countries": [
+        "SG",
+        "ID",
+        "MY",
+        "PH",
+        "TH",
+        "VN"
+      ],
+      "langZones": [
+        "马来语区",
+        "印尼语区",
+        "泰语区",
+        "英语区"
+      ],
+      "origin": "ride-food",
+      "relevance": "SEA 超级应用 · 金融/数字银行放贷头筹之一",
+      "irUrl": "https://s205.q4cdn.com/179588156/files/doc_news/2026/May/05/2026-Q1-Earnings-Press-Release.pdf",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-05",
+      "confidence": "高",
+      "sourceNote": "公司新闻稿",
+      "kpis": [
+        {
+          "id": "fsRev",
+          "label": "金融分部收入",
+          "value": "1.07 亿美元",
+          "yoy": "+43%"
+        },
+        {
+          "id": "disburse",
+          "label": "季放款额",
+          "value": "11 亿美元",
+          "yoy": "+67%"
+        },
+        {
+          "id": "glp",
+          "label": "总贷款组合",
+          "value": "14.4 亿美元",
+          "yoy": "+130%"
+        },
+        {
+          "id": "fsEbitda",
+          "label": "金融 Adj. EBITDA",
+          "value": "-0.17 亿美元"
+        }
+      ],
+      "cashLoanHint": "GrabFin+数字银行；展业国 ID/PH/TH/MY 对照当地牌照",
+      "status": "filled"
+    },
+    {
+      "id": "bajaj",
+      "groupKeys": [
+        "Bajaj Finance（·IN）"
+      ],
+      "nameZh": "Bajaj Finance",
+      "ticker": "BAJFINANCE.NS",
+      "exchange": "NSE",
+      "region": "south-asia",
+      "countries": [
+        "IN"
+      ],
+      "langZones": [
+        "印地语区",
+        "英语区"
+      ],
+      "origin": "credit-native",
+      "relevance": "印度消费贷头筹",
+      "irUrl": "https://www.business-standard.com/markets/capital-market-news/bajaj-finance-q1-pat-climbs-27-yoy-to-rs-5-986-cr-aum-tops-rs-5-46-lakh-crore-126073000969_1.html",
+      "period": "FY27Q1",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07",
+      "confidence": "高",
+      "sourceNote": "业绩新闻/IR",
+      "kpis": [
+        {
+          "id": "aum",
+          "label": "AUM",
+          "value": "₹5.47 万亿",
+          "yoy": "+24%"
+        },
+        {
+          "id": "gnpa",
+          "label": "GNPA",
+          "value": "0.96%"
+        },
+        {
+          "id": "nnpa",
+          "label": "NNPA",
+          "value": "0.39%"
+        },
+        {
+          "id": "urbanPL",
+          "label": "城市个人贷 AUM",
+          "value": "₹1.10 万亿"
+        }
+      ],
+      "cashLoanHint": "展业国 IN 资产质量与个贷锚",
+      "status": "filled"
+    },
+    {
+      "id": "nu",
+      "groupKeys": [
+        "Nu Holdings/Nubank（Nubank·LATAM）"
+      ],
+      "nameZh": "Nubank",
+      "ticker": "NU.N",
+      "exchange": "NYSE",
+      "region": "latam",
+      "countries": [
+        "BR",
+        "MX",
+        "CO"
+      ],
+      "langZones": [
+        "葡语区",
+        "西语区"
+      ],
+      "origin": "digibank",
+      "relevance": "拉美数字银行头筹 · 墨西哥已盈亏平衡叙事",
+      "irUrl": "https://international.nubank.com.br/company/nu-holdings-ltd-reports-first-quarter-2026-financial-results/",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05",
+      "confidence": "高",
+      "sourceNote": "公司 IR",
+      "kpis": [
+        {
+          "id": "creditBook",
+          "label": "信贷组合",
+          "value": "372 亿美元",
+          "yoy": "+40%"
+        },
+        {
+          "id": "unsec",
+          "label": "无抵押贷",
+          "value": "约 100 亿美元"
+        },
+        {
+          "id": "npl1590",
+          "label": "NPL 15–90",
+          "value": "5.0%"
+        },
+        {
+          "id": "npl90",
+          "label": "NPL 90+",
+          "value": "6.5%"
+        },
+        {
+          "id": "mxCust",
+          "label": "墨西哥客户",
+          "value": "约 1500 万"
+        }
+      ],
+      "cashLoanHint": "展业国 MX 对照；信用卡为主、无抵押贷增速快",
+      "status": "filled"
+    },
+    {
+      "id": "finv",
+      "groupKeys": [
+        "FinVolution/信也（信也·CN）"
+      ],
+      "nameZh": "信也 FinVolution",
+      "ticker": "FINV.N",
+      "exchange": "NYSE",
+      "region": "east-asia",
+      "countries": [
+        "CN",
+        "ID",
+        "PH"
+      ],
+      "langZones": [
+        "简中",
+        "印尼语区",
+        "英语区"
+      ],
+      "origin": "credit-native",
+      "relevance": "中资出海助贷 · 海外印尼/菲律宾",
+      "irUrl": "https://www.prnewswire.com/news-releases/finvolution-group-reports-first-quarter-2026-unaudited-financial-results-302781329.html",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05",
+      "confidence": "高",
+      "sourceNote": "公司新闻稿/IR",
+      "kpis": [
+        {
+          "id": "volumeTotal",
+          "label": "总成交量",
+          "value": "426 亿元",
+          "yoy": "-18.2%"
+        },
+        {
+          "id": "volumeCn",
+          "label": "国内成交量",
+          "value": "385 亿元",
+          "yoy": "-21.6%"
+        },
+        {
+          "id": "volumeOs",
+          "label": "海外成交量",
+          "value": "41 亿元",
+          "yoy": "+36.7%"
+        },
+        {
+          "id": "balanceOs",
+          "label": "海外在贷",
+          "value": "26 亿元",
+          "yoy": "+36.8%"
+        },
+        {
+          "id": "delinq90",
+          "label": "国内 90+ 逾期",
+          "value": "3.11%"
+        }
+      ],
+      "cashLoanHint": "海外量增；对照当地牌照",
+      "status": "filled"
+    },
+    {
+      "id": "jfin",
+      "groupKeys": [
+        "嘉银科技/嘉银/Jiayin（嘉银·CN）"
+      ],
+      "nameZh": "嘉银 Jiayin",
+      "ticker": "JFIN.O",
+      "exchange": "NASDAQ",
+      "region": "east-asia",
+      "countries": [
+        "CN",
+        "ID"
+      ],
+      "langZones": [
+        "简中",
+        "印尼语区"
+      ],
+      "origin": "credit-native",
+      "relevance": "已投·印尼 Samir；国内助贷",
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1743102/000119312526278439/jfin-ex99.htm",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-06-23",
+      "confidence": "高",
+      "sourceNote": "公司 6-K/新闻稿",
+      "kpis": [
+        {
+          "id": "volume",
+          "label": "促成成交量",
+          "value": "193 亿元",
+          "yoy": "-45.8%"
+        },
+        {
+          "id": "delinq90",
+          "label": "90+ 逾期率",
+          "value": "2.25%"
+        },
+        {
+          "id": "revenue",
+          "label": "净收入",
+          "value": "7.57 亿元",
+          "yoy": "-57.4%"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "亏损 0.62 亿元"
+        }
+      ],
+      "cashLoanHint": "国内量价收缩；印尼看海外分部",
+      "status": "filled"
+    },
+    {
+      "id": "qfin",
+      "groupKeys": [
+        "奇富科技/奇富借条/Qfin（奇富·CN）"
+      ],
+      "nameZh": "奇富 QFIN",
+      "ticker": "QFIN.O",
+      "exchange": "NASDAQ / 3660.HK",
+      "region": "east-asia",
+      "countries": [
+        "CN"
+      ],
+      "langZones": [
+        "简中"
+      ],
+      "origin": "credit-native",
+      "relevance": "国内消金/助贷可比",
+      "irUrl": "https://www.globenewswire.com/de/news-release/2026/05/26/3301561/0/en/Qfin-Holdings-Announces-First-Quarter-2026-Unaudited-Financial-Results.html",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-26",
+      "confidence": "高",
+      "sourceNote": "公司新闻稿",
+      "kpis": [
+        {
+          "id": "volume",
+          "label": "促成+自营放款量",
+          "value": "650 亿元",
+          "yoy": "-26.8%"
+        },
+        {
+          "id": "balance",
+          "label": "在贷余额",
+          "value": "1,144 亿元"
+        },
+        {
+          "id": "delinq90",
+          "label": "90+ 逾期率",
+          "value": "3.50%"
+        },
+        {
+          "id": "day1",
+          "label": "Day-1 逾期",
+          "value": "5.7%"
+        }
+      ],
+      "status": "filled"
+    },
+    {
+      "id": "lx",
+      "groupKeys": [
+        "乐信/分期乐/Lexin（乐信·CN）"
+      ],
+      "nameZh": "乐信 Lexin",
+      "ticker": "LX.O",
+      "exchange": "NASDAQ",
+      "region": "east-asia",
+      "countries": [
+        "CN",
+        "MX"
+      ],
+      "langZones": [
+        "简中",
+        "西语区"
+      ],
+      "origin": "bnpl",
+      "relevance": "分期电商+消金；墨西哥 Fortaprest",
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1708259/000119312526237752/lx-ex99_1.htm",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-25",
+      "confidence": "高",
+      "sourceNote": "公司 6-K",
+      "kpis": [
+        {
+          "id": "originations",
+          "label": "放款量",
+          "value": "579 亿元",
+          "yoy": "+12.2%"
+        },
+        {
+          "id": "balance",
+          "label": "在贷本金",
+          "value": "965 亿元",
+          "yoy": "-10.1%"
+        },
+        {
+          "id": "delinq90",
+          "label": "90+ 逾期率",
+          "value": "3.5%"
+        },
+        {
+          "id": "gmv",
+          "label": "分期电商 GMV",
+          "value": "22.0 亿元",
+          "yoy": "+95%"
+        }
+      ],
+      "status": "filled"
+    },
+    {
+      "id": "yrd",
+      "groupKeys": [
+        "宜人金科/宜人贷（宜人·CN）",
+        "宜人智科/宜人（宜人·CN）"
+      ],
+      "nameZh": "宜人 YRD",
+      "ticker": "YRD.N",
+      "exchange": "NYSE",
+      "region": "east-asia",
+      "countries": [
+        "CN"
+      ],
+      "langZones": [
+        "简中"
+      ],
+      "origin": "credit-native",
+      "relevance": "国内助贷可比",
+      "irUrl": "https://ir.yiren.com/2026-06-25-Yiren-Digital-Reports-First-Quarter-2026-Unaudited-Financial-Results",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-06-25",
+      "confidence": "高",
+      "sourceNote": "公司 IR",
+      "kpis": [
+        {
+          "id": "volume",
+          "label": "促成成交量",
+          "value": "89 亿元",
+          "yoy": "-42%"
+        },
+        {
+          "id": "avgLoan",
+          "label": "笔均",
+          "value": "约 1.20 万元",
+          "yoy": "+67%"
+        },
+        {
+          "id": "dq1_30",
+          "label": "1–30 天逾期",
+          "value": "2.5%"
+        },
+        {
+          "id": "dq61_90",
+          "label": "61–90 天逾期",
+          "value": "3.2%"
+        }
+      ],
+      "status": "filled"
+    },
+    {
+      "id": "vcredit",
+      "groupKeys": [
+        "维信金科/Vcredit（维信·CN）"
+      ],
+      "nameZh": "维信 Vcredit",
+      "ticker": "2003.HK",
+      "exchange": "HKEX",
+      "region": "east-asia",
+      "countries": [
+        "CN",
+        "HK"
+      ],
+      "langZones": [
+        "简中",
+        "繁中"
+      ],
+      "origin": "credit-native",
+      "relevance": "港股消金",
+      "irUrl": "https://www.acnnewswire.com/press-release/english/106100/vcredit-releases-2025-full-year-results",
+      "period": "2025FY",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026-03-31",
+      "confidence": "高",
+      "sourceNote": "全年业绩公告",
+      "kpis": [
+        {
+          "id": "volume",
+          "label": "内地放款量",
+          "value": "584.5 亿元"
+        },
+        {
+          "id": "income",
+          "label": "总收入",
+          "value": "38.7 亿元"
+        },
+        {
+          "id": "users",
+          "label": "累计注册用户",
+          "value": "1.71 亿",
+          "yoy": "+8.2%"
+        },
+        {
+          "id": "newDq",
+          "label": "新贷逾期（年末）",
+          "value": "约 0.85%"
+        }
+      ],
+      "status": "filled"
+    }
+  ]
+}

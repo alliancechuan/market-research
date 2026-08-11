@@ -48,6 +48,24 @@ import { VitalPyramid } from "./VitalPyramid";
 import { getVitalCountry } from "./data/vitalSeries";
 import { CreditDebtCharts, FxCaCharts, IncomeSectorCharts } from "./MacroFactorCharts";
 import { MORNING_BRIEF_36KR, BRIEF_PRIMARY_IDS } from "./data/morningBrief36kr";
+import { CC_WATCH_DIGEST } from "./data/ccWatchDigest";
+import { CC_SOURCE_TIERS } from "./data/ccSourceTiers";
+import {
+  resolveListedDisclosure,
+  listedDisclosureStats,
+  listedCoverageByRegion,
+  LISTED_ORIGIN_LABEL,
+  LISTED_REGION_LABEL,
+} from "./data/listedPlayerDisclosure";
+import {
+  resolveCompetitiveIntel,
+  competitiveQueueStats,
+  COMPETITIVE_LAYER_LABEL,
+} from "./data/playerCompetitiveIntel";
+import {
+  licenseCreditPriorityStats,
+  LICENSE_CREDIT_TRACK_LABEL,
+} from "./data/countryLicenseCreditPriority";
 import {
   PAYMENT_KIND_BLURB,
   PAYMENT_KIND_LABEL,
@@ -18813,6 +18831,7 @@ const LISTED_TICKER_BY_GROUP: Record<string, string> = {
   "LendingClub（LendingClub·US）": "LC.N",
   "Klarna（Klarna·EU）": "未上市/私募",
   "Bajaj Finance（·IN）": "BAJFINANCE.NS",
+  "Kaspi.kz（Kaspi·KZ）": "KSPI",
 };
 
 const LISTED_TICKER_BY_BRAND: Record<string, string> = {
@@ -19424,6 +19443,157 @@ function ThreeMetrics({ kpi }: { kpi: PlayerKpi }) {
       {kpi.note ? (
         <Text size="small" tone="tertiary">
           {kpi.note}
+        </Text>
+      ) : null}
+    </Stack>
+  );
+}
+
+/** 上市定期披露 KPI（T2 信源）；无槽位则不渲染 */
+function ListedDisclosureBrief({ group, ticker }: { group: string; ticker?: string }) {
+  const d = resolveListedDisclosure(group, ticker);
+  const theme = useHostTheme();
+  if (!d) return null;
+  const filled = d.status === "filled" && d.kpis.length > 0;
+  const originLabel = d.origin ? LISTED_ORIGIN_LABEL[d.origin] || d.origin : "";
+  const regionLabel = d.region ? LISTED_REGION_LABEL[d.region] || d.region : "";
+  return (
+    <Stack gap={6}>
+      <Row gap={8} align="center" justify="space-between" wrap>
+        <Text size="small" weight="medium">
+          最近披露 KPI
+          {d.period ? ` · ${d.period}` : ""}
+        </Text>
+        <Text size="small" tone="tertiary">
+          T2
+          {d.confidence ? ` · ${d.confidence}` : ""}
+          {!filled ? " · 待填" : ""}
+        </Text>
+      </Row>
+      <Row gap={6} wrap>
+        {regionLabel ? (
+          <Pill tone="neutral" size="sm">
+            {regionLabel}
+          </Pill>
+        ) : null}
+        {originLabel ? (
+          <Pill tone="info" size="sm">
+            {originLabel}
+          </Pill>
+        ) : null}
+        {(d.langZones || []).slice(0, 3).map((z) => (
+          <Pill key={z} tone="neutral" size="sm">
+            {z}
+          </Pill>
+        ))}
+      </Row>
+      {filled ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+            gap: 8,
+          }}
+        >
+          {d.kpis.slice(0, 6).map((k) => (
+            <div
+              key={k.id}
+              style={{
+                padding: "8px 10px",
+                borderRadius: 8,
+                border: `1px solid ${theme.stroke.tertiary}`,
+                background: theme.bg.elevated,
+              }}
+            >
+              <div style={{ fontSize: 11, color: theme.text.tertiary, marginBottom: 4 }}>{k.label}</div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: theme.text.primary }}>{k.value}</div>
+              {k.yoy ? (
+                <div style={{ fontSize: 11, color: theme.text.tertiary, marginTop: 2 }}>{k.yoy}</div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <Text size="small" tone="tertiary">
+          {d.cashLoanHint || "槽位已建，待财报/债项披露填入成交量/在贷/逾期等。"}
+        </Text>
+      )}
+      {filled && d.cashLoanHint ? (
+        <Text size="small" tone="secondary">
+          {d.cashLoanHint}
+        </Text>
+      ) : null}
+      {d.irUrl ? (
+        <Text size="small">
+          原文：
+          <Link href={d.irUrl}>{d.sourceNote || d.ticker || d.nameZh}</Link>
+          {d.reportedAt ? ` · ${d.reportedAt}` : ""}
+        </Text>
+      ) : null}
+    </Stack>
+  );
+}
+
+/** 招股/年报竞争格局（四层分类）；无情报则不渲染 */
+function CompetitiveIntelBrief({ group, ticker }: { group: string; ticker?: string }) {
+  const intel = resolveCompetitiveIntel(group, ticker);
+  const theme = useHostTheme();
+  if (!intel) return null;
+  const layers = intel.layers.filter((l) => l.items?.length);
+  if (!layers.length) return null;
+  return (
+    <Stack gap={6}>
+      <Row gap={8} align="center" justify="space-between" wrap>
+        <Text size="small" weight="medium">
+          竞争格局
+        </Text>
+        <Text size="small" tone="tertiary">
+          {intel.chain?.namedByProspectus ? "招股点名链" : "情报"}
+          {intel.confidence ? ` · ${intel.confidence}` : ""}
+        </Text>
+      </Row>
+      {intel.marketThesis?.summary ? (
+        <Text size="small" tone="secondary">
+          {intel.marketThesis.summary}
+          {intel.marketThesis.thirdParty ? `（${intel.marketThesis.thirdParty}）` : ""}
+        </Text>
+      ) : null}
+      {layers.map((layer) => (
+        <Stack key={layer.id} gap={4}>
+          <Text size="small" tone="tertiary">
+            {COMPETITIVE_LAYER_LABEL[layer.id] || layer.id}
+          </Text>
+          <Row gap={6} wrap>
+            {layer.items.map((it) => (
+              <span
+                key={`${layer.id}-${it.nameZh}`}
+                title={it.why}
+                style={{
+                  fontSize: 12,
+                  lineHeight: 1.4,
+                  padding: "4px 8px",
+                  borderRadius: 6,
+                  border: `1px solid ${theme.stroke.tertiary}`,
+                  color: it.groupKey ? theme.text.primary : theme.text.tertiary,
+                  background: theme.bg.elevated,
+                }}
+              >
+                {it.nameZh}
+                {!it.groupKey ? " ·待建档" : ""}
+              </span>
+            ))}
+          </Row>
+        </Stack>
+      ))}
+      {intel.cashLoanHint ? (
+        <Text size="small" tone="secondary">
+          {intel.cashLoanHint}
+        </Text>
+      ) : null}
+      {intel.sources?.[0]?.url ? (
+        <Text size="small">
+          信源：
+          <Link href={intel.sources[0].url}>{intel.sources[0].title}</Link>
         </Text>
       ) : null}
     </Stack>
@@ -21241,6 +21411,8 @@ function ScenePlayer({ r, iosFinanceRank }: { r: SceneRow; iosFinanceRank?: numb
             </Text>
             <Text size="small">{depthLine || r.sceneType}</Text>
             <ThreeMetrics kpi={kpi} />
+            <ListedDisclosureBrief group={r.group} ticker={ticker} />
+            <CompetitiveIntelBrief group={r.group} ticker={ticker} />
             <PlayerLicenseBrief licenseReg={r.licenseReg} />
           </Stack>
           <CompactDetails id={`sc_${r.group}`}>
@@ -21497,6 +21669,8 @@ function CreditPlayer({ r, iosFinanceRank }: { r: CreditRow; iosFinanceRank?: nu
               </Text>
             ) : null}
             {!hideScaleMetrics ? <ThreeMetrics kpi={kpi} /> : null}
+            <ListedDisclosureBrief group={r.group} ticker={ticker} />
+            <CompetitiveIntelBrief group={r.group} ticker={ticker} />
             {isPlayer ? (
               <PlayerLicenseBrief licenseReg={r.licenseReg} licenses={r.licenses} />
             ) : null}
@@ -22612,7 +22786,15 @@ function AtlasRoleSwitch({
   );
 }
 
-function BossWatchBar({ verdict, strongCount }: { verdict: string; strongCount: number }) {
+function BossWatchBar({
+  verdict,
+  strongCount,
+  label = "本周该盯 · 消费信贷",
+}: {
+  verdict: string;
+  strongCount: number;
+  label?: string;
+}) {
   const theme = useHostTheme();
   return (
     <div
@@ -22624,7 +22806,8 @@ function BossWatchBar({ verdict, strongCount }: { verdict: string; strongCount: 
       }}
     >
       <div style={{ fontSize: 11, color: theme.text.tertiary, marginBottom: 4 }}>
-        本周该盯 · 消费信贷强相关 {strongCount} 条
+        {label}
+        {strongCount ? ` · ${strongCount} 条` : ""}
       </div>
       <div style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.primary }}>{verdict}</div>
     </div>
@@ -22632,14 +22815,19 @@ function BossWatchBar({ verdict, strongCount }: { verdict: string; strongCount: 
 }
 
 function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
+  const watch = CC_WATCH_DIGEST;
   const brief = MORNING_BRIEF_36KR;
   const theme = useHostTheme();
-  const dayKey = brief.displayDate || brief.coverageDate || "na";
+  const dayKey = watch.displayDate || brief.displayDate || brief.coverageDate || "na";
+  const [openMkt, setOpenMkt] = useCanvasState<string>(`ccWatchMkt_${dayKey}`, "");
+  const [readMkts, setReadMkts] = useCanvasState<string>(`ccWatchRead_${dayKey}`, "");
   const [openId, setOpenId] = useCanvasState<string>(`mornOpen_${dayKey}`, "");
   const [readIds, setReadIds] = useCanvasState<string>(`mornRead_${dayKey}`, "");
   const [openPlayer, setOpenPlayer] = useCanvasState<string>(`mornPlayer_${dayKey}`, "");
   const [readPlayers, setReadPlayers] = useCanvasState<string>(`mornPlayerRead_${dayKey}`, "");
+  const [showKr, setShowKr] = useCanvasState<string>(`mornKr_${dayKey}`, "");
   const [showWeak, setShowWeak] = useCanvasState<string>(`mornWeak_${dayKey}`, "");
+  const readMktSet = new Set(readMkts.split("|").filter(Boolean));
   const readSet = new Set(readIds.split("|").filter(Boolean));
   const readPlayerSet = new Set(readPlayers.split("|").filter(Boolean));
   const playerHits = role === "roadshow" ? [] : buildPlayerBriefHits(brief, credits);
@@ -22648,7 +22836,6 @@ function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
     (t) => t.primary !== false && (BRIEF_PRIMARY_IDS as readonly string[]).includes(t.id),
   );
   const weakThemes = brief.themes.filter((t) => t.id === "other_weak" || t.primary === false);
-  // 兼容旧七桶：非 primary ids 也进弱相关展示区之外的主区
   const legacyPrimary = brief.themes.filter(
     (t) =>
       !primaryThemes.includes(t) &&
@@ -22656,12 +22843,29 @@ function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
       t.primary !== false &&
       !(BRIEF_PRIMARY_IDS as readonly string[]).includes(t.id),
   );
-  const mainThemes = primaryThemes.length ? primaryThemes : legacyPrimary.length ? legacyPrimary : brief.themes.filter((t) => t.id !== "other_weak");
+  const mainThemes = primaryThemes.length
+    ? primaryThemes
+    : legacyPrimary.length
+      ? legacyPrimary
+      : brief.themes.filter((t) => t.id !== "other_weak");
+
+  function openMarket(code: string) {
+    const next = openMkt === code ? "" : code;
+    setOpenMkt(next);
+    if (next) {
+      setOpenId("");
+      setOpenPlayer("");
+      if (!readMktSet.has(code)) setReadMkts([...readMktSet, code].join("|"));
+    }
+  }
 
   function openTheme(id: string) {
     const next = openId === id ? "" : id;
     setOpenId(next);
-    if (next) setOpenPlayer("");
+    if (next) {
+      setOpenMkt("");
+      setOpenPlayer("");
+    }
     if (next && !readSet.has(id)) {
       setReadIds([...readSet, id].join("|"));
     }
@@ -22670,15 +22874,21 @@ function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
   function openPlayerCard(key: string) {
     const next = openPlayer === key ? "" : key;
     setOpenPlayer(next);
-    if (next) setOpenId("");
+    if (next) {
+      setOpenId("");
+      setOpenMkt("");
+    }
     if (next && !readPlayerSet.has(key)) {
       setReadPlayers([...readPlayerSet, key].join("|"));
     }
   }
 
+  const openMarketRow = watch.markets.find((m) => m.code === openMkt) ?? null;
   const openRow = brief.themes.find((r) => r.id === openId) ?? null;
   const openPlayerHit = playerHits.find((p) => p.key === openPlayer) ?? null;
+  const watchTotal = watch.stats.itemTotal ?? 0;
   const strongCount = brief.stats.strong ?? brief.stats.focusHit ?? 0;
+  const bossVerdict = watch.overallVerdict || brief.overallVerdict || "";
 
   const themeCards = (rows: typeof brief.themes) => (
     <div
@@ -22726,42 +22936,183 @@ function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
 
   return (
     <Card>
-      <CardHeader>{brief.headline}</CardHeader>
+      <CardHeader>
+        消费信贷晨报 · {watch.displayDate || brief.displayDate || ""}
+      </CardHeader>
       <CardBody>
         <Stack gap={14}>
           <Text size="small" tone="tertiary">
-            {brief.publishAt ? `发布 ${brief.publishAt}` : `整理 ${brief.generatedAt}`}
-            {brief.windowStart && brief.windowEnd ? ` · ${brief.windowStart}–${brief.windowEnd}` : ""}
-            {` · 共 ${brief.stats.coverageTotal} 条`}
-            {strongCount ? ` · 强相关 ${strongCount}` : ""}
-            {playerHits.length ? ` · 挂到 ${playerHits.length} 家玩家` : ""}
+            {`定向 ${watch.generatedAt}`}
+            {` · 展业六国 ${watchTotal} 条`}
+            {` · 辅扫 36氪 ${brief.stats.coverageTotal} 条`}
+            {strongCount ? `（标强相关 ${strongCount}）` : ""}
           </Text>
-          {brief.lede ? (
+          {watch.note ? (
             <Text size="small" tone="secondary">
-              {brief.lede}
+              {watch.note}
             </Text>
           ) : null}
+          <Text size="small" tone="tertiary">
+            信源序：{CC_SOURCE_TIERS.tiers.map((t) => `${t.id} ${t.nameZh}`).join(" → ")}
+            {` · T2 全量 ${listedDisclosureStats().total}（已填 KPI ${listedDisclosureStats().filled}）`}
+            {` · 竞争情报 ${competitiveQueueStats().subjects} 家（队列待扩 ${competitiveQueueStats().pending}）`}
+            {` · ${[...listedCoverageByRegion().entries()]
+              .map(([r, v]) => `${LISTED_REGION_LABEL[r] || r}${v.total}`)
+              .join(" / ")}`}
+          </Text>
+          {(() => {
+            const lc = licenseCreditPriorityStats({ focusOnly: true });
+            const trackBits = ["digibank", "payment", "online_credit"]
+              .map((t) => {
+                const b = lc.byTrack[t];
+                if (!b) return null;
+                return `${LICENSE_CREDIT_TRACK_LABEL[t] || t}${b.covered}/${b.total}`;
+              })
+              .filter(Boolean);
+            return (
+              <Text size="small" tone="tertiary">
+                {`牌照主轴（展业六国）：覆盖 ${lc.covered}/${lc.total} · 队列中 ${lc.queued} · 缺口 ${lc.gap}`}
+                {trackBits.length ? ` · ${trackBits.join(" · ")}` : ""}
+                {" · 优先：数字银行 / 支付牌照 / 线上信贷机构"}
+              </Text>
+            );
+          })()}
 
-          {(role === "boss" || role === "am") && brief.overallVerdict ? (
-            <BossWatchBar verdict={brief.overallVerdict} strongCount={strongCount} />
+          {(role === "boss" || role === "am") && bossVerdict ? (
+            <BossWatchBar
+              verdict={bossVerdict}
+              strongCount={watchTotal}
+              label="本周该盯 · 展业国定向"
+            />
           ) : null}
 
           {role === "roadshow" ? (
             <Text size="small" tone="tertiary">
-              路演只读：仅展示消费信贷三板块摘要，不展开玩家挂靠与内部备注。
+              路演只读：展示展业国监管线索摘要，不展开玩家挂靠与内部备注。
             </Text>
           ) : null}
 
           <Text size="small" weight="medium">
-            消费信贷三板块
+            展业国定向扫描
           </Text>
-          {themeCards(mainThemes)}
+          <Text size="small" tone="tertiary">
+            MX / TH / ID / PH / HK / IN · 点国别看线索与监管门户
+          </Text>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
+              gap: 10,
+            }}
+          >
+            {watch.markets.map((m) => {
+              const unread = readMktSet.has(m.code) ? 0 : m.count;
+              const active = openMkt === m.code;
+              return (
+                <button
+                  key={m.code}
+                  type="button"
+                  onClick={() => openMarket(m.code)}
+                  style={{
+                    position: "relative",
+                    textAlign: "left",
+                    padding: "12px 12px 14px",
+                    borderRadius: 10,
+                    border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+                    background: active ? theme.fill.quaternary : theme.bg.elevated,
+                    cursor: "pointer",
+                    color: theme.text.primary,
+                    font: "inherit",
+                    minHeight: 88,
+                  }}
+                >
+                  <UnreadBadge count={unread} />
+                  <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, paddingRight: 8 }}>
+                    {m.nameZh}
+                    {m.regulator ? (
+                      <span style={{ fontWeight: 400, color: theme.text.tertiary }}> · {m.regulator}</span>
+                    ) : null}
+                  </div>
+                  <div style={{ fontSize: 12, lineHeight: 1.45, color: theme.text.secondary }}>
+                    {m.cashLoanHint || "核牌照与消费贷规则"}
+                  </div>
+                  <div style={{ fontSize: 11, color: theme.text.tertiary, marginTop: 6 }}>{m.count} 条</div>
+                </button>
+              );
+            })}
+          </div>
 
-          {weakThemes.length && role !== "roadshow" ? (
+          {openMarketRow ? (
+            <Stack gap={10}>
+              <Row gap={8} align="center" justify="space-between" wrap>
+                <Text size="small" weight="medium">
+                  {openMarketRow.nameZh} · {openMarketRow.count} 条
+                </Text>
+                <Text size="small" tone="tertiary">
+                  再点卡片可收起
+                </Text>
+              </Row>
+              {openMarketRow.cashLoanHint ? (
+                <Text size="small" tone="secondary">
+                  {openMarketRow.cashLoanHint}
+                </Text>
+              ) : null}
+              {openMarketRow.portals?.length ? (
+                <Row gap={10} wrap>
+                  {openMarketRow.portals.map((p) => (
+                    <a
+                      key={p.url}
+                      href={p.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: 12, color: theme.text.secondary }}
+                    >
+                      {p.title} ↗
+                    </a>
+                  ))}
+                </Row>
+              ) : null}
+              <div
+                style={{
+                  maxHeight: 320,
+                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                }}
+              >
+                {openMarketRow.items.map((s, i) => (
+                  <div key={`${openMarketRow.code}-${i}-${s.title}`} style={{ fontSize: 13, lineHeight: 1.5 }}>
+                    <div style={{ color: theme.text.tertiary, marginBottom: 2, fontSize: 11 }}>
+                      {[s.published, s.source].filter(Boolean).join(" · ") || "·"}
+                    </div>
+                    {s.url ? (
+                      <a
+                        href={s.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: theme.text.primary, textDecoration: "none" }}
+                      >
+                        {s.title}
+                      </a>
+                    ) : (
+                      <span style={{ color: theme.text.secondary }}>{s.title}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Stack>
+          ) : (
+            <Text size="small" tone="tertiary">
+              点国别卡片查看定向线索；链接以监管官网为准。
+            </Text>
+          )}
+
+          {role !== "roadshow" ? (
             <Stack gap={8}>
               <button
                 type="button"
-                onClick={() => setShowWeak(showWeak ? "" : "1")}
+                onClick={() => setShowKr(showKr ? "" : "1")}
                 style={{
                   border: "none",
                   background: "transparent",
@@ -22773,132 +23124,145 @@ function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
                   fontSize: 12,
                 }}
               >
-                {showWeak ? "收起弱相关 ▾" : `展开弱相关（${weakThemes.reduce((n, t) => n + t.count, 0)} 条）▸`}
+                {showKr
+                  ? "收起 36氪辅扫 ▾"
+                  : `展开 36氪辅扫（国内泛财经，弱相关为主 · ${brief.stats.coverageTotal} 条）▸`}
               </button>
-              {showWeak ? themeCards(weakThemes) : null}
-            </Stack>
-          ) : null}
-
-          {playerHits.length && role === "am" ? (
-            <Stack gap={8}>
-              <Text size="small" weight="medium">
-                玩家相关快讯
-              </Text>
-              <Text size="small" tone="tertiary">
-                按标题关键词挂到 CRM 玩家；红点为未读。
-              </Text>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
-                  gap: 10,
-                }}
-              >
-                {playerHits.slice(0, 24).map((p) => {
-                  const unread = readPlayerSet.has(p.key) ? 0 : p.items.length;
-                  const active = openPlayer === p.key;
-                  return (
-                    <button
-                      key={p.key}
-                      type="button"
-                      onClick={() => openPlayerCard(p.key)}
-                      style={{
-                        position: "relative",
-                        textAlign: "left",
-                        padding: "12px 12px 14px",
-                        borderRadius: 10,
-                        border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
-                        background: active ? theme.fill.quaternary : theme.bg.elevated,
-                        cursor: "pointer",
-                        color: theme.text.primary,
-                        font: "inherit",
-                        minHeight: 72,
-                      }}
-                    >
-                      <UnreadBadge count={unread} />
-                      <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, paddingRight: 8 }}>
-                        {p.label}
+              {showKr ? (
+                <Stack gap={12}>
+                  <Text size="small" weight="medium">
+                    36氪 · 消费信贷三板块（辅）
+                  </Text>
+                  {themeCards(mainThemes)}
+                  {weakThemes.length ? (
+                    <Stack gap={8}>
+                      <button
+                        type="button"
+                        onClick={() => setShowWeak(showWeak ? "" : "1")}
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          padding: 0,
+                          textAlign: "left",
+                          cursor: "pointer",
+                          font: "inherit",
+                          color: theme.text.tertiary,
+                          fontSize: 12,
+                        }}
+                      >
+                        {showWeak
+                          ? "收起弱相关 ▾"
+                          : `展开弱相关（${weakThemes.reduce((n, t) => n + t.count, 0)} 条）▸`}
+                      </button>
+                      {showWeak ? themeCards(weakThemes) : null}
+                    </Stack>
+                  ) : null}
+                  {playerHits.length && role === "am" ? (
+                    <Stack gap={8}>
+                      <Text size="small" weight="medium">
+                        玩家相关快讯（36氪关键词挂靠）
+                      </Text>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
+                          gap: 10,
+                        }}
+                      >
+                        {playerHits.slice(0, 24).map((p) => {
+                          const unread = readPlayerSet.has(p.key) ? 0 : p.items.length;
+                          const active = openPlayer === p.key;
+                          return (
+                            <button
+                              key={p.key}
+                              type="button"
+                              onClick={() => openPlayerCard(p.key)}
+                              style={{
+                                position: "relative",
+                                textAlign: "left",
+                                padding: "12px 12px 14px",
+                                borderRadius: 10,
+                                border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+                                background: active ? theme.fill.quaternary : theme.bg.elevated,
+                                cursor: "pointer",
+                                color: theme.text.primary,
+                                font: "inherit",
+                                minHeight: 72,
+                              }}
+                            >
+                              <UnreadBadge count={unread} />
+                              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, paddingRight: 8 }}>
+                                {p.label}
+                              </div>
+                              <div style={{ fontSize: 12, color: theme.text.secondary }}>
+                                {p.items.length} 条相关
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
-                      <div style={{ fontSize: 12, color: theme.text.secondary }}>{p.items.length} 条相关</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </Stack>
-          ) : null}
-
-          {openPlayerHit ? (
-            <Stack gap={10}>
-              <Row gap={8} align="center" justify="space-between" wrap>
-                <Text size="small" weight="medium">
-                  {openPlayerHit.label} · {openPlayerHit.items.length} 条
-                </Text>
-                <Text size="small" tone="tertiary">
-                  再点卡片可收起
-                </Text>
-              </Row>
-              <div
-                style={{
-                  maxHeight: 280,
-                  overflowY: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
-                {openPlayerHit.items.map((s, i) => (
-                  <div
-                    key={`${openPlayerHit.key}-${i}-${s.title}`}
-                    style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.secondary }}
-                  >
-                    <span style={{ color: theme.text.tertiary, marginRight: 8 }}>{s.time || "·"}</span>
-                    {s.title}
-                  </div>
-                ))}
-              </div>
-            </Stack>
-          ) : openRow ? (
-            <Stack gap={10}>
-              <Row gap={8} align="center" justify="space-between" wrap>
-                <Text size="small" weight="medium">
-                  {openRow.title} · {openRow.count} 条
-                </Text>
-                <Text size="small" tone="tertiary">
-                  点击卡片可收起
-                </Text>
-              </Row>
-              <div style={{ fontSize: 13, lineHeight: 1.6, color: theme.text.secondary }}>{openRow.commentary}</div>
-              {openRow.sources?.length ? (
-                <div
-                  style={{
-                    maxHeight: 280,
-                    overflowY: "auto",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                    paddingTop: 4,
-                  }}
-                >
-                  {openRow.sources.map((s, i) => (
-                    <div
-                      key={`${openRow.id}-${i}-${s.title}`}
-                      style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.secondary }}
-                    >
-                      <span style={{ color: theme.text.tertiary, marginRight: 8 }}>{s.time || "·"}</span>
-                      {s.title}
-                      {s.cashLoanHint ? (
-                        <span style={{ color: theme.text.tertiary, marginLeft: 8 }}>· {s.cashLoanHint}</span>
+                    </Stack>
+                  ) : null}
+                  {openPlayerHit ? (
+                    <Stack gap={10}>
+                      <Text size="small" weight="medium">
+                        {openPlayerHit.label} · {openPlayerHit.items.length} 条
+                      </Text>
+                      <div
+                        style={{
+                          maxHeight: 280,
+                          overflowY: "auto",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 8,
+                        }}
+                      >
+                        {openPlayerHit.items.map((s, i) => (
+                          <div
+                            key={`${openPlayerHit.key}-${i}-${s.title}`}
+                            style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.secondary }}
+                          >
+                            <span style={{ color: theme.text.tertiary, marginRight: 8 }}>{s.time || "·"}</span>
+                            {s.title}
+                          </div>
+                        ))}
+                      </div>
+                    </Stack>
+                  ) : openRow ? (
+                    <Stack gap={10}>
+                      <Text size="small" weight="medium">
+                        {openRow.title} · {openRow.count} 条
+                      </Text>
+                      <div style={{ fontSize: 13, lineHeight: 1.6, color: theme.text.secondary }}>
+                        {openRow.commentary}
+                      </div>
+                      {openRow.sources?.length ? (
+                        <div
+                          style={{
+                            maxHeight: 280,
+                            overflowY: "auto",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 8,
+                          }}
+                        >
+                          {openRow.sources.map((s, i) => (
+                            <div
+                              key={`${openRow.id}-${i}-${s.title}`}
+                              style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.secondary }}
+                            >
+                              <span style={{ color: theme.text.tertiary, marginRight: 8 }}>{s.time || "·"}</span>
+                              {s.title}
+                            </div>
+                          ))}
+                        </div>
                       ) : null}
-                    </div>
-                  ))}
-                </div>
+                    </Stack>
+                  ) : null}
+                </Stack>
               ) : null}
             </Stack>
-          ) : (
-            <Text size="small" tone="tertiary">
-              点板块查看快讯；弱相关默认折叠。右上角红点为未读。
-            </Text>
-          )}
+          ) : null}
         </Stack>
       </CardBody>
     </Card>

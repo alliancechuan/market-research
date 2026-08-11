@@ -24,7 +24,9 @@ import {
   useCanvasState,
   useHostTheme,
 } from "./shims/cursor-canvas";
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { ScreenSegChip, ScreenSegTrack, ScreenStatusPills } from "./HeatMapChrome";
 import {
   DATA_QUALITY_LABEL,
   NBFC_STATS,
@@ -39,16 +41,14 @@ import {
   storeRankSortOptions,
   type StoreRankSortMode,
 } from "./data/storeRankFinance";
-import { LendingHeatGlobe } from "./LendingHeatGlobe";
-import { InvestedHeatGlobe } from "./InvestedHeatGlobe";
-import { CombinedHeatGlobe } from "./CombinedHeatGlobe";
+import { FullMarketChoropleth, ScreenImfWbFilterBar } from "./FullMarketChoropleth";
 import { MacroHeatGlobe } from "./MacroHeatGlobe";
 import { MACRO_MAP_FACTORS, type MacroMapFactorId } from "./data/macroMapMetrics";
 import { VitalPyramid } from "./VitalPyramid";
 import { getVitalCountry } from "./data/vitalSeries";
 import { CreditDebtCharts, FxCaCharts, IncomeSectorCharts } from "./MacroFactorCharts";
-import { MORNING_BRIEF_36KR, BRIEF_PRIMARY_IDS } from "./data/morningBrief36kr";
-import { CC_WATCH_DIGEST } from "./data/ccWatchDigest";
+import { MORNING_BRIEF_36KR } from "./data/morningBrief36kr";
+import { CC_WATCH_DIGEST, diandianBucketLabel } from "./data/ccWatchDigest";
 import { CC_SOURCE_TIERS } from "./data/ccSourceTiers";
 import {
   resolveListedDisclosure,
@@ -67,6 +67,22 @@ import {
   LICENSE_CREDIT_TRACK_LABEL,
 } from "./data/countryLicenseCreditPriority";
 import {
+  INDUSTRY_RESEARCH_LIBRARY,
+  docKindLabel,
+  isResearchReportDoc,
+  latestResearchReports,
+  latestSourcePacks,
+  resolveResearchHitsForGroup,
+} from "./data/industryResearchLibrary";
+import {
+  citeMark,
+  getSourceCitation,
+  getSourceCitationCatalog,
+  parseCiteNos,
+  SOURCE_CITE_RE,
+  sourceCiteKindLabel,
+} from "./data/sourceCitations";
+import {
   PAYMENT_KIND_BLURB,
   PAYMENT_KIND_LABEL,
   PAYMENT_KIND_ORDER,
@@ -84,11 +100,13 @@ import {
 import { AGENT_SCENE_LEAVES, AI_PRODUCT_RANK_36KR } from "./data/aiProductRank36kr";
 import {
   buildCashLoanMacroGroups,
+  collectCountryMacroCiteNos,
   displayCreditNote,
   getCountryMacro,
   synthesizeCashLoanBrief,
   type CashLoanMacroGroup,
 } from "./data/countryMacro";
+import { CitedText, MacroAsOfLine, MacroSourcesBlock, useSourceCiteReturn } from "./SourceCite";
 import {
   COUNTRY_LANGUAGE,
   LANGUAGE_ZONE_ORDER,
@@ -120,6 +138,7 @@ import inNbfcDigitalRoster from "./data/in-nbfc-digital-roster.json";
  * 经营性征（挂机构；可演变）：原生路径（场景原生|信贷原生，二分不重不漏）· 国家/地区 · 场景 · 金融产品 · 牌照
  * 信源（机构进出市场；系统定期检索引入；亦可人工创建；未来可扩信源）：
  *    - 流量源 · 监管源 · 经办认领（客户经理联系确认，对信息质量负责）
+ *    - 情报源 · 行业情报库（研报 research_report + 监管/信源包 regulator_pack 分轨）：见 INDUSTRY_RESEARCH_LIBRARY
  *    - 研报源 · 墨腾创投（Momentum Works / 微信「墨腾创投」）：东南亚平台与金融科技长期学习源；见 MOTENG_LEARNED
  *    - 宏观源 · Trading Economics：国家/地区维度；入口 hub=macro（与机构类型同级点选）；框架见 MacroFactorFrameworkOverview；单国卡片 CountryMacroPanel / COUNTRY_MACRO
  *    - 债券源 · 中国货币网（chinamoney.com.cn / .org.cn）：银行间债市发行/流通/兑付/评级披露；核验国内 ABS·ABN·企业债等；见 CHINAMONEY_BOND
@@ -594,7 +613,7 @@ const VERIFY_LABEL: Record<VerifyStatus, string> = {
   双端通过: "多源齐备",
   仅流量: "仅流量源",
   仅监管: "仅监管源",
-  待双端: "信源未齐",
+  待双端: "见出处编号",
   冲突观察: "冲突观察",
 };
 
@@ -2774,10 +2793,16 @@ const REGULATOR_CASH_LENDING_POLICY: Record<
     docs: "https://www.rbi.org.in/",
   },
   "Otoritas Jasa Keuangan｜OJK｜金监局（监管·ID）": {
-    summary: "LPBBTI/P2P 持牌；违规现金贷 App 禁令",
+    summary: "LPBBTI/P2P=POJK 40/2024；BNPL=POJK 32/2025（银行+融资公司）",
     detail:
-      "P2P/LPBBTI 须持牌；多次公布非法网贷名单并协同下架；线上贷超/导流亦受持牌与广告合规约束。",
-    docs: "https://www.ojk.go.id/",
+      "P2P/LPBBTI 现行框架为 POJK 40/2024（2024-12-27生效，取代POJK 10/2022）：最低股权约Rp12.5B、单户上限约Rp2B、禁跨境放贷等。BNPL 由 POJK 32/2025（2025-12-15生效）规范：仅商业银行与融资公司可办，融资公司须事先获OJK批准，既有主体约6个月调整期。行业水位（媒体转述OJK）：P2P outstanding 2026-01约Rp98.54T；融资公司BNPL约Rp12.18T、银行BNPL约Rp27.1T。第三方BNPL美元规模（R&M媒体摘要）与OJK余额分轨。",
+    docs: "https://ojk.go.id/id/regulasi/Pages/POJK-40-Tahun-2024-Layanan-Pendanaan-Bersama-Berbasis-Teknologi-Informasi.aspx",
+  },
+  "Securities and Exchange Commission｜SEC｜菲律宾证监会（监管·PH）": {
+    summary: "Lending/Financing+OLP登记；协同下架未注册App；落地BSP 1133利率上限",
+    detail:
+      "线上放贷须SEC Lending/Financing公司牌照并登记OLP（MC 19披露；MC 10曾冻结新OLP）。2023-02协同Google下架33个未注册OLP（ABS-CBN报道）。利率上限执行BSP Circular 1133（SEC MC 3/2022）：覆盖≤₱10,000且期限≤4个月无担保一般用途贷——名义≤6%/月、EIR≤15%/月、逾期罚息≤5%/月、总成本≤本金100%。数字支付基建见BSP 2024 Status of Digital Payments（零售笔数数字化约57.4%）。",
+    docs: "https://www.bsp.gov.ph/Regulations/Issuances/2021/1133.pdf",
   },
   "Central Bank of Nigeria｜CBN｜尼日利亚央行（监管·NG）": {
     summary: "数字贷款监管收紧（与消费者保护机构协同）",
@@ -3044,7 +3069,7 @@ function LoginPasswordField({
           height: 28,
           padding: 0,
           border: "none",
-          borderRadius: 6,
+          borderRadius: 8,
           background: "transparent",
           color: theme.text.tertiary,
           cursor: "pointer",
@@ -3270,8 +3295,8 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约94.3%（2024）·家庭债务/GDP·CEIC转述",
     fxVolInYear: "±4.0%·年内高低相对均价粗算·currency-api·USD/TWD周抽样高低/均价·2025–2026",
-    gdpPerCapitaUsd: "约36000美元（2025级）·二级·待双端",
-    debtToGdp: "政府债务/GDP约25%–30%（近年）·二级·待双端",
+    gdpPerCapitaUsd: "约36000美元（2025级）·二级〔10〕",
+    debtToGdp: "政府债务/GDP约25%–30%（近年）·二级〔10〕",
   },
   HK: {
     asOf: "2026-08对照·TE中国香港",
@@ -3374,11 +3399,11 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "通胀破12%。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约28.9%（2025-12）·家庭债务/GDP·CEIC转述",
     fxVolInYear: "±6.0%·年内高低相对均价粗算·USD/MNT·currency-api抽样校正·2025–2026",
-    privCreditOrConsumer: "国内私营信贷约45% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约45% GDP（近年）·二级〔10〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   ID: {
-    asOf: "2026-08对照·TE印尼",
+    asOf: "2026-08对照·TE印尼+OJK/R&M信源包",
     gdpYoY: "5.29%（2026-06）",
     gdpUsdBn: "约1.45万亿美元（2025-12）",
     gdpPerCapitaUsd: "约4555美元（2025-12）",
@@ -3400,8 +3425,8 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     debtToGdp: "政府债务/GDP约41%（2025-12）",
     householdDebtToGdp: "约15.5%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
     consumerConfidence: "约118（2026-06）",
-    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    creditNote: "OJK口径（媒体转述〔11〕〔12〕〔4〕）：P2P outstanding 2025-04约Rp80.94T（+29%YoY，TWP90约2.93%）；2026-01约Rp98.54T（+25.5%YoY，TWP90约4.38%）。融资公司BNPL 2025-04约Rp8.24T（+47%YoY，NPF gross约3.78%）→2026-01约Rp12.18T（+71%YoY）；银行BNPL 2026-01约Rp27.1T（+20%YoY）。第三方BNPL（R&M媒体摘要）2025约US$8.59B，与OJK余额分轨〔7〕〔4〕。监管：POJK 40/2024（P2P/LPBBTI）〔4〕；POJK 32/2025（BNPL仅银行+融资公司，融资公司须事先批准）〔4〕。",
+    cashLoanVerdict: "印尼现金贷/BNPL：先核POJK 40/2024（P2P）或POJK 32/2025（BNPL主体资格），再用OJK余额读行业水位；勿用第三方美元GMV替代监管余额。",
   },
   VN: {
     asOf: "2026-08对照·TE越南",
@@ -3426,7 +3451,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约24.9%（2024）·家庭债务/GDP·IIF Global Debt Monitor",
     fxVolInYear: "±0.9%·年内高低相对均价粗算·currency-api·USD/VND周抽样高低/均价·2025–2026",
-    privCreditOrConsumer: "国内私营信贷约125% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约125% GDP（近年）·二级〔10〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   MY: {
@@ -3482,7 +3507,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
   },
   PH: {
-    asOf: "2026-08对照·TE菲律宾",
+    asOf: "2026-08对照·TE菲律宾+BSP/SEC/R&M信源包",
     gdpYoY: "2.8%（2026-03）",
     gdpUsdBn: "约4870亿美元（2025-12）",
     gdpPerCapitaUsd: "约4066美元（2025-12）",
@@ -3504,8 +3529,8 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     debtToGdp: "政府债务/GDP约63.2%（2025-12）",
     householdDebtToGdp: "约13.6%（2025-12）·家庭债务/GDP·CEIC转述",
     consumerConfidence: "约-42（2026-06）",
-    creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    creditNote: "第三方BNPL（PRNewswire/R&M 2024-02）：2024约US$2.29B，2029约US$3.87B（CAGR约11%）〔7〕。BSP 2024数字支付：零售笔数数字化57.4%、金额59.0%（超PDP目标52–54%）〔5〕。线上放贷：SEC 2023-02协同下架33未注册OLP〔6〕；BSP Circular 1133+SEC MC3〔5〕〔6〕 — ≤₱1万且≤4个月无担保贷名义≤6%/月、EIR≤15%/月、逾期≤5%/月、总成本≤本金100%。",
+    cashLoanVerdict: "菲律宾：先核SEC Lending/Financing+OLP登记与BSP 1133定价带，再用BSP数字支付读场景渗透；第三方BNPL规模仅作量级。",
   },
   SG: {
     asOf: "2026-08对照·TE新加坡",
@@ -3686,7 +3711,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     fxVolInYear: "±3.2%·年内高低相对均价粗算·currency-api·USD/UZS周抽样高低/均价·2025–2026",
     householdDebtToGdp: "约12.2%（2024）·家庭债务/GDP·央行个人贷款/GDP·Kun.uz转述",
-    privCreditOrConsumer: "国内私营信贷约40% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约40% GDP（近年）·二级〔10〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   KG: {
@@ -3711,9 +3736,9 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约12.6%（2026-Q2）·家庭债务/GDP·CEIC转述",
-    privCreditOrConsumer: "国内私营信贷约25% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约25% GDP（近年）·二级〔10〕",
     fxVolInYear: "±8.0%·年内高低相对均价粗算·USD/KGS·公开汇价抽样校正·2025–2026",
-    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
   },
   TJ: {
     asOf: "2026-08对照·TE塔吉克斯坦",
@@ -3736,9 +3761,9 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约8%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约15% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约15% GDP（近年）·二级〔10〕",
     fxVolInYear: "±2.3%·年内高低相对均价粗算·currency-api·USD/TJS周抽样高低/均价·2025–2026",
-    fxReserves: "约38.1亿美元（2025）·IMF/FRED央行总储备·待双端",
+    fxReserves: "约38.1亿美元（2025）·IMF/FRED央行总储备〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   TM: {
@@ -3760,11 +3785,11 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约3%（2023）·家庭债务/GDP·官方数据不透明·银行个人信贷粗算",
-    policyRate: "—·马纳特强管理汇率/利率不透明·待双端",
+    policyRate: "—·马纳特强管理汇率/利率不透明〔1〕",
     fxVolInYear: "±3%内·官方马纳特管理低波·汇率不透明",
-    privCreditOrConsumer: "正规零售信贷深度低·二级·待双端",
-    fxReserves: "外储与汇率不透明·官方马纳特管理·勿假装有官方外储数字·待双端",
-    sectorMix: "油气主导·三产占比待官方续拆·待双端·2026-08补录",
+    privCreditOrConsumer: "正规零售信贷深度低·二级〔10〕",
+    fxReserves: "外储与汇率不透明·官方马纳特管理·勿假装有官方外储数字〔1〕",
+    sectorMix: "油气主导·三产占比待官方续拆〔1〕·2026-08补录",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   MX: {
@@ -3869,7 +3894,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP过成熟阈值；通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     fxVolInYear: "±6.0%·年内高低相对均价粗算·currency-api·USD/ARS周抽样高低/均价·2025–2026",
-    privCreditOrConsumer: "国内私营信贷约14% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约14% GDP（近年）·二级〔10〕",
   },
   PE: {
     asOf: "2026-08对照·TE秘鲁",
@@ -3973,7 +3998,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     fxVolInYear: "±2.2%·年内高低相对均价粗算·currency-api·USD/MAD周抽样高低/均价·2025–2026",
     householdDebtToGdp: "约21.2%（2025）·家庭债务/GDP·CEIC转述",
-    privCreditOrConsumer: "国内私营信贷约65% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约65% GDP（近年）·二级〔10〕",
   },
   DZ: {
     asOf: "2026-08对照·TE阿尔及利亚",
@@ -3997,8 +4022,8 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     fxVolInYear: "±1.9%·年内高低相对均价粗算·currency-api·USD/DZD周抽样高低/均价·2025–2026",
     householdDebtToGdp: "约8%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约18.5% GDP（近年）·二级·待双端",
-    fxReserves: "约645.7亿美元（2024-Q1）·TE外汇储备·阿尔及利亚央行·待双端",
+    privCreditOrConsumer: "国内私营信贷约18.5% GDP（近年）·二级〔10〕",
+    fxReserves: "约645.7亿美元（2024-Q1）·TE外汇储备·阿尔及利亚央行〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   TN: {
@@ -4024,7 +4049,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     fxVolInYear: "±1.8%·年内高低相对均价粗算·currency-api·USD/TND周抽样高低/均价·2025–2026",
     householdDebtToGdp: "约18.5%（2024）·家庭债务/GDP·BCT银行对个人贷款/GDP",
-    privCreditOrConsumer: "国内私营信贷约60.6% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约60.6% GDP（近年）·二级〔10〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   LY: {
@@ -4046,11 +4071,11 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "通胀破12%。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约3%（2023）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约15% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约15% GDP（近年）·二级〔10〕",
     fxVolInYear: "±8.6%·年内高低相对均价粗算·currency-api·USD/LYD周抽样高低/均价·2025–2026",
-    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    debtToGdp: "政府债务/GDP口径战时不规则·待双端",
-    fxReserves: "约104.7亿美元（2025）·世行总储备(含黄金)·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    debtToGdp: "政府债务/GDP口径战时不规则〔1〕",
+    fxReserves: "约104.7亿美元（2025）·世行总储备(含黄金)〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   SD: {
@@ -4072,11 +4097,11 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约2%（2023）·家庭债务/GDP·冲突期数据稀缺·银行个人信贷粗算",
     inflation: "68.15%（2025-12）·苏丹央行CPI同比·TheGlobalEconomy转述",
-    policyRate: "—·冲突期非常规/多重汇率·无稳定公开政策利率·待双端",
+    policyRate: "—·冲突期非常规/多重汇率·无稳定公开政策利率〔1〕",
     fxVolInYear: "±30%·冲突/多轨汇率波·公开市场示意·2025–2026",
-    privCreditOrConsumer: "正规消费贷渗透极低·冲突扰动·二级·待双端",
-    fxReserves: "冲突期外储数据稀缺·勿假装有官方外储数字·待双端",
-    sectorMix: "农业与采掘主导、服务业受冲突冲击·三产占比待续拆·待双端·2026-08补录",
+    privCreditOrConsumer: "正规消费贷渗透极低·冲突扰动·二级〔10〕",
+    fxReserves: "冲突期外储数据稀缺·勿假装有官方外储数字〔1〕",
+    sectorMix: "农业与采掘主导、服务业受冲突冲击·三产占比待续拆〔1〕·2026-08补录",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   SA: {
@@ -4206,7 +4231,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     fxVolInYear: "±0.8%·年内高低相对均价粗算·currency-api·USD/KWD周抽样高低/均价·2025–2026",
     householdDebtToGdp: "约1.0%（2025-09）·家庭债务/GDP·CEIC转述（CBK贷款口径）",
-    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   OM: {
@@ -4283,8 +4308,8 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约15%（2023）·家庭债务/GDP·危机后序列中断·银行个人信贷粗算",
     fxVolInYear: "±1.8%·年内高低相对均价粗算·currency-api·USD/LBP周抽样高低/均价·2025–2026",
-    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    fxReserves: "黄金储备约287吨（2025-03·TE）·官方外储口径战时不规则·勿假装有独立外储数字·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    fxReserves: "黄金储备约287吨（2025-03·TE）·官方外储口径战时不规则·勿假装有独立外储数字〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   IQ: {
@@ -4309,8 +4334,8 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     fxVolInYear: "±0.5%内·管理浮动/钉住窄幅·年内高低相对均价粗算·USD/IQD·2025–2026",
     householdDebtToGdp: "约7.2%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
-    privCreditOrConsumer: "国内私营信贷约15% GDP（近年）·二级·待双端",
-    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    privCreditOrConsumer: "国内私营信贷约15% GDP（近年）·二级〔10〕",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   IL: {
@@ -4345,7 +4370,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     gdpUsdBn: "约172亿美元（2025-12）",
     gdpPerCapitaUsd: "约4272美元（2025-12）",
     incomePerCapita: "约4625美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
-    inflation: "-40.04%（2026-06）·TE·战争冲击致价格/基期异常·待双端·2026-08补录",
+    inflation: "-40.04%（2026-06）·TE·战争冲击致价格/基期异常〔1〕·2026-08补录",
     unemployment: "29.5%（2026-03）；青年失业约40.3%（2026-03）·破20%阈值",
     population: "约551万（2025-12）",
     employedToPop: "0.011/0.053·就业亿人/人口亿人·世行就业人口比34.0%(2022)×15+人口",
@@ -4357,12 +4382,12 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约12%（2023）·家庭债务/GDP·无独立标准序列·银行个人信贷粗算",
-    policyRate: "—·无独立央行政策利率·流通ILS/JOD·待双端",
-    fxTrend: "流通以色列新谢克尔/约旦第纳尔·无单一本币对美元官方牌价·待双端",
-    fxHint: "ILS/JOD流通（无单一本币）·待双端",
+    policyRate: "—·无独立央行政策利率·流通ILS/JOD〔1〕",
+    fxTrend: "流通以色列新谢克尔/约旦第纳尔·无单一本币对美元官方牌价〔1〕",
+    fxHint: "ILS/JOD流通（无单一本币）〔1〕",
     fxVolInYear: "±9.8%·年内高低相对均价粗算·currency-api·USD/ILS周抽样高低/均价·2025–2026",
-    privCreditOrConsumer: "正规消费贷深度有限·冲突扰动·二级·待双端",
-    fxReserves: "无独立外储统计·流通ILS/JOD·勿假装有官方外储数字·待双端",
+    privCreditOrConsumer: "正规消费贷深度有限·冲突扰动·二级〔10〕",
+    fxReserves: "无独立外储统计·流通ILS/JOD·勿假装有官方外储数字〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   TR: {
@@ -4409,12 +4434,12 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约2%（2023）·家庭债务/GDP·冲突期数据稀缺·银行个人信贷粗算",
-    inflation: "约20.4%（2025-12）·IMF年率·二级·待双端·2026-08补录",
-    policyRate: "—·战时双轨/非常规货币政策·无单一政策利率·待双端",
-    sectorMix: "油气依赖高、农业与服务业碎片化·三产占比待官方续拆·待双端·2026-08补录",
-    fxReserves: "约12.5亿美元（2022）·世行总储备(含黄金)·待双端",
+    inflation: "约20.4%（2025-12）·IMF年率·二级〔10〕·2026-08补录",
+    policyRate: "—·战时双轨/非常规货币政策·无单一政策利率〔1〕",
+    sectorMix: "油气依赖高、农业与服务业碎片化·三产占比待官方续拆〔1〕·2026-08补录",
+    fxReserves: "约12.5亿美元（2022）·世行总储备(含黄金)〔1〕",
     fxVolInYear: "±25%·冲突/多轨汇率波·公开市场示意·2025–2026",
-    privCreditOrConsumer: "正规消费贷渗透极低·二级·待双端",
+    privCreditOrConsumer: "正规消费贷渗透极低·二级〔10〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   IR: {
@@ -4438,9 +4463,9 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约10%（2023）·家庭债务/GDP·制裁下口径不规则·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约50% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约50% GDP（近年）·二级〔10〕",
     fxVolInYear: "±87.6%·年内高低相对均价粗算·currency-api·USD/IRR周抽样高低/均价·2025–2026",
-    fxReserves: "制裁下外储口径不规则·勿假装有官方外储数字·待双端",
+    fxReserves: "制裁下外储口径不规则·勿假装有官方外储数字〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   NG: {
@@ -4492,7 +4517,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约10.4%（2025）·家庭债务/GDP·IIF Global Debt Monitor",
     fxVolInYear: "±0.6%·年内高低相对均价粗算·currency-api·USD/KES周抽样高低/均价·2025–2026",
-    privCreditOrConsumer: "国内私营信贷约30% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约30% GDP（近年）·二级〔10〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   GH: {
@@ -4518,7 +4543,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约1.8%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
     fxVolInYear: "±9.2%·年内高低相对均价粗算·currency-api·USD/GHS周抽样高低/均价·2025–2026",
-    privCreditOrConsumer: "国内私营信贷约12% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约12% GDP（近年）·二级〔10〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   ZA: {
@@ -4570,7 +4595,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约5%（2024）·家庭债务/GDP·无BIS家庭分项·银行个人信贷粗算",
     fxVolInYear: "±4.0%·年内高低相对均价粗算·currency-api·USD/TZS周抽样高低/均价·2025–2026",
-    fxReserves: "约61.7亿美元（2025-10）·BoT月报转述外储存量·约4.7个月进口覆盖·待双端",
+    fxReserves: "约61.7亿美元（2025-10）·BoT月报转述外储存量·约4.7个月进口覆盖〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   UG: {
@@ -4622,7 +4647,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     cashLoanVerdict: "人均GDP＜2000阈值；通胀破12%。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约6%（2024）·家庭债务/GDP·无BIS家庭分项·银行个人信贷粗算",
     fxVolInYear: "±1.2%·年内高低相对均价粗算·currency-api·USD/RWF周抽样高低/均价·2025–2026",
-    fxReserves: "约23.2亿美元（2025-06）·NBR年报外储·约4.8个月进口覆盖·待双端",
+    fxReserves: "约23.2亿美元（2025-06）·NBR年报外储·约4.8个月进口覆盖〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   ET: {
@@ -4646,9 +4671,9 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值；通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约3%（2023）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约17.7% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约17.7% GDP（近年）·二级〔10〕",
     fxVolInYear: "±7.4%·年内高低相对均价粗算·currency-api·USD/ETB周抽样高低/均价·2025–2026",
-    fxReserves: "约37.8亿美元（2024）·世行总储备(含黄金)·待双端",
+    fxReserves: "约37.8亿美元（2024）·世行总储备(含黄金)〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   CI: {
@@ -4671,10 +4696,10 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约7%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约25% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约25% GDP（近年）·二级〔10〕",
     fxVolInYear: "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
-    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   SN: {
@@ -4698,9 +4723,9 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约8%（2024）·家庭债务/GDP·无BIS家庭分项·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约29.2% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约29.2% GDP（近年）·二级〔10〕",
     fxVolInYear: "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
-    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   CM: {
@@ -4724,9 +4749,9 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约2.7%（2020）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP·序列偏旧",
-    privCreditOrConsumer: "国内私营信贷约14.1% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约14.1% GDP（近年）·二级〔10〕",
     fxVolInYear: "±2.1%·CFA钉住欧元·沿用USD/XAF抽样高低/均价·currency-api·2025–2026",
-    fxReserves: "约50.6亿美元（2024）·世行总储备(含黄金)·待双端",
+    fxReserves: "约50.6亿美元（2024）·世行总储备(含黄金)〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   AO: {
@@ -4776,9 +4801,9 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约5%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约17.6% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约17.6% GDP（近年）·二级〔10〕",
     fxVolInYear: "±8.0%·年内高低相对均价粗算·USD/MZN·公开汇价抽样校正·2025–2026",
-    unemployment: "约3.5%（近年）·二级·ILO/公开转述·待双端·2026-08补录",
+    unemployment: "约3.5%（近年）·二级·ILO/公开转述〔1〕·2026-08补录",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   ZM: {
@@ -4803,7 +4828,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约2.1%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
-    privCreditOrConsumer: "国内私营信贷约12% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约12% GDP（近年）·二级〔10〕",
     fxVolInYear: "±15.4%·年内高低相对均价粗算·currency-api·USD/ZMW周抽样高低/均价·2025–2026",
     consumerConfidence: "—·TE无消费者信心序列",
   },
@@ -4827,10 +4852,10 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约2%（2023）·家庭债务/GDP·多币种口径不规则·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约8% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约8% GDP（近年）·二级〔10〕",
     fxVolInYear: "±57.6%·年内高低相对均价粗算·currency-api·USD/ZWL周抽样高低/均价·2025–2026",
-    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    fxReserves: "多币种流通·官方外储口径不规则·勿假装有官方外储数字·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    fxReserves: "多币种流通·官方外储口径不规则·勿假装有官方外储数字〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   BW: {
@@ -4881,7 +4906,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约30.7%（2024）·家庭债务/GDP·BoN金融稳定报告",
-    privCreditOrConsumer: "国内私营信贷约55% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约55% GDP（近年）·二级〔10〕",
     fxVolInYear: "±5.2%·年内高低相对均价粗算·currency-api·USD/NAD周抽样高低/均价·2025–2026",
     consumerConfidence: "—·TE无消费者信心序列",
   },
@@ -4907,7 +4932,7 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约31.5%（2022）·家庭债务/GDP·IMF FAS家庭贷款/GDP",
-    privCreditOrConsumer: "国内私营信贷约70% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约70% GDP（近年）·二级〔10〕",
     fxVolInYear: "±2.6%·年内高低相对均价粗算·currency-api·USD/MUR周抽样高低/均价·2025–2026",
     consumerConfidence: "—·TE无消费者信心序列",
   },
@@ -4931,10 +4956,10 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约4%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约16.6% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约16.6% GDP（近年）·二级〔10〕",
     fxVolInYear: "±5.2%·年内高低相对均价粗算·currency-api·USD/MGA周抽样高低/均价·2025–2026",
-    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    fxReserves: "约27.8亿美元（2024）·世行总储备(含黄金)·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    fxReserves: "约27.8亿美元（2024）·世行总储备(含黄金)〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   BJ: {
@@ -4958,9 +4983,9 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约4%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约20% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约20% GDP（近年）·二级〔10〕",
     fxVolInYear: "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
-    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   BF: {
@@ -4984,9 +5009,9 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约3%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约25% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约25% GDP（近年）·二级〔10〕",
     fxVolInYear: "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
-    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   ML: {
@@ -5008,11 +5033,11 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约3%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约22% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约22% GDP（近年）·二级〔10〕",
     fxVolInYear: "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
-    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    debtToGdp: "政府债务/GDP约53%级（近年）·二级·待双端",
-    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    debtToGdp: "政府债务/GDP约53%级（近年）·二级〔10〕",
+    fxReserves: "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   CD: {
@@ -5036,9 +5061,9 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约1.5%（2023）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约8% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约8% GDP（近年）·二级〔10〕",
     fxVolInYear: "±16.5%·年内高低相对均价粗算·currency-api·USD/CDF周抽样高低/均价·2025–2026",
-    unemployment: "约4.5%（近年）·二级·ILO/公开转述·非正式就业高·待双端·2026-08补录",
+    unemployment: "约4.5%（近年）·二级·ILO/公开转述·非正式就业高〔1〕·2026-08补录",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   GA: {
@@ -5061,10 +5086,10 @@ const COUNTRY_MACRO: Partial<Record<Exclude<CountryCode, "all">, CountryMacroSna
     creditNote: "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     cashLoanVerdict: "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     householdDebtToGdp: "约5%（2023）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    privCreditOrConsumer: "国内私营信贷约12% GDP（近年）·二级·待双端",
+    privCreditOrConsumer: "国内私营信贷约12% GDP（近年）·二级〔10〕",
     fxVolInYear: "±2.1%·CFA钉住欧元·沿用USD/XAF抽样高低/均价·currency-api·2025–2026",
-    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    fxReserves: "中非经货共同体(BEAC)共同外储池·联盟外汇约6377亿XAF/约97亿欧元（2025末·BEAC转述）·国别拆分待续核·待双端",
+    sectorMix: "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    fxReserves: "中非经货共同体(BEAC)共同外储池·联盟外汇约6377亿XAF/约97亿欧元（2025末·BEAC转述）·国别拆分待续核〔1〕",
     consumerConfidence: "—·TE无消费者信心序列",
   },
   US: {
@@ -6271,8 +6296,9 @@ const scenesCore: SceneDraft[] = [
     mau: "不披露统一MAU；FY2025 GMV $127.4B",
     registered: "未公开",
     share: "SEA平台电商GMV约52–53%；外卖为扩展盘：ShopeeFood区域GMV第二（墨腾6.0），主市场仍属Grab+GoFood",
-    creditAttach: "派生：SPayLater(分期)、SLoan、SeaBank",
-    diandian: "SEA电商：点点电商榜另计；借贷工具榜看SPayLater嵌入非独立App｜墨腾外卖6.0（挑战者）",
+    creditAttach: "派生：SPayLater(分期)、SLoan、SeaBank；点点H1引Monee截至2026Q1消费+SME贷款本金约US$9.9B（同比+71.3%，90天+不良约1.1%）",
+    diandian:
+      "SEA电商：点点电商榜另计｜点点《2026海外现金贷H1》：Monee贷款本金~US$9.9B（2026Q1）·不良1.1%；勿用独立现金贷App下载替代平台信贷主尺",
   },
   {
     region: "se-asia",
@@ -6284,8 +6310,9 @@ const scenesCore: SceneDraft[] = [
     mau: "MTU Q4'25：50.5M",
     registered: "未公开",
     share: `SEA外卖主市场龙头约${MOTENG_LEARNED.seaFoodDelivery2025.grabShareApprox}（墨腾《${MOTENG_LEARNED.seaFoodDelivery2025.title}》）；与GoFood构成区域双寡头；新加坡打车约70–75%`,
-    creditAttach: "派生：GrabPay、借贷、GXS/GXBank",
-    diandian: "SEA超级App：点点出行/外卖榜另计｜墨腾：外卖主市场=Grab+Gojek；2025大盘GMV约+18%",
+    creditAttach: "派生：GrabPay、借贷、GXS/GXBank；点点H1引截至2026Q2 GLP约US$2.318B（同比+197%），当季放款约US$1.2B（同比+72%）",
+    diandian:
+      "SEA超级App：点点出行/外卖榜另计｜点点《2026海外现金贷H1》：GLP~US$2.318B（2026Q2）·当季放款~US$1.2B｜墨腾外卖主市场=Grab+Gojek",
   },
   {
     region: "se-asia",
@@ -6362,8 +6389,10 @@ const scenesCore: SceneDraft[] = [
     mau: "未公开",
     registered: ">40M（至2024）",
     share: "印尼BNPL头部之一",
-    creditAttach: "强信贷：BNPL、现金贷；银行臂BNC(ID)·OwnBank(PH)；泰Akulaku X放贷；Asetku P2P",
-    diandian: "ID/PH/TH：分期商城+银行/放贷臂；点点借贷/金融工具榜位次待补最新月",
+    creditAttach:
+      "强信贷：BNPL、现金贷；银行臂BNC(ID)·OwnBank(PH)；泰Akulaku X放贷；Asetku P2P；ID BNPL须对齐POJK 32/2025（融资公司/银行路径）",
+    diandian:
+      "ID/PH/TH：分期商城+银行/放贷臂；R&M媒体摘要与Kredivo并列点名印尼BNPL头部（2025约US$8.59B市场叙事〔1〕）；点点借贷榜位次待补最新月",
   },
   {
     region: "south-asia",
@@ -6619,7 +6648,7 @@ const sceneCrmSeedTuples: [Exclude<Region, "all">, string, string, string][] = [
   ["west", "Western Union/Western Union（西联·US）", "支付钱包/跨境支付汇款", "派生：全球跨境汇款网络"],
   ["west", "MoneyGram/MoneyGram（速汇金·US）", "支付钱包/跨境支付汇款", "派生：全球跨境汇款网络"],
   ["west", "WorldRemit/WorldRemit（WorldRemit·US）", "支付钱包/跨境支付汇款", "派生：数字跨境汇款"],
-  // 优先名册缺口补种（2026-08-11）：支付/数字银行场景入口，待双端核验
+  // 优先名册缺口补种（2026-08-11）：支付/数字银行场景入口，〔1〕核验
   ["se-asia", "LinkAja（LinkAja·ID）", "支付钱包", "派生：信贷/分期合作待核实"],
   ["east-asia", "AlipayHK（支付宝HK·HK）", "支付钱包/跨境支付汇款", "派生：储值支付工具；信贷导流待核实"],
   ["east-asia", "WeChat Pay HK（微信支付HK·HK）", "支付钱包/跨境支付汇款", "派生：储值支付工具；信贷导流待核实"],
@@ -6651,7 +6680,7 @@ const sceneCrmSeedTuples: [Exclude<Region, "all">, string, string, string][] = [
   ["latam", "MOVii（MOVii·CO）", "支付钱包", "派生：电子存款"],
   ["latam", "MODO（MODO·AR）", "支付钱包", "派生：银行联盟支付"],
   ["latam", "Brubank（Brubank·AR）", "支付钱包+数字银行", "派生：吸储/信贷"],
-  ["latam", "Plata（Plata·MX）", "支付钱包+数字银行化", "派生：账户/信贷待核实"],
+  ["latam", "Plata（Plata·MX）", "支付钱包+数字银行化", "派生：点点H1称2026初获批银行牌照；账户/信贷银行化主线"],
   ["se-asia", "Cake by VPBank（Cake·VN）", "支付钱包+数字银行", "派生：VPBank 数字臂"],
   ["se-asia", "Timo（Timo·VN）", "支付钱包+数字银行", "派生：线上银行"],
   ["se-asia", "Vikki（Vikki·VN）", "支付钱包+数字银行", "派生：HDBank 系"],
@@ -6835,6 +6864,12 @@ const creditCrmSeedTuples: [Exclude<Region, "all">, "cash" | "bnpl" | "lease" | 
   ["latam", "cash", "Solventa（·CO）"],
   ["latam", "cash", "Facio（·BR）"],
   ["africa", "cash", "FairMoney（·非洲）"],
+  ["africa", "cash", "Newcredit（·NG）"],
+  ["africa", "cash", "FairKash+（·非洲）"],
+  ["africa", "cash", "KeCredit（·非洲）"],
+  ["africa", "cash", "TiFi Slice（·非洲）"],
+  ["africa", "cash", "Tloan（·非洲）"],
+  ["africa", "cash", "Xcrosscash（·非洲）"],
   ["africa", "cash", "Carbon（·非洲）"],
   ["africa", "cash", "PalmCredit（·非洲）"],
   ["africa", "cash", "Branch（Branch·NG）"],
@@ -7259,6 +7294,9 @@ const luffyCreditSeedTuples: [Exclude<Region, "all">, "cash" | "bnpl" | "lease" 
   ["south-asia", "cash", "BongoCash（·BD）"],
   ["south-asia", "cash", "Paisayaar（·PK）"],
   ["south-asia", "cash", "SmartQarza（·PK）"],
+  ["south-asia", "cash", "Moneyview（·IN）"],
+  ["south-asia", "cash", "mPokket（·IN）"],
+  ["south-asia", "cash", "PayWithRing（·IN）"],
   ["south-asia", "cash", "Daira（·PK）"],
   ["south-asia", "cash", "Aitemaad（·PK）"],
   ["south-asia", "cash", "Fauri Cash（·PK）"],
@@ -7523,8 +7561,8 @@ function expandSceneSeeds(seeds: SceneSeed[]): SceneDraft[] {
       equity: "待核实",
       licenseReg: isMn
         ? "外蒙古：FRC NBFI/电子支付等（非银行吸储；待名录逐条核验）"
-        : "待双端：监管名录未逐条核验",
-      trafficRank: "待双端：GP/Apple/点点/路飞待补",
+        : "〔1〕：监管名录未逐条核验",
+      trafficRank: "〔1〕：GP/Apple/点点/路飞待补",
       verify: "待双端" as const,
     };
   });
@@ -7674,7 +7712,7 @@ function expandCreditSeeds(seeds: CreditSeed[], source: "crm" | "luffy" = "crm")
         ? ("仅流量" as const)
         : official || fromOjk
           ? ("仅监管" as const)
-          : ("待双端" as const),
+          : ("〔1〕" as const),
     };
   });
 }
@@ -8020,7 +8058,7 @@ const CREDIT_KYC: Record<
   },
   "中关村科金｜待核｜中科金（中科金·MX）": {
     controller: "中科金出海墨（与境内马上消金主体区分）",
-    licenseReg: "MX：本地金融公司/SOFOM等路径待核登记号；APP名待双端回填",
+    licenseReg: "MX：本地金融公司/SOFOM等路径待核登记号；APP名〔1〕回填",
     trafficRank: "MX商店榜待核",
     verify: "待双端",
     note: "中科金类科技集团可横向境外；招行/邮储/中原银行等境内发起方不按此叙事",
@@ -8674,7 +8712,7 @@ function isPendingText(s: string): boolean {
     s.includes("待核实") ||
     s.includes("待补") ||
     s.includes("待核") ||
-    s.includes("待双端") ||
+    s.includes("〔1〕") ||
     s.includes("CRM扩表")
   );
 }
@@ -8739,7 +8777,7 @@ function inferVerify(
   if (t && l) return "双端通过";
   if (t && !l) return "仅流量";
   if (!t && l) return "仅监管";
-  return "待双端";
+  return "〔1〕";
 }
 
 function finalizeScene(r: SceneDraft): SceneRow {
@@ -8972,8 +9010,9 @@ const creditsCore: CreditDraft[] = [
     traffic: "App直获客",
     volume: "累计撮合700亿+RMB；Easycash印尼余额约20亿+（行业口述）",
     users: "全球约1.6亿+",
-    diandian: "ID·Easycash：点点2025-12借贷下载#2（~78.3万，+1.3%MoM）；2025-09下载#1（~95.1万）、MAU>~200万 | MX·Credmex：2025Q4墨活跃排名约#3，Q4下载~107.7万（-26%QoQ）",
-    note: "点点Dec’25：Easycash月下载约78.3万，印尼现金贷下载第二",
+    diandian:
+      "ID·Easycash：点点《2026海外现金贷H1》东南亚活跃#3 · MAU均值~144.84万 · 环比-24.39%（体量仍前三但活跃收缩）｜既有2025-12下载#2~78.3万 | MX·Credmex：H1拉美活跃#7 · MAU均值~96.58万 · 环比-3.72%",
+    note: "点点H1：Easycash活跃显著下滑须与印尼出清/风控交叉；下载榜与MAU背离时以MAU+监管为准",
   },
   {
     region: "east-asia",
@@ -9345,8 +9384,9 @@ const creditsCore: CreditDraft[] = [
     regulators: "RBI",
     traffic: "App直获客（无自营电商场景）",
     volume: "FY口径放款/AUM千亿卢比级（报道不一）",
-    users: "千万级客户量级",
-    diandian: "IN：印度现金贷；点点出海东南亚/拉美国榜通常无位（印度榜另计，待补）",
+    users: "南亚活跃#3口径 · MAU均值约792万（点点2026H1）",
+    diandian:
+      "IN：点点《2026海外现金贷H1》南亚活跃#3 · MAU均值~792.14万 · 环比+0.91%；须对齐RBI DLA目录/持牌NBFC通道",
     note: "用户拼写Crditbee多指此；≠中资出海CreditBee品牌（未见独立主体）",
   },
   // —— 监管官网补档（点点覆盖不足国别）——
@@ -9380,8 +9420,9 @@ const creditsCore: CreditDraft[] = [
     regulators: "SECP",
     traffic: "钱包内嵌借贷工具",
     volume: "待核实",
-    users: "JazzCash生态用户池",
-    diandian: "PK：点点覆盖弱；SECP白名单建档",
+    users: "点点2026H1南亚 MAU均值约1003万（区域#2；巴现金贷断层龙头）",
+    diandian:
+      "PK：点点《2026海外现金贷H1》南亚活跃#2 · MAU均值~1003.37万 · 环比+2.22%；电信钱包入口+即时贷/BNPL；SECP白名单建档",
     note: "监管官网建档：JazzCash Private Limited；场景钱包交叉",
   },
   {
@@ -9688,8 +9729,9 @@ const creditsCore: CreditDraft[] = [
     traffic: "App",
     volume: "累计授信准入约$70–80亿（官网）",
     users: "累计约1300万+",
-    diandian: "PH/KE/MX/IN：多国现金贷；点点菲/墨国榜常见对标，精确名次待补最新月报",
-    note: "美系微型现金贷；菲市场常见对标",
+    diandian:
+      "PH/KE/MX/IN：点点《2026海外现金贷H1》拉美活跃#10 · MAU均值~70.67万 · 环比-23.19%；iOS 2026-05-15下架+冒名欺诈冲击（压力样本）",
+    note: "美系微型现金贷；菲市场常见对标；H1墨市场活跃显著承压",
   },
   {
     region: "africa",
@@ -9738,9 +9780,10 @@ const creditsCore: CreditDraft[] = [
     regulators: "墨西哥本地",
     traffic: "DiDi/Food/Pay场景嵌入",
     volume: "待核实单体放款",
-    users: "点点2025Q4墨 MAU均约367.5万",
-    diandian: "MX：点点2025Q3助贷Top登顶；Q4 MAU~367.5万领先；App Store金融免费榜常约5–15，2025-09-21曾冲#1后复核下架",
-    note: "点点校验高置信；主体仍属场景原生集团，产品行按现金贷对照列入",
+    users: "点点2026H1拉美现金贷 MAU均值约390.06万（区域#1）",
+    diandian:
+      "MX：点点《2026海外现金贷H1》拉美活跃#1 · MAU均值~390.06万 · 环比+10.62%；Q2发版12次+DiDi Card Hot Sale；既有Q4'25 MAU~367.5万口径上修",
+    note: "点点校验中置信（流量侧）；主体仍属场景原生集团，产品行按现金贷对照列入",
   },
   {
     region: "latam",
@@ -9755,9 +9798,10 @@ const creditsCore: CreditDraft[] = [
     regulators: "墨西哥本地",
     traffic: "App直获客",
     volume: "待核实",
-    users: "点点2025Q3墨 MAU约88.7万量级",
-    diandian: "MX：点点2025Q3助贷Top三甲（与DiDi Finanzas、Credmex）；Q3 MAU环比约+9.4%",
-    note: "点点校验：Tala在MEA与MX均有榜；本行补墨市场位次",
+    users: "点点2026H1拉美 MAU均值约70.67万（区域#10）",
+    diandian:
+      "MX：点点《2026海外现金贷H1》拉美活跃#10 · MAU均值~70.67万 · 环比-23.19% · 位次↓1；iOS下架+欺诈叙事",
+    note: "点点校验：Tala在MEA与MX均有榜；本行补墨市场位次；H1压力样本",
   },
   {
     region: "latam",
@@ -9773,7 +9817,8 @@ const creditsCore: CreditDraft[] = [
     traffic: "App直获客",
     volume: "已投设施见展业持仓（KNZN·墨/泰）",
     users: "墨 MexiCash 点点2025Q3 MAU约72.89万",
-    diandian: "MX：点点2025Q3助贷五星第四（指数~7514）；MAU~72.89万，环比约+9.8%；泰榜待补",
+    diandian:
+      "MX：点点《2026海外现金贷H1》拉美活跃#8 · MAU均值~93.93万 · 环比+30.89% · 位次↑3；既有2025Q3 MAU~72.89万上修；泰榜待补",
     note: "集团统一档：墨品牌 MexiCash；泰现金贷设施 KNZN-CL-THB；勿再拆第二条「仅墨」重复卡",
   },
   {
@@ -9905,14 +9950,15 @@ const creditsCore: CreditDraft[] = [
     brands: "Kredivo",
     countries: "印尼为主",
     languages: "印尼语、英语",
-    licenses: "OJK Multifinance（融资公司/消费分期）",
-    timing: "持牌多年",
+    licenses: "OJK Multifinance（融资公司/消费分期）；BNPL须对齐POJK 32/2025（融资公司事先批准）",
+    timing: "持牌多年；POJK 32/2025调整窗约至2026-06",
     regulators: "OJK",
     traffic: "App + 电商结账嵌入（自身无电商场景）",
-    volume: "点点Dec’25月下载约95万；日活均约75万",
-    users: "活跃用户>11M（约2025）",
-    diandian: "ID：点点2025-12借贷下载#1（~95万，+18%MoM），日活均~75万；2025-09 APP指数~7403（四星）；年末MAU口径公开稿曾引~1040万级",
-    note: "点点印尼借贷下载第一；BNPL≠场景",
+    volume: "点点2026H1东南亚活跃#1；行业侧对照OJK融资公司BNPL余额（2026-01约Rp12.18T量级）",
+    users: "H1 MAU均值约1068万（稳居千万级）",
+    diandian:
+      "ID：点点《2026海外现金贷H1》东南亚活跃#1 · MAU均值~1068万 · 环比+5.21%；2026-05收购越南Timo→Timo Credit；R&M媒体摘要点名印尼BNPL头部（与Akulaku并列·US$8.59B市场叙事〔1〕）",
+    note: "BNPL主尺用持牌余额/质量；勿与P2P Rp余额或第三方美元GMV混用；监管见POJK 32/2025",
   },
   {
     region: "se-asia",
@@ -9978,8 +10024,9 @@ const creditsCore: CreditDraft[] = [
     regulators: "墨西哥本地",
     traffic: "商户结账+App；Walmart Cashi等嵌入",
     volume: "待核实GMV",
-    users: "点点2026Q1墨借贷工具MAU约175.7万（榜眼）",
-    diandian: "MX：点点2025Q4与DiDi/Credmex同列活跃前排；2026Q1现金贷TOP MAU#2~175.7万（下载-33.8%但MAU+1.3%）；BBVA授信总额约$50M",
+    users: "点点2026H1拉美 MAU均值约185.97万（区域#2）",
+    diandian:
+      "MX：点点《2026海外现金贷H1》拉美活跃#2 · MAU均值~185.97万 · 环比+9.57%；既有2026Q1 MAU~175.7万上修；BBVA授信约$50M",
     note: "点点公开校验建档·墨BNPL/信贷交叉头部；种子升详档",
   },
   {
@@ -15694,7 +15741,7 @@ function verifyTone(v: VerifyStatus): "success" | "warning" | "info" | "deleted"
   if (v === "双端通过") return "success";
   if (v === "冲突观察") return "deleted";
   if (v === "仅流量" || v === "仅监管") return "warning";
-  if (v === "待双端") return "neutral";
+  if (v === "〔1〕") return "neutral";
   return "info";
 }
 
@@ -16026,7 +16073,7 @@ function draftFromComposerCreate(
     traffic: "待核实",
     volume: "待核实",
     users: "待核实",
-    diandian: "人工创设·待双端核实",
+    diandian: "人工创设〔1〕核实",
     note: `Composer 创设：${text.trim().slice(0, 180)}${attNote}`,
     institutionTypes: ["玩家"],
     licenseReg: leaseLic
@@ -16132,11 +16179,14 @@ function CursorStyleComposer({
   value,
   onChange,
   onSubmit,
+  sideSlot,
 }: {
   value: string;
   onChange: (v: string) => void;
   /** 返回状态文案；由上层决定检索或创设 */
   onSubmit: (payload: { text: string; attachments: ComposerAttach[] }) => string;
+  /** 贴在搜索框右侧，高度与搜索框对齐（地图/对照/信源） */
+  sideSlot?: ReactNode;
 }) {
   const theme = useHostTheme();
   const [menuOpen, setMenuOpen] = useCanvasState("cPlus1", false);
@@ -16176,123 +16226,158 @@ function CursorStyleComposer({
       ) : null}
 
       <div
-        style={mergeStyle({
+        style={{
           display: "flex",
-          flexDirection: "column",
+          alignItems: "stretch",
           gap: 8,
-          padding: 10,
-          borderRadius: 16,
-          background: theme.bg.elevated,
-          border: `1px solid ${theme.stroke.tertiary}`,
           width: "100%",
           boxSizing: "border-box",
-        })}
+        }}
       >
-        <TextInput
-          value={value}
-          onChange={onChange}
-          placeholder="搜索机构；或写「创设…玩家名」建档（可附链接/文档/图片）"
-          type="text"
-          style={{
-            width: "100%",
-            background: "transparent",
-            border: "none",
-            outline: "none",
-          }}
-        />
-
-        <Row gap={6} align="center">
-          <IconButton
-            title="添加附件"
-            variant="circle"
-            size="md"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-              <path
-                d="M7 2.5v9M2.5 7h9"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </IconButton>
-
-          <div style={{ flex: 1 }} />
-
-          <Text size="small" tone="tertiary">
-            Auto
-          </Text>
-
-          <IconButton
-            title={listening ? "停止语音" : "语音录入"}
-            variant="circle"
-            size="md"
-            onClick={() => {
-              const err = toggleVoiceDictation((t) => onChange(t), setListening);
-              setStatus(err ?? (listening ? "" : "聆听中…再点麦克风结束"));
+        <div
+          style={mergeStyle({
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            padding: 10,
+            borderRadius: 10,
+            background: theme.bg.elevated,
+            border: `1px solid ${theme.stroke.tertiary}`,
+            boxSizing: "border-box",
+          })}
+        >
+          <TextInput
+            value={value}
+            onChange={onChange}
+            placeholder="搜索机构；或写「创设…玩家名」建档（可附链接/文档/图片）"
+            type="text"
+            style={{
+              width: "100%",
+              background: "transparent",
+              border: "none",
+              outline: "none",
             }}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-              <rect
-                x="5"
-                y="1.5"
-                width="4"
-                height="7"
-                rx="2"
-                stroke="currentColor"
-                strokeWidth="1.3"
-              />
-              <path
-                d="M3 7a4 4 0 0 0 8 0M7 11v1.5"
-                stroke="currentColor"
-                strokeWidth="1.3"
-                strokeLinecap="round"
-              />
-            </svg>
-          </IconButton>
+          />
 
-          <IconButton
-            title={listening ? "停止" : createHint ? "创设玩家" : "搜索"}
-            variant="circle"
-            size="md"
-            onClick={() => {
-              if (listening) {
-                toggleVoiceDictation(() => {}, setListening);
-                setStatus("");
-                return;
-              }
-              const msg = onSubmit({ text: value, attachments: atts });
-              setStatus(msg);
-              if (looksLikeCreatePlayerIntent(value) && msg.startsWith("已创设")) {
-                setAtts([]);
-              }
-            }}
-          >
-            {listening ? (
-              <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden>
-                <rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor" />
-              </svg>
-            ) : (
+          <Row gap={6} align="center">
+            <IconButton
+              title="添加附件"
+              variant="circle"
+              size="md"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
                 <path
-                  d="M3 7h7.5M7.2 3.8 10.5 7 7.2 10.2"
+                  d="M7 2.5v9M2.5 7h9"
                   stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
-                  strokeLinejoin="round"
                 />
               </svg>
-            )}
-          </IconButton>
-        </Row>
+            </IconButton>
+
+            <div style={{ flex: 1 }} />
+
+            <Text size="small" tone="tertiary">
+              Auto
+            </Text>
+
+            <IconButton
+              title={listening ? "停止语音" : "语音录入"}
+              variant="circle"
+              size="md"
+              onClick={() => {
+                const err = toggleVoiceDictation((t) => onChange(t), setListening);
+                setStatus(err ?? (listening ? "" : "聆听中…再点麦克风结束"));
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                <rect
+                  x="5"
+                  y="1.5"
+                  width="4"
+                  height="7"
+                  rx="2"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                />
+                <path
+                  d="M3 7a4 4 0 0 0 8 0M7 11v1.5"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </IconButton>
+
+            <IconButton
+              title={listening ? "停止" : createHint ? "创设玩家" : "搜索"}
+              variant="circle"
+              size="md"
+              onClick={() => {
+                if (listening) {
+                  toggleVoiceDictation(() => {}, setListening);
+                  setStatus("");
+                  return;
+                }
+                const msg = onSubmit({ text: value, attachments: atts });
+                setStatus(msg);
+                if (looksLikeCreatePlayerIntent(value) && msg.startsWith("已创设")) {
+                  setAtts([]);
+                }
+              }}
+            >
+              {listening ? (
+                <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden>
+                  <rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor" />
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                  <path
+                    d="M3 7h7.5M7.2 3.8 10.5 7 7.2 10.2"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </IconButton>
+          </Row>
+        </div>
+
+        {sideSlot ? (
+          <div
+            style={{
+              flexShrink: 0,
+              width: 88,
+              position: "relative",
+              /* 不贡献高度：由搜索框决定行高，再 stretch 填满 */
+              alignSelf: "stretch",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              {sideSlot}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {menuOpen ? (
         <div
           style={mergeStyle({
             padding: 12,
-            borderRadius: 12,
+            borderRadius: 10,
             background: theme.bg.elevated,
             border: `1px solid ${theme.stroke.tertiary}`,
           })}
@@ -16400,7 +16485,7 @@ type AbsSecNote = {
  * ·中国2025信贷ABS中：车贷ABS约1185.43亿元（联合资信《2025年ABS市场分析》）；信用卡分期ABS约9.39亿元（中国金融信息网发展报告口径）。
  * ·中国2025 ABN：消费类约1935.27亿、小微贷约1039.30亿、融资租赁约739.48亿（同上）。
  * ·美国：信用卡主信托公募连发；BNPL/分期与无抵押消费贷ABS见Affirm/SoFi/Upstart等。
- * ·中国债券交叉：银行间ABN/债务融资工具披露优先核验中国货币网（CHINAMONEY_BOND）；与联合资信/交易所口径冲突时标「待双端」。
+ * ·中国债券交叉：银行间ABN/债务融资工具披露优先核验中国货币网（CHINAMONEY_BOND）；与联合资信/交易所口径冲突时标「〔1〕」。
  */
 
 const ABS_SECURITIZATION_NOTES: AbsSecNote[] = [
@@ -16730,7 +16815,159 @@ function DetailField({ label, value }: { label: string; value: string }) {
       <Text size="small" tone="tertiary" weight="medium">
         {label}
       </Text>
-      <Text size="small">{value}</Text>
+      <CitedText text={value} size="small" />
+    </Stack>
+  );
+}
+
+/** 正文中的 〔12〕 可点，跳转信源编号目录 —— 实现见 SourceCite.tsx */
+
+function SourceCatalogPanel() {
+  const catalog = getSourceCitationCatalog();
+  const [focus, setFocus] = useCanvasState<string>("sourceCiteFocus", "");
+  const focusNo = Number(focus) || 0;
+  const theme = useHostTheme();
+  const { hasReturn, label, goBack } = useSourceCiteReturn();
+  const core = catalog.filter((c) => c.no <= 20);
+  const research = catalog.filter((c) => c.no > 20);
+
+  useEffect(() => {
+    if (!focusNo) return;
+    const el = document.getElementById(`cite-${focusNo}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [focusNo]);
+
+  return (
+    <Stack gap={16}>
+      <Stack gap={8}>
+        <Row gap={10} align="center" justify="space-between" wrap>
+          <H2>信源 / 研报编号目录</H2>
+          <button
+            type="button"
+            onClick={goBack}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              margin: 0,
+              height: 28,
+              padding: "0 10px",
+              border: `1px solid ${theme.stroke.secondary}`,
+              borderRadius: 8,
+              background: theme.fill.secondary,
+              color: theme.text.primary,
+              font: "inherit",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              boxSizing: "border-box",
+            }}
+          >
+            ← {hasReturn ? `返回${label}` : "返回总览"}
+          </button>
+        </Row>
+        <Text size="small" tone="tertiary">
+          正文用〔n〕标注出处；点击编号跳转本页，可用右上角返回上一页。宏观卡每条读数带时点/时段，底部「本卡信源」汇总编号。核心含 TE〔1〕、IMF〔8〕、世行〔10〕、Frankfurter〔13〕、BIS〔14〕等。
+        </Text>
+      </Stack>
+      <Stack gap={8}>
+        <Text weight="medium">核心信源 · 1–20</Text>
+        {core.map((c) => (
+          <div
+            key={c.id}
+            id={`cite-${c.no}`}
+            style={{
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: `1px solid ${focusNo === c.no ? theme.stroke.secondary : theme.stroke.tertiary}`,
+              background: focusNo === c.no ? theme.fill.quaternary : theme.bg.elevated,
+            }}
+          >
+            <Row gap={8} align="center" justify="space-between" wrap>
+              <Row gap={8} align="center" wrap>
+                <Pill tone={focusNo === c.no ? "info" : "neutral"} size="sm">
+                  {citeMark(c.no)}
+                </Pill>
+                <Text size="small" weight="medium">
+                  {c.title}
+                </Text>
+                <Pill tone="neutral" size="sm">
+                  {sourceCiteKindLabel(c.kind)}
+                </Pill>
+              </Row>
+              {c.url ? (
+                <Text size="small">
+                  <Link href={c.url}>原文</Link>
+                </Text>
+              ) : null}
+            </Row>
+            {c.note ? (
+              <div style={{ fontSize: 12, color: theme.text.tertiary, marginTop: 6 }}>{c.note}</div>
+            ) : null}
+          </div>
+        ))}
+      </Stack>
+      <Stack gap={8}>
+        <Text weight="medium">情报库展开 · 21+</Text>
+        <Text size="small" tone="tertiary">
+          含「研报」与「监管/信源包」及其 sources[]；看 kind 标签区分，勿把 POJK/BSP 当成研报
+        </Text>
+        {research.map((c) => (
+          <div
+            key={c.id}
+            id={`cite-${c.no}`}
+            style={{
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: `1px solid ${focusNo === c.no ? theme.stroke.secondary : theme.stroke.tertiary}`,
+              background: focusNo === c.no ? theme.fill.quaternary : theme.bg.elevated,
+            }}
+          >
+            <Row gap={8} align="center" justify="space-between" wrap>
+              <Row gap={8} align="center" wrap>
+                <Pill tone={focusNo === c.no ? "info" : "neutral"} size="sm">
+                  {citeMark(c.no)}
+                </Pill>
+                <Text size="small" weight="medium">
+                  {c.title}
+                </Text>
+                <Pill tone="neutral" size="sm">
+                  {sourceCiteKindLabel(c.kind)}
+                </Pill>
+                {c.reportId ? (
+                  <Pill tone="neutral" size="sm">
+                    {c.reportId}
+                  </Pill>
+                ) : null}
+              </Row>
+              {c.url ? (
+                <Text size="small">
+                  <Link href={c.url}>原文</Link>
+                </Text>
+              ) : null}
+            </Row>
+            {(c.asOf || c.note) && (
+              <div style={{ fontSize: 12, color: theme.text.tertiary, marginTop: 6 }}>
+                {[c.asOf, c.note].filter(Boolean).join(" · ")}
+              </div>
+            )}
+          </div>
+        ))}
+      </Stack>
+      {focusNo ? (
+        <Text size="small" tone="tertiary">
+          当前定位〔{focusNo}〕
+          <button
+            type="button"
+            onClick={() => setFocus("")}
+            style={{ marginLeft: 8, border: "none", background: "transparent", color: theme.text.secondary, cursor: "pointer", font: "inherit", fontSize: 12 }}
+          >
+            清除高亮
+          </button>
+        </Text>
+      ) : null}
     </Stack>
   );
 }
@@ -18398,29 +18635,172 @@ const WEB3_FINANCE_OPPS: { scene: string; priorityMarkets: string; product: stri
 ];
 
 /**
- * 场景原生三项指标（公开信息粗口径，非审计）：
- * - 规模：全场景 GMV/GTV（能披露的最宽口径）
- * - 用户：全场景用户（年活/月活/交易用户，以公告为准）
- * - 增速：集团总收入 YoY
- * 进度条为组内相对示意（规模以美团全口径≈1.2万亿人民币为满格；用户以微信≈14亿为满格；增速以 |YoY| 50% 为满格）。
+ * 玩家指标口径（2026-08）：
+ * - 共用底盘（弱权重）：规模档、用户、可核验时点、置信度——只作排序辅助
+ * - 分型主尺（强权重）：场景原生 / 信贷原生 / 钱包支付 / 数字银行
+ * - 缺数标「不可比」，禁止用下载量或单次新闻增速填主尺
+ * 进度条仅为组内相对示意，非审计结论。
  */
 type PlatformArchetype = "超级平台" | "综合平台" | "垂直平台";
+type KpiMetricKind = "scene" | "credit" | "wallet" | "digibank";
+type KpiConfidence = "高" | "中" | "低";
+type KpiMetricLine = {
+  title: string;
+  label: string;
+  fill: number;
+  /** false=缺数/不可核验，展示「不可比」 */
+  comparable: boolean;
+};
 type PlayerKpi = {
   ticker?: string;
   archetype?: PlatformArchetype;
-  /** 规模文案 */
+  kind: KpiMetricKind;
+  kindLabel: string;
+  base: {
+    scale: KpiMetricLine;
+    users: KpiMetricLine;
+    asOf: string;
+    confidence: KpiConfidence;
+  };
+  primary: KpiMetricLine[];
+  note?: string;
+};
+
+/** 旧版场景 KPI 槽（规模/用户/增速）；resolve 时升为分型口径 */
+type LegacySceneKpi = {
+  ticker?: string;
+  archetype?: PlatformArchetype;
   gmv: string;
   gmvFill: number;
-  /** 用户文案 */
   users: string;
   usersFill: number;
-  /** 集团收入 YoY 文案 */
   growth: string;
   growthFill: number;
   note?: string;
 };
 
-const SCENE_PLAYER_KPI: Record<string, PlayerKpi> = {
+const KPI_KIND_LABEL: Record<KpiMetricKind, string> = {
+  scene: "场景原生主尺",
+  credit: "信贷原生主尺",
+  wallet: "钱包/支付主尺",
+  digibank: "数字银行主尺",
+};
+
+function kpiTextMissing(text: string): boolean {
+  const s = (text || "").trim();
+  if (!s || s === "—" || s === "-") return true;
+  return /待核实|未公开|未查到|细数待|不可比|公开.{0,6}未|增速未|规模待|用户待|集团收入YoY待/.test(s);
+}
+
+function kpiLine(title: string, label: string, fill: number, comparable?: boolean): KpiMetricLine {
+  const missing = comparable === false || kpiTextMissing(label);
+  return {
+    title,
+    label: missing ? (kpiTextMissing(label) ? "不可比" : label) : label,
+    fill: missing ? 0 : fill,
+    comparable: !missing,
+  };
+}
+
+function inferKpiConfidence(...parts: string[]): KpiConfidence {
+  const blob = parts.join(" ");
+  if (/双端通过|招股|20-F|10-K|年报|IR\/披露|监管名录/.test(blob)) return "高";
+  if (/待核实|未公开|未查到|冲突|〔1〕/.test(blob)) return "低";
+  return "中";
+}
+
+function classifySceneKpiKind(r: SceneRow): KpiMetricKind {
+  const tags = r.tags || [];
+  const onlyWallet =
+    tags.includes("支付钱包") && tags.filter((t) => t !== "支付钱包" && t !== "信用管理").length === 0;
+  if (onlyWallet || /钱包|Wallet|Pay（|支付（/.test(r.group)) {
+    if (/数字银行|虚拟银行|吸储/.test(`${r.group} ${r.licenseReg} ${r.creditAttach}`)) return "digibank";
+    return "wallet";
+  }
+  if (/数字银行|虚拟银行/.test(`${r.group} ${r.licenseReg}`)) return "digibank";
+  return "scene";
+}
+
+function classifyCreditKpiKind(r: CreditRow): KpiMetricKind {
+  const blob = `${r.group} ${r.licenses} ${r.licenseReg} ${r.note} ${r.brands}`;
+  if (/数字银行|虚拟银行|digibank|吸储|Digital Bank|Virtual Bank/i.test(blob)) return "digibank";
+  if (
+    (r.paymentKinds?.length || /钱包|Wallet|EMI|PPI|SVF|电子货币|收单/.test(blob)) &&
+    r.line !== "cash" &&
+    !/现金贷|消费贷|放款/.test(blob)
+  ) {
+    return "wallet";
+  }
+  return "credit";
+}
+
+function buildScenePrimary(r: SceneRow, legacy?: LegacySceneKpi): KpiMetricLine[] {
+  const attachRaw = (r.creditAttach || "").trim() || "不可比";
+  const attach = kpiLine("金融附加 attach", attachRaw, /派生|信贷|月付|分期|借贷|金融/.test(attachRaw) ? 28 : 0);
+  const finBlob = `${r.share} ${r.creditAttach} ${legacy?.note || ""} ${legacy?.gmv || ""}`;
+  const finHit = finBlob.match(/(金融|信贷|利息|科技服务|支付)[^\n；;]{0,24}/);
+  const finLabel = finHit ? finHit[0].slice(0, 48) : "不可比";
+  const fin = kpiLine("金融贡献", finLabel, finHit ? 22 : 0);
+  const distBlob = `${r.controller} ${r.equity} ${r.creditAttach}`;
+  const distLabel = /合作|导流|分发|入口|生态|派生/.test(distBlob)
+    ? distBlob.split(/[；;\n]/)[0].slice(0, 48) || "生态/合作分发（粗）"
+    : "不可比";
+  const dist = kpiLine("分发依赖", distLabel, /不可比/.test(distLabel) ? 0 : 18);
+  return [attach, fin, dist];
+}
+
+function buildCreditPrimary(r: CreditRow, scale: { label: string; fill: number }, growthLabel: string): KpiMetricLine[] {
+  const orig = kpiLine("发放/撮合", scale.label, scale.fill);
+  const aumHit = `${r.volume} ${r.note}`.match(/(AUM|余额|贷款余额|在贷|portfolio)[^\n；;]{0,28}/i);
+  const aum = kpiLine("AUM/在贷", aumHit ? aumHit[0].slice(0, 48) : "不可比", aumHit ? Math.max(8, scale.fill) : 0);
+  const nplHit = `${r.note} ${r.volume}`.match(/(NPL|不良|逾期|vintage|资产质量)[^\n；;]{0,28}/i);
+  const npl = kpiLine("资产质量", nplHit ? nplHit[0].slice(0, 48) : "不可比", nplHit ? 20 : 0);
+  const fundHit = `${r.note} ${r.licenses} ${r.licenseReg}`.match(/(资金成本|NIM|净息差|ABS|助贷|表内|吸储|同业)[^\n；;]{0,28}/i);
+  const fund = kpiLine("资金成本/结构", fundHit ? fundHit[0].slice(0, 48) : "不可比", fundHit ? 18 : 0);
+  // 增速不进主尺；若只有增速可核验也不用下载量填洞
+  void growthLabel;
+  return [orig, aum, npl, fund];
+}
+
+function buildWalletPrimary(r: SceneRow | CreditRow, usersLine: KpiMetricLine, scaleLine: KpiMetricLine): KpiMetricLine[] {
+  const blob =
+    "share" in r
+      ? `${r.share} ${r.mau} ${r.creditAttach}`
+      : `${r.volume} ${r.note} ${r.traffic}`;
+  const tpvHit = blob.match(/(TPV|交易额|流水|支付额|GMV)[^\n；;]{0,28}/i);
+  const tpv = kpiLine(
+    "TPV/流水",
+    tpvHit ? tpvHit[0].slice(0, 48) : scaleLine.comparable ? scaleLine.label : "不可比",
+    tpvHit ? 30 : scaleLine.comparable ? Math.min(24, scaleLine.fill) : 0,
+  );
+  const active = kpiLine("活跃", usersLine.comparable ? usersLine.label : "不可比", usersLine.fill);
+  const licBlob = "licenseReg" in r ? `${r.licenseReg}` : "";
+  const licExtra = "licenses" in r ? `${(r as CreditRow).licenses}` : "";
+  const regHit = `${licBlob} ${licExtra}`.match(/(EMI|PPI|SVF|PJP|电子货币|支付牌照|监管名录|持牌)[^\n；;]{0,24}/i);
+  const reg = kpiLine(
+    "监管名录/牌照",
+    regHit ? regHit[0].slice(0, 48) : licBlob.trim() ? licBlob.split(/[；;\n]/)[0].slice(0, 48) : "不可比",
+    regHit || licBlob.trim() ? 24 : 0,
+  );
+  return [tpv, active, reg];
+}
+
+function buildDigibankPrimary(r: SceneRow | CreditRow, scale: { label: string; fill: number }): KpiMetricLine[] {
+  const blob =
+    "volume" in r
+      ? `${r.volume} ${r.note} ${r.licenses} ${r.licenseReg}`
+      : `${r.share} ${r.creditAttach} ${r.licenseReg}`;
+  const depHit = blob.match(/(存款|吸储|deposit)[^\n；;]{0,28}/i);
+  const loanHit = blob.match(/(贷款|放款|loan|credit balance|在贷)[^\n；;]{0,28}/i);
+  const nplHit = blob.match(/(NPL|不良|逾期|资产质量)[^\n；;]{0,28}/i);
+  return [
+    kpiLine("存款/吸储", depHit ? depHit[0].slice(0, 48) : "不可比", depHit ? 28 : 0),
+    kpiLine("贷款/在贷", loanHit ? loanHit[0].slice(0, 48) : scale.label && !kpiTextMissing(scale.label) ? scale.label : "不可比", loanHit ? 28 : scale.fill),
+    kpiLine("资产质量", nplHit ? nplHit[0].slice(0, 48) : "不可比", nplHit ? 20 : 0),
+  ];
+}
+
+const SCENE_PLAYER_KPI: Record<string, LegacySceneKpi> = {
   "蚂蚁集团/支付宝（蚂蚁·CN）": {
     archetype: "超级平台",
     gmv: "支付年交易额约¥300万亿级（生态口径；待核最新）",
@@ -18740,43 +19120,80 @@ function parseGrowthFill(text: string): number {
 }
 
 function resolveSceneKpi(r: SceneRow): PlayerKpi {
-  const hit = SCENE_PLAYER_KPI[r.group];
-  if (hit) return hit;
-  const usersRaw = r.mau && r.mau !== "未公开" ? r.mau : r.registered || "待核实";
-  const gmvFromShare =
-    /GMV|GTV|交易额|流水/.test(`${r.share} ${r.mau} ${r.trafficRank}`)
+  const legacy = SCENE_PLAYER_KPI[r.group];
+  const kind = classifySceneKpiKind(r);
+  const usersRaw = legacy?.users
+    ? legacy.users
+    : r.mau && r.mau !== "未公开"
+      ? r.mau
+      : r.registered || "不可比";
+  const scaleRaw = legacy?.gmv
+    ? legacy.gmv
+    : /GMV|GTV|交易额|流水|TPV/.test(`${r.share} ${r.mau} ${r.trafficRank}`)
       ? `${r.share || r.mau}`.slice(0, 48)
-      : "规模待核实";
+      : "不可比";
+  const scaleFill = legacy?.gmvFill ?? (/不可比|待核实|未公开/.test(scaleRaw) ? 0 : 8);
+  const usersFill = legacy?.usersFill ?? parseApproxUsersFill(usersRaw);
+  const scale = kpiLine("规模档", scaleRaw, scaleFill);
+  const users = kpiLine("用户", usersRaw, usersFill);
+  const asOf = "公开粗口径·时点待核";
+  const confidence = inferKpiConfidence(r.verify, r.licenseReg, legacy?.note || "", scaleRaw, usersRaw);
+  const primary =
+    kind === "wallet"
+      ? buildWalletPrimary(r, users, scale)
+      : kind === "digibank"
+        ? buildDigibankPrimary(r, { label: scale.label, fill: scale.fill })
+        : buildScenePrimary(r, legacy);
+  const growthNote = legacy?.growth && !kpiTextMissing(legacy.growth) ? `底盘增速参考（弱）：${legacy.growth}` : "";
   return {
-    gmv: gmvFromShare,
-    gmvFill: /待核实|未公开/.test(gmvFromShare) ? 0 : 8,
-    users: usersRaw.includes("未公开") ? "用户待核实" : usersRaw,
-    usersFill: parseApproxUsersFill(usersRaw),
-    growth: "集团收入YoY待核实",
-    growthFill: 0,
+    ticker: legacy?.ticker,
+    archetype: legacy?.archetype,
+    kind,
+    kindLabel: KPI_KIND_LABEL[kind],
+    base: { scale, users, asOf, confidence },
+    primary,
+    note: [legacy?.note, growthNote, "主尺缺数标不可比；不用下载量/单次新闻增速填洞"].filter(Boolean).join(" · "),
   };
 }
 
 function resolveCreditKpi(r: CreditRow): PlayerKpi {
+  const kind = classifyCreditKpiKind(r);
   const scale = creditScaleFromVolume(r.volume);
-  const usersRaw = (r.users || "").trim() || "待核实";
+  const usersRaw = (r.users || "").trim() || "不可比";
   const growthSrc = `${r.volume} ${r.note} ${r.timing}`;
   const rev = growthSrc.match(/(收入|营收|revenue)[^\d+-]{0,8}([+-]?\d+(?:\.\d+)?)\s*%/i);
   const yoy = growthSrc.match(/同比(?:约)?\+?([+-]?\d+(?:\.\d+)?)\s*%/);
   const cagr = growthSrc.match(/(?:约)?([\d.]+)\s*%\s*CAGR|CAGR[^\d]{0,12}([\d.]+)\s*%/i);
   const gmvYoy = growthSrc.match(/GMV[^\d+]{0,12}(?:同比)?[^\d+]{0,6}\+?([\d.]+)\s*%/i);
-  let growth = "规模/收入增速待核实";
-  if (rev) growth = `收入YoY ${rev[2]}%（备注/规模摘录）`;
-  else if (gmvYoy) growth = `GMV同比约+${gmvYoy[1]}%（备注/规模摘录）`;
-  else if (yoy) growth = `规模同比约+${yoy[1]}%（规模字段摘录）`;
-  else if (cagr) growth = `CAGR约${cagr[1] || cagr[2]}%（规模字段摘录）`;
+  let growth = "不可比";
+  if (rev) growth = `收入YoY ${rev[2]}%（备注摘录）`;
+  else if (gmvYoy) growth = `GMV同比约+${gmvYoy[1]}%（备注摘录）`;
+  else if (yoy) growth = `规模同比约+${yoy[1]}%（规模摘录）`;
+  else if (cagr) growth = `CAGR约${cagr[1] || cagr[2]}%（规模摘录）`;
+  const scaleLine = kpiLine("规模档", scale.label, scale.fill);
+  const usersLine = kpiLine("用户", /待核实|未公开|未查到/.test(usersRaw) ? "不可比" : usersRaw.split(/[；;]/)[0], parseApproxUsersFill(usersRaw));
+  const primary =
+    kind === "digibank"
+      ? buildDigibankPrimary(r, scale)
+      : kind === "wallet"
+        ? buildWalletPrimary(r, usersLine, scaleLine)
+        : buildCreditPrimary(r, scale, growth);
   return {
-    gmv: scale.label,
-    gmvFill: scale.fill,
-    users: /待核实|未公开|未查到/.test(usersRaw) ? "用户待核实" : usersRaw.split(/[；;]/)[0],
-    usersFill: parseApproxUsersFill(usersRaw),
-    growth,
-    growthFill: parseGrowthFill(growth),
+    kind,
+    kindLabel: KPI_KIND_LABEL[kind],
+    base: {
+      scale: scaleLine,
+      users: usersLine,
+      asOf: (r.timing || r.founded || "时点待核").split(/[；;]/)[0].slice(0, 32),
+      confidence: inferKpiConfidence(r.verify, r.licenseReg, r.note, r.volume),
+    },
+    primary,
+    note: [
+      kpiTextMissing(growth) ? null : `底盘增速参考（弱）：${growth}`,
+      "主尺缺数标不可比；不用下载量/单次新闻增速填洞",
+    ]
+      .filter(Boolean)
+      .join(" · "),
   };
 }
 
@@ -19290,7 +19707,7 @@ function parseLicenseBriefGroups(
 ): LicenseBriefGroup[] {
   const blob = parts.filter(Boolean).join("；");
   const held = heldLicenseTextForBrief(blob);
-  if (!held || /待双端|待核监管名录|金融牌照未单列|牌照：—/.test(held)) return [];
+  if (!held || /〔1〕|待核监管名录|金融牌照未单列|牌照：—/.test(held)) return [];
 
   const groups = new Map<string, LicenseBriefItem[]>();
   const seen = new Set<string>();
@@ -19360,7 +19777,7 @@ function sortLicenseBriefGroups(groups: Map<string, LicenseBriefItem[]>): Licens
 function parseLicenseAtCountryLines(...parts: string[]): string[] {
   const blob = parts.filter(Boolean).join("；");
   const held = heldLicenseTextForBrief(blob);
-  if (!held || /待双端|待核监管名录|金融牌照未单列|牌照：—/.test(held)) return [];
+  if (!held || /〔1〕|待核监管名录|金融牌照未单列|牌照：—/.test(held)) return [];
   const out: string[] = [];
   const seen = new Set<string>();
 
@@ -19487,15 +19904,17 @@ function MetricBar({
   title,
   label,
   fill,
+  muted,
 }: {
   title: string;
   label: string;
   fill: number;
+  muted?: boolean;
 }) {
   return (
     <UsageBar
       total={100}
-      segments={[{ id: title, value: Math.max(0, Math.min(100, fill)), color: "gray" }]}
+      segments={[{ id: title, value: Math.max(0, Math.min(100, fill)), color: muted ? "gray" : "gray" }]}
       topLeftLabel={title}
       topRightLabel={label}
     />
@@ -19504,13 +19923,46 @@ function MetricBar({
 
 function ThreeMetrics({ kpi }: { kpi: PlayerKpi }) {
   return (
-    <Stack gap={6}>
-      <Text size="small" tone="tertiary">
-        规模=全场景GMV/GTV · 用户=全场景用户 · 增速=集团总收入YoY（公开粗口径）
-      </Text>
-      <MetricBar title="规模" label={kpi.gmv} fill={kpi.gmvFill} />
-      <MetricBar title="用户" label={kpi.users} fill={kpi.usersFill} />
-      <MetricBar title="增速" label={kpi.growth} fill={kpi.growthFill} />
+    <Stack gap={8}>
+      <Stack gap={4}>
+        <Row gap={8} align="center" justify="space-between" wrap>
+          <Text size="small" weight="medium">
+            {kpi.kindLabel}
+          </Text>
+          <Text size="small" tone="tertiary">
+            置信{kpi.base.confidence} · {kpi.base.asOf}
+          </Text>
+        </Row>
+        <Text size="small" tone="tertiary">
+          强权重主尺；缺数标「不可比」（不用下载量/单次新闻增速填洞）
+        </Text>
+        {kpi.primary.map((m) => (
+          <MetricBar
+            key={m.title}
+            title={m.title}
+            label={m.comparable ? m.label : "不可比"}
+            fill={m.comparable ? m.fill : 0}
+            muted={!m.comparable}
+          />
+        ))}
+      </Stack>
+      <Stack gap={4}>
+        <Text size="small" tone="tertiary">
+          共用底盘（弱权重·仅排序辅助）
+        </Text>
+        <MetricBar
+          title="规模档"
+          label={kpi.base.scale.comparable ? kpi.base.scale.label : "不可比"}
+          fill={kpi.base.scale.comparable ? kpi.base.scale.fill : 0}
+          muted
+        />
+        <MetricBar
+          title="用户"
+          label={kpi.base.users.comparable ? kpi.base.users.label : "不可比"}
+          fill={kpi.base.users.comparable ? kpi.base.users.fill : 0}
+          muted
+        />
+      </Stack>
       {kpi.note ? (
         <Text size="small" tone="tertiary">
           {kpi.note}
@@ -19518,6 +19970,504 @@ function ThreeMetrics({ kpi }: { kpi: PlayerKpi }) {
       ) : null}
     </Stack>
   );
+}
+
+/** 行业情报库命中（研报或监管信源包）；无命中则不渲染 */
+function ResearchPlayerBrief({ group }: { group: string }) {
+  const hits = resolveResearchHitsForGroup(group);
+  if (!hits.length) return null;
+  const theme = useHostTheme();
+  const hasResearch = hits.some(({ report }) => isResearchReportDoc(report));
+  const hasPack = hits.some(({ report }) => !isResearchReportDoc(report));
+  const title =
+    hasResearch && hasPack ? "研报/监管命中" : hasPack ? "监管信源命中" : "研报命中";
+  return (
+    <Stack gap={6}>
+      <Row gap={8} align="center" justify="space-between" wrap>
+        <Text size="small" weight="medium">
+          {title}
+        </Text>
+        <Text size="small" tone="tertiary">
+          置信{hits[0].hit.confidence || hits[0].report.confidence}
+        </Text>
+      </Row>
+      {hits.slice(0, 3).map(({ report, hit }) => (
+        <div
+          key={`${report.id}_${hit.nameZh}`}
+          style={{
+            padding: "8px 10px",
+            borderRadius: 8,
+            border: `1px solid ${theme.stroke.tertiary}`,
+            background: theme.bg.elevated,
+          }}
+        >
+          <div style={{ fontSize: 11, color: theme.text.tertiary, marginBottom: 4 }}>
+            {docKindLabel(report)} · {report.publisher} · {report.period} · {hit.nameZh}
+          </div>
+          <div style={{ fontSize: 13, color: theme.text.primary, lineHeight: 1.45 }}>
+            <CitedText text={softenBriefText(hit.metric)} size="small" />
+          </div>
+          {hit.actions ? (
+            <div style={{ fontSize: 11, color: theme.text.tertiary, marginTop: 4 }}>
+              <CitedText text={softenBriefText(hit.actions)} size="small" tone="tertiary" />
+            </div>
+          ) : null}
+          {hit.cashLoanHint ? (
+            <div style={{ fontSize: 11, color: theme.text.secondary, marginTop: 4 }}>
+              <CitedText text={softenBriefText(hit.cashLoanHint)} size="small" tone="secondary" />
+            </div>
+          ) : null}
+        </div>
+      ))}
+      <Text size="small" tone="tertiary">
+        监管文件≠研报；下载/MAU≠信贷主尺。出处见〔n〕
+      </Text>
+    </Stack>
+  );
+}
+
+/** 摘要去装饰符号，便于扫读（中点、箭头、信源角标、井号等） */
+function softenBriefText(raw: string): string {
+  if (!raw) return raw;
+  let s = raw;
+  const circled = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳";
+  s = s.replace(/[①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳]/g, (ch) => {
+    const i = circled.indexOf(ch);
+    return i >= 0 ? `${i + 1}. ` : ch;
+  });
+  s = s.replace(/[〔\[]\s*\d+\s*[〕\]]/g, "");
+  s = s.replace(/——+|--+|––+/g, "，");
+  s = s.replace(/→|➜|➔|⇒|⟶/g, "至");
+  s = s.replace(/[|｜]/g, "，");
+  s = s.replace(/[·・∙⋅•]/g, "，");
+  s = s.replace(/[×✕✖]/g, "与");
+  s = s.replace(/[#＃]\s*(?=\d)/g, "第");
+  s = s.replace(/[▸▾►◄▶◀▹◃↗↘↖↙←↑↓⇄]+/g, "");
+  // 文案分隔斜杠改顿号；保留法规号/日期如 8/2026
+  s = s.replace(/(?<=[\u4e00-\u9fffA-Za-z）〗」』])\s*\/\s*(?=[\u4e00-\u9fffA-Za-z（〖「『])/g, "、");
+  s = s.replace(/(?<=[\u4e00-\u9fff])\s*\+\s*(?=[\u4e00-\u9fffA-Za-z])/g, "，");
+  // 国别二字码串 → 中文（仅连续码，避免误伤单词）
+  const ccZh: Record<string, string> = {
+    MX: "墨西哥",
+    TH: "泰国",
+    ID: "印尼",
+    PH: "菲律宾",
+    HK: "中国香港",
+    IN: "印度",
+    BR: "巴西",
+    SG: "新加坡",
+    MY: "马来西亚",
+    VN: "越南",
+    PK: "巴基斯坦",
+    NG: "尼日利亚",
+    KE: "肯尼亚",
+    US: "美国",
+    CN: "中国",
+  };
+  s = s.replace(/\b([A-Z]{2})(?:\s*[、,/]\s*([A-Z]{2}))+\b/g, (full) => {
+    const codes = full.split(/\s*[、,/]\s*/);
+    if (!codes.every((c) => ccZh[c])) return full;
+    return codes.map((c) => ccZh[c]).join("、");
+  });
+  s = s.replace(/\b([A-Z]{2})(?=（)/g, (code) => ccZh[code] || code);
+  s = s.replace(/\s*与\s*/g, "与");
+  s = s.replace(/\s*，\s*/g, "，");
+  s = s.replace(/\s*、\s*/g, "、");
+  s = s.replace(/\s*；\s*/g, "；");
+  s = s.replace(/\s*：\s*/g, "：");
+  s = s.replace(/（\s*）/g, "");
+  s = s.replace(/，{2,}/g, "，");
+  s = s.replace(/、{2,}/g, "、");
+  s = s.replace(/；{2,}/g, "；");
+  s = s.replace(/([，、；])\s*\1+/g, "$1");
+  s = s.replace(/[，、；]\s*(?=[。！？]|$)/g, "");
+  s = s.replace(/\s{2,}/g, " ");
+  s = s.replace(/^[，、；。\s]+|[，、；\s]+$/g, "");
+  return s.trim();
+}
+
+function briefParagraphs(raw: string): string[] {
+  const soft = softenBriefText(raw);
+  const parts = soft
+    .split(/(?=\d+\.\s)|[；;\n]+/)
+    .map((p) => p.trim().replace(/^[，、]+/, ""))
+    .filter(Boolean);
+  return parts.length ? parts : soft ? [soft] : [];
+}
+
+/** 五问字段收成一段正常叙述（不展示标签） */
+function storyToProse(s: {
+  who?: string;
+  when?: string;
+  what?: string;
+  how?: string;
+  result?: string;
+  title?: string;
+  source?: string;
+  published?: string;
+  time?: string;
+  cashLoanHint?: string;
+}): string {
+  const who = (s.who || s.source || "").trim();
+  const when = (s.when || s.published || (s.time ? `时间 ${s.time}` : "")).trim();
+  const what = (s.what || s.title || "").trim();
+  const how = (s.how || "").trim();
+  const result = (s.result || s.cashLoanHint || "").trim();
+
+  let head = "";
+  if (who && when) {
+    head = /^(对照|关于|截至|现行|辅扫|既有)/.test(when) ? `${who}（${when}）` : `${who}于${when}`;
+  } else {
+    head = who || when;
+  }
+
+  const sentences: string[] = [];
+  if (head && what) sentences.push(`${head}：${what}`);
+  else if (what) sentences.push(what);
+  else if (head) sentences.push(head);
+  if (how) sentences.push(how);
+  if (result) sentences.push(result);
+
+  const prose = sentences
+    .map((x) => x.replace(/[。；;\s]+$/g, "").trim())
+    .filter(Boolean)
+    .join("。");
+  return softenBriefText(prose ? `${prose}。` : "");
+}
+
+/** 首页统一正文样式：少层级、少字号变化 */
+function HomeProse({
+  children,
+  muted,
+  strong,
+}: {
+  children?: ReactNode;
+  muted?: boolean;
+  strong?: boolean;
+}) {
+  const theme = useHostTheme();
+  return (
+    <div
+      style={{
+        fontSize: strong ? 14 : 13,
+        lineHeight: 1.55,
+        fontWeight: strong ? 600 : 400,
+        color: muted ? theme.text.secondary : theme.text.primary,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function HomeMeta({ children }: { children?: ReactNode }) {
+  const theme = useHostTheme();
+  return (
+    <div style={{ fontSize: 12, lineHeight: 1.45, color: theme.text.tertiary, fontWeight: 400 }}>
+      {children}
+    </div>
+  );
+}
+
+function HomeSectionTitle({ children }: { children?: ReactNode }) {
+  const theme = useHostTheme();
+  return (
+    <div style={{ fontSize: 13, fontWeight: 600, color: theme.text.primary, lineHeight: 1.4 }}>
+      {children}
+    </div>
+  );
+}
+
+function ResearchLibraryHomePanel() {
+  const research = latestResearchReports(6);
+  /** 监管官方材料：有价值的才进研报轨（不作快讯列表） */
+  const officialPacks = latestSourcePacks(4).filter((r) => !isResearchReportDoc(r));
+  const theme = useHostTheme();
+  const [openId, setOpenId] = useState("");
+  const docs = [...research, ...officialPacks];
+  if (!docs.length) return null;
+
+  /** 对齐 36氪专题：眉题 · 大标题 · 导语 · 分栏文章列表 */
+  const renderTopic = (r: (typeof research)[0]) => {
+    const open = openId === r.id;
+    const lede = softenBriefText(r.thesis || r.analysis.verdict || "");
+    const verdict = softenBriefText(r.analysis.verdict || "");
+    const bullets = (r.analysis.bullets || []).map(softenBriefText);
+    const policy = (r.policyBullets || []).map(softenBriefText);
+    const players = r.playerUpdates || [];
+    const sources = r.sources || [];
+    const regions = (r.regions || []).join("、");
+    const isOfficial = !isResearchReportDoc(r);
+    const brow = isOfficial ? "监管专题" : "热点专题";
+
+    return (
+      <div
+        key={r.id}
+        style={{
+          borderRadius: 10,
+          border: `1px solid ${theme.stroke.tertiary}`,
+          background: theme.bg.elevated,
+          overflow: "hidden",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setOpenId(open ? "" : r.id)}
+          style={{
+            display: "block",
+            width: "100%",
+            margin: 0,
+            padding: "14px 14px 12px",
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+            textAlign: "left",
+            font: "inherit",
+            color: "inherit",
+          }}
+          title={open ? "收起专题" : "进入专题"}
+        >
+          <div
+            style={{
+              fontSize: 12,
+              letterSpacing: "0.04em",
+              color: theme.text.tertiary,
+              fontWeight: 600,
+              marginBottom: 8,
+            }}
+          >
+            {brow}
+            {r.docKindLabel || docKindLabel(r) ? ` · ${r.docKindLabel || docKindLabel(r)}` : ""}
+          </div>
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 600,
+              lineHeight: 1.35,
+              color: theme.text.primary,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {softenBriefText(r.title)}
+          </div>
+          {lede ? (
+            <div style={{ marginTop: 10 }}>
+              <HomeProse muted>{lede}</HomeProse>
+            </div>
+          ) : null}
+          <div style={{ marginTop: 12 }}>
+            <HomeMeta>
+              {softenBriefText(
+                [
+                  r.publisher,
+                  r.period,
+                  r.asOf ? `对照 ${r.asOf}` : "",
+                  regions ? `覆盖 ${regions}` : "",
+                  r.confidence ? `置信${r.confidence}` : "",
+                ]
+                  .filter(Boolean)
+                  .join(" · "),
+              )}
+            </HomeMeta>
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <HomeMeta>{open ? "收起专题" : "进入专题"}</HomeMeta>
+          </div>
+        </button>
+
+        {open ? (
+          <div
+            style={{
+              borderTop: `1px solid ${theme.stroke.tertiary}`,
+              padding: "8px 14px 14px",
+            }}
+          >
+            <Stack gap={12}>
+              {verdict && verdict !== lede ? (
+                <Stack gap={8}>
+                  <HomeSectionTitle>「主编导读」</HomeSectionTitle>
+                  <HomeProse muted>{verdict}</HomeProse>
+                </Stack>
+              ) : null}
+
+              {bullets.length ? (
+                <Stack gap={8}>
+                  <HomeSectionTitle>「核心结论」</HomeSectionTitle>
+                  <Stack gap={0}>
+                    {bullets.map((b, i) => (
+                      <div
+                        key={`${r.id}-b-${i}`}
+                        style={{
+                          padding: "12px 0",
+                          borderBottom:
+                            i === bullets.length - 1 ? "none" : `1px solid ${theme.stroke.tertiary}`,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 600,
+                            lineHeight: 1.45,
+                            color: theme.text.primary,
+                          }}
+                        >
+                          {i + 1}. {b.length > 36 ? `${b.slice(0, 36)}…` : b}
+                        </div>
+                        {b.length > 36 ? (
+                          <div
+                            style={{
+                              marginTop: 6,
+                              fontSize: 13,
+                              lineHeight: 1.65,
+                              color: theme.text.secondary,
+                            }}
+                          >
+                            {b}
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </Stack>
+                </Stack>
+              ) : null}
+
+              {policy.length ? (
+                <Stack gap={8}>
+                  <HomeSectionTitle>「监管对照」</HomeSectionTitle>
+                  <Stack gap={0}>
+                    {policy.slice(0, 6).map((b, i) => (
+                      <div
+                        key={`${r.id}-p-${i}`}
+                        style={{
+                          padding: "10px 0",
+                          borderBottom:
+                            i === Math.min(policy.length, 6) - 1
+                              ? "none"
+                              : `1px solid ${theme.stroke.tertiary}`,
+                          fontSize: 13,
+                          lineHeight: 1.65,
+                          color: theme.text.secondary,
+                        }}
+                      >
+                        {b}
+                      </div>
+                    ))}
+                  </Stack>
+                </Stack>
+              ) : null}
+
+              {players.length ? (
+                <Stack gap={8}>
+                  <HomeSectionTitle>「相关玩家」</HomeSectionTitle>
+                  <Stack gap={0}>
+                    {players.slice(0, 12).map((p, i) => (
+                      <div
+                        key={`${r.id}-pl-${i}`}
+                        style={{
+                          padding: "12px 0",
+                          borderBottom:
+                            i === Math.min(players.length, 12) - 1
+                              ? "none"
+                              : `1px solid ${theme.stroke.tertiary}`,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 600,
+                            color: theme.text.primary,
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {p.nameZh}
+                          {p.appName ? ` · ${p.appName}` : ""}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 6,
+                            fontSize: 13,
+                            lineHeight: 1.65,
+                            color: theme.text.secondary,
+                          }}
+                        >
+                          {softenBriefText(p.metric)}
+                        </div>
+                      </div>
+                    ))}
+                  </Stack>
+                  {players.length > 12 ? (
+                    <HomeMeta>另有 {players.length - 12} 家未展开</HomeMeta>
+                  ) : null}
+                </Stack>
+              ) : null}
+
+              {sources.length ? (
+                <Stack gap={8}>
+                  <HomeSectionTitle>「信源与附件」</HomeSectionTitle>
+                  <Stack gap={0}>
+                    {sources.map((s, i) => (
+                      <div
+                        key={s.id}
+                        style={{
+                          padding: "10px 0",
+                          borderBottom:
+                            i === sources.length - 1 ? "none" : `1px solid ${theme.stroke.tertiary}`,
+                        }}
+                      >
+                        <div style={{ fontSize: 14, fontWeight: 600, color: theme.text.primary }}>
+                          {s.title}
+                          {s.url ? (
+                            <>
+                              {" "}
+                              <Link href={s.url}>原文</Link>
+                            </>
+                          ) : null}
+                        </div>
+                        {s.asOf ? <HomeMeta>时点 {s.asOf}</HomeMeta> : null}
+                        {(s.bullets || []).slice(0, 2).map((b, j) => (
+                          <div
+                            key={`${s.id}-${j}`}
+                            style={{
+                              marginTop: 4,
+                              fontSize: 12,
+                              lineHeight: 1.55,
+                              color: theme.text.tertiary,
+                            }}
+                          >
+                            {softenBriefText(b)}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </Stack>
+                  {r.localPath ? <HomeMeta>本地稿 {r.localPath}</HomeMeta> : null}
+                </Stack>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => setOpenId("")}
+                style={{
+                  alignSelf: "flex-start",
+                  border: "none",
+                  background: "transparent",
+                  padding: 0,
+                  cursor: "pointer",
+                  font: "inherit",
+                  fontSize: 12,
+                  color: theme.text.tertiary,
+                }}
+              >
+                收起专题
+              </button>
+            </Stack>
+          </div>
+        ) : null}
+      </div>
+    );
+  };
+
+  return <Stack gap={12}>{docs.map(renderTopic)}</Stack>;
 }
 
 /** 上市定期披露 KPI（T2 信源）；无槽位则不渲染 */
@@ -19651,7 +20601,7 @@ function CompetitiveIntelBrief({ group, ticker }: { group: string; ticker?: stri
                   fontSize: 12,
                   lineHeight: 1.4,
                   padding: "4px 8px",
-                  borderRadius: 6,
+                  borderRadius: 8,
                   border: `1px solid ${theme.stroke.tertiary}`,
                   color: it.groupKey || crm === "rail" ? theme.text.primary : theme.text.tertiary,
                   background: theme.bg.elevated,
@@ -19700,13 +20650,11 @@ function FilterChip({
   clearable?: boolean;
   onClick: () => void;
 }) {
+  const theme = useHostTheme();
   return (
-    <Pill
-      active={active}
-      tone={active ? undefined : present ? "info" : "neutral"}
-      size="sm"
+    <button
+      type="button"
       onClick={onClick}
-      keyboardHint={active && clearable ? "×" : undefined}
       title={
         active && clearable
           ? "点击清除"
@@ -19716,9 +20664,30 @@ function FilterChip({
               ? "尚无机构（未创设）"
               : undefined
       }
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        height: 28,
+        padding: "0 10px",
+        borderRadius: 8,
+        border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+        background: active ? theme.fill.secondary : theme.bg.elevated,
+        color: present && !active ? theme.text.link : theme.text.primary,
+        cursor: "pointer",
+        font: "inherit",
+        fontSize: 12,
+        fontWeight: active ? 600 : 500,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+        flexShrink: 0,
+        boxSizing: "border-box",
+      }}
     >
       {label}
-    </Pill>
+      {active && clearable ? (
+        <span style={{ marginLeft: 4, color: theme.text.tertiary, fontWeight: 500 }}>×</span>
+      ) : null}
+    </button>
   );
 }
 
@@ -20585,7 +21554,8 @@ function CashLoanMacroGroupBlock({
                 wordBreak: "break-word",
               }}
             >
-              {m.value}
+              <CitedText text={m.value} size="small" />
+              <MacroAsOfLine asOf={m.asOf} fromSnap={m.asOfFromSnap} />
             </div>
           </div>
         ))}
@@ -20598,7 +21568,7 @@ function CashLoanMacroGroupBlock({
 function CountryMacroPanel({ country }: { country: CountryCode }) {
   if (country === "all") return null;
   const code = country as Exclude<CountryCode, "all">;
-  const snap = COUNTRY_MACRO[code];
+  const snap = getCountryMacro(code) || COUNTRY_MACRO[code];
   const macroBrief = snap ? synthesizeCashLoanBrief(snap) : "";
   const macroNote = snap ? displayCreditNote(snap) : undefined;
   const langLine = formatCountryLanguageLine(code);
@@ -20606,6 +21576,7 @@ function CountryMacroPanel({ country }: { country: CountryCode }) {
   const teUrl = teIndicatorsUrl(code);
   const theme = useHostTheme();
   const groups = snap ? buildCashLoanMacroGroups(snap) : [];
+  const citeNos = snap ? collectCountryMacroCiteNos(snap) : [];
 
   const chartById: Record<string, ReactNode> = snap
     ? {
@@ -20665,7 +21636,9 @@ function CountryMacroPanel({ country }: { country: CountryCode }) {
                   <div style={{ fontSize: 11, color: theme.text.tertiary, marginBottom: 4 }}>
                     现金贷准入简评 · 决策序 ①监管基建 → ②汇兑 → ③客群 → ④过热 → ⑤压测
                   </div>
-                  <div style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.primary }}>{macroBrief}</div>
+                  <div style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.primary }}>
+                    <CitedText text={macroBrief} size="small" />
+                  </div>
                   <div style={{ fontSize: 11, color: theme.text.tertiary, marginTop: 6 }}>
                     ①牌照/利率上限/催收见「监管」页，宏观卡从②起读。
                   </div>
@@ -20679,6 +21652,7 @@ function CountryMacroPanel({ country }: { country: CountryCode }) {
                   />
                 ))}
                 {macroNote ? <DetailField label="补充" value={macroNote} /> : null}
+                <MacroSourcesBlock citeNos={citeNos} />
               </Stack>
             ) : (
               <Stack gap={8}>
@@ -20801,10 +21775,12 @@ function GeoAndLicenseFilters({
       </Stack>
 
       {onLangZone ? (
-        <Stack gap={4}>
-          <Text size="small" weight="medium">
-            语言区
-          </Text>
+        <SoftFold
+          title="语言区"
+          hint={langZone === "all" ? "按展业语言区收窄；选项随洲际变化" : `已选 ${langZone}`}
+          count={languageZonesForRegion(region).length}
+          defaultOpen={langZone !== "all"}
+        >
           <Text size="small" tone="tertiary">
             按展业语言区收窄；选项随洲际变化
           </Text>
@@ -20823,13 +21799,21 @@ function GeoAndLicenseFilters({
               />
             ))}
           </Row>
-        </Stack>
+        </SoftFold>
       ) : null}
 
-      <Stack gap={4}>
-        <Text size="small" weight="medium">
-          涉足国家/地区
-        </Text>
+      <SoftFold
+        title="涉足国家/地区"
+        hint={
+          filterHint
+            ? `当前 · ${filterHint}`
+            : onCountryChip
+              ? "多选收窄；点标题可收起"
+              : "点选收窄；再点同一国取消"
+        }
+        count={countriesForRegionAndLang(region, langZone).length}
+        defaultOpen={country !== "all"}
+      >
         <Text size="small" tone="tertiary">
           {onCountryChip
             ? "多选：点「全部」后点掉某国 = 除该国以外；再点可加回/去掉"
@@ -20851,7 +21835,7 @@ function GeoAndLicenseFilters({
             当前筛选 · {filterHint}
           </Text>
         ) : null}
-      </Stack>
+      </SoftFold>
 
       <CountryMacroPanel country={macroCountry} />
 
@@ -20966,7 +21950,7 @@ function LoginPage() {
       <div
         style={mergeStyle({
           padding: 16,
-          borderRadius: 12,
+          borderRadius: 10,
           background: theme.bg.elevated,
           border: `1px solid ${theme.stroke.tertiary}`,
         })}
@@ -21347,7 +22331,7 @@ function SourceVerifyBlock({
         )}
       </Row>
       <Text size="small" tone="secondary">
-        信源一般来自：流量源、监管源、经办认领；宏观对照 Trading Economics；国内债券/ABN 交叉中国货币网；研报见墨腾。系统定期检索引入；亦可人工创设。
+        信源一般来自：流量源、监管源、经办认领；宏观对照 Trading Economics〔1〕；国内债券/ABN 交叉中国货币网〔9〕；研报见点点〔2〕/墨腾〔3〕。正文用〔n〕标注，点击跳转「信源编号」目录。
       </Text>
       <Row gap={6} wrap>
         {SOURCE_CHANNEL_ORDER.map((c) => (
@@ -21362,7 +22346,7 @@ function SourceVerifyBlock({
         </Callout>
       ) : (
         <Callout tone="warning">
-          信源未齐或仅单侧。请客户经理优先补齐监管源或发起经办认领，对认领信息质量负责。
+          信源未齐或仅单侧时，在字段旁标注〔n〕出处编号（不再写「待双端」）；点编号打开信源/研报目录核对。
         </Callout>
       )}
       <Grid columns={2} gap={10}>
@@ -21496,6 +22480,7 @@ function ScenePlayer({ r, iosFinanceRank }: { r: SceneRow; iosFinanceRank?: numb
             </Text>
             <Text size="small">{depthLine || r.sceneType}</Text>
             <ThreeMetrics kpi={kpi} />
+            <ResearchPlayerBrief group={r.group} />
             <ListedDisclosureBrief group={r.group} ticker={ticker} />
             <CompetitiveIntelBrief group={r.group} ticker={ticker} />
             <PlayerLicenseBrief licenseReg={r.licenseReg} />
@@ -21754,6 +22739,7 @@ function CreditPlayer({ r, iosFinanceRank }: { r: CreditRow; iosFinanceRank?: nu
               </Text>
             ) : null}
             {!hideScaleMetrics ? <ThreeMetrics kpi={kpi} /> : null}
+            <ResearchPlayerBrief group={r.group} />
             <ListedDisclosureBrief group={r.group} ticker={ticker} />
             <CompetitiveIntelBrief group={r.group} ticker={ticker} />
             {isPlayer ? (
@@ -22204,6 +23190,66 @@ const CREDIT_L2_USER_BEHAVIOR: Partial<Record<Exclude<CreditProdL2, "all">, stri
   公务员贷: "面向公务人群的消费/周转借款",
 };
 
+/** 轻量折叠：语言区/国家/业态等默认收起，避免刷屏 */
+function SoftFold({
+  title,
+  hint,
+  count,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  count?: number | string;
+  defaultOpen?: boolean;
+  children?: ReactNode;
+}) {
+  const theme = useHostTheme();
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Stack gap={4}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          minHeight: 28,
+          width: "100%",
+          margin: 0,
+          padding: 0,
+          border: "none",
+          background: "transparent",
+          font: "inherit",
+          color: "inherit",
+          textAlign: "left",
+        }}
+        aria-expanded={open}
+      >
+        <Text size="small" weight="medium" as="span" style={{ flex: 1, minWidth: 0 }}>
+          {title}
+          <span style={{ marginLeft: 8, color: theme.text.tertiary, fontWeight: 400 }}>
+            {open ? "收起" : "展开"}
+          </span>
+        </Text>
+        {count != null ? (
+          <Pill size="sm" tone="neutral">
+            {String(count)}
+          </Pill>
+        ) : null}
+      </button>
+      {!open && hint ? (
+        <Text size="small" tone="tertiary">
+          {hint}
+        </Text>
+      ) : null}
+      {open ? <Stack gap={6}>{children}</Stack> : null}
+    </Stack>
+  );
+}
+
 /** 场景树折叠行：原生 details，避免 useCanvasState 写 sidecar 导致滚动回顶 */
 function AtlasFold({
   id,
@@ -22211,41 +23257,58 @@ function AtlasFold({
   count,
   children,
   defaultOpen = false,
+  remountKey,
 }: {
   id: string;
   title: string;
   count?: number | string;
   children?: ReactNode;
   defaultOpen?: boolean;
+  /** 变化时重置展开态（如总览收起 / 进机构页展开） */
+  remountKey?: string;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
+  useEffect(() => {
+    setOpen(defaultOpen);
+  }, [remountKey, defaultOpen]);
   return (
-    <details defaultOpen={defaultOpen} style={{ margin: 0 }}>
-      <summary
+    <div style={{ margin: 0 }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
         style={{
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           gap: 8,
           minHeight: 28,
-          userSelect: "none",
-          listStyle: "none",
+          width: "100%",
+          margin: 0,
+          padding: 0,
+          border: "none",
+          background: "transparent",
+          font: "inherit",
+          color: "inherit",
+          textAlign: "left",
         }}
+        aria-expanded={open}
       >
         <Text size="small" weight="medium" as="span" style={{ flex: 1, minWidth: 0 }}>
           {title}
+          <span style={{ marginLeft: 8, opacity: 0.55, fontWeight: 400 }}>{open ? "收起" : "展开"}</span>
         </Text>
         {count != null ? (
           <Pill size="sm" tone="neutral">
             {String(count)}
           </Pill>
         ) : null}
-      </summary>
-      {children ? (
+      </button>
+      {open && children ? (
         <Stack gap={4} style={{ paddingLeft: 18, marginTop: 4 }}>
           {children}
         </Stack>
       ) : null}
-    </details>
+    </div>
   );
 }
 
@@ -22335,6 +23398,49 @@ function ensureAtlasScrollMem() {
 
 function PersistScrollShell({ children }: { children?: ReactNode }) {
   ensureAtlasScrollMem();
+  const theme = useHostTheme();
+  const [tail, setTail] = useState<"idle" | "spin" | "empty">("idle");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let spinTimer: ReturnType<typeof setTimeout> | undefined;
+    let emptyTimer: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      const mem = getAtlasScrollMem();
+      if (mem.restoring) return;
+      const scroller = findAtlasScroller(mem.shell);
+      const el =
+        scroller instanceof Window
+          ? document.documentElement
+          : (scroller as HTMLElement | null);
+      if (!el) return;
+      const top = scroller instanceof Window ? window.scrollY : (scroller as HTMLElement).scrollTop;
+      const view =
+        scroller instanceof Window ? window.innerHeight : (scroller as HTMLElement).clientHeight;
+      const height =
+        scroller instanceof Window
+          ? document.documentElement.scrollHeight
+          : (scroller as HTMLElement).scrollHeight;
+      const nearBottom = top + view >= height - 48;
+      if (!nearBottom) {
+        if (spinTimer) clearTimeout(spinTimer);
+        if (emptyTimer) clearTimeout(emptyTimer);
+        setTail("idle");
+        return;
+      }
+      setTail((prev) => (prev === "idle" ? "spin" : prev));
+      if (spinTimer) clearTimeout(spinTimer);
+      spinTimer = setTimeout(() => {
+        setTail("empty");
+        emptyTimer = setTimeout(() => setTail("idle"), 1600);
+      }, 700);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      if (spinTimer) clearTimeout(spinTimer);
+      if (emptyTimer) clearTimeout(emptyTimer);
+    };
+  }, []);
   return (
     <div
       style={{ minHeight: "100%", overflowAnchor: "none" }}
@@ -22361,6 +23467,42 @@ function PersistScrollShell({ children }: { children?: ReactNode }) {
       }}
     >
       {children}
+      {tail !== "idle" ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            padding: "16px 0 28px",
+            color: theme.text.tertiary,
+            fontSize: 12,
+          }}
+          aria-live="polite"
+        >
+          {tail === "spin" ? (
+            <>
+              <span
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: 999,
+                  border: `2px solid ${theme.stroke.tertiary}`,
+                  borderTopColor: theme.text.secondary,
+                  animation: "atlasTailSpin 0.7s linear infinite",
+                  boxSizing: "border-box",
+                }}
+              />
+              加载中
+            </>
+          ) : (
+            "没有更多了"
+          )}
+          <style>{`@keyframes atlasTailSpin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      ) : (
+        <div style={{ height: 12 }} aria-hidden />
+      )}
     </div>
   );
 }
@@ -22485,6 +23627,8 @@ function DigitalSceneAtlasBrowse() {
   const [layer, setLayer] = useCanvasState<SceneAtlasLayer>("atlasLayer3", "web2");
   const [web2Focus, setWeb2Focus] = useCanvasState<string>("atlasW2f2", "all");
   const [web3Focus, setWeb3Focus] = useCanvasState<string>("atlasW3f1", "all");
+  const [web2CatalogOpen, setWeb2CatalogOpen] = useCanvasState("atlasW2cat1", "");
+  const catalogOpen = web2CatalogOpen === "1";
 
   const web2IndustryTags = SCENE_TAG_ORDER.filter(
     (t) => t !== "Web3" && t !== "金融" && t !== "艺术" && t !== "信用管理",
@@ -22653,26 +23797,55 @@ function DigitalSceneAtlasBrowse() {
           </Row>
 
           {web2Focus === "all" ? (
-            <Grid columns={3} gap={8} align="stretch">
-              <SceneIndustryCard
-                title="金融"
-                count={financeSecondLevelCount}
-                preview="信用管理 · 信贷产品 · 理财"
-                onOpen={() => setWeb2Focus("金融")}
-              />
-              {Array.from(industryGrouped.entries()).map(([l1, list]) => (
-                <SceneIndustryCard
-                  key={l1}
-                  title={SCENE_TAG_LABEL[l1]}
-                  count={list.length}
-                  preview={list
-                    .slice(0, 4)
-                    .map((r) => r.l2)
-                    .join(" · ")}
-                  onOpen={() => setWeb2Focus(l1)}
-                />
-              ))}
-            </Grid>
+            <Stack gap={8}>
+              <button
+                type="button"
+                onClick={() => setWeb2CatalogOpen(catalogOpen ? "" : "1")}
+                style={{
+                  alignSelf: "flex-start",
+                  border: "none",
+                  background: "transparent",
+                  padding: 0,
+                  cursor: "pointer",
+                  font: "inherit",
+                  fontSize: 12,
+                  color: "inherit",
+                }}
+              >
+                <Text size="small" weight="medium" as="span">
+                  日常业态
+                  <span style={{ marginLeft: 8, opacity: 0.55, fontWeight: 400 }}>
+                    {catalogOpen ? "收起" : "展开"}
+                  </span>
+                </Text>
+              </button>
+              {catalogOpen ? (
+                <Grid columns={3} gap={8} align="stretch">
+                  <SceneIndustryCard
+                    title="金融"
+                    count={financeSecondLevelCount}
+                    preview="信用管理 · 信贷产品 · 理财"
+                    onOpen={() => setWeb2Focus("金融")}
+                  />
+                  {Array.from(industryGrouped.entries()).map(([l1, list]) => (
+                    <SceneIndustryCard
+                      key={l1}
+                      title={SCENE_TAG_LABEL[l1]}
+                      count={list.length}
+                      preview={list
+                        .slice(0, 4)
+                        .map((r) => r.l2)
+                        .join(" · ")}
+                      onOpen={() => setWeb2Focus(l1)}
+                    />
+                  ))}
+                </Grid>
+              ) : (
+                <Text size="small" tone="tertiary">
+                  已收起业态一览；点上方展开，或点筛选芯片直达某一业态
+                </Text>
+              )}
+            </Stack>
           ) : web2Focus === "金融" ? (
             <Stack gap={10}>
               <Row gap={8} align="center">
@@ -22790,27 +23963,140 @@ const EMPTY_COMPOSER_ATTS: ComposerAttach[] = [];
 
 type AppTab = "crm" | "screen";
 
-function AppTabBar({
-  appTab,
-  setAppTab,
-}: {
-  appTab: AppTab;
-  setAppTab: (t: AppTab) => void;
-}) {
+function IconMapGlobe() {
   return (
-    <Stack gap={4}>
-      <Text size="small" tone="secondary" weight="medium">
-        工作区
-      </Text>
-      <Row gap={6} wrap>
-        <FilterChip
-          label="CRM生态系统"
-          active={appTab === "crm"}
-          onClick={() => setAppTab("crm")}
-        />
-        <FilterChip label="大屏" active={appTab === "screen"} onClick={() => setAppTab("screen")} />
-      </Row>
-    </Stack>
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="8" cy="8" r="5.25" stroke="currentColor" strokeWidth="1.4" />
+      <path
+        d="M2.75 8h10.5M8 2.75c1.6 1.7 2.4 3.4 2.4 5.25S9.6 11.55 8 13.25C6.4 11.55 5.6 9.85 5.6 8S6.4 4.45 8 2.75z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** 对照：双栏并排 */
+function IconCompare() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="1.75" y="2.75" width="5" height="10.5" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="9.25" y="2.75" width="5" height="10.5" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+/** 信源编号：书签角标 */
+function IconSourceCite() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M3.5 2.75h7.25A1.5 1.5 0 0 1 12.25 4.25v9L8 11.1 3.75 13.25V4.25A1.5 1.5 0 0 1 5.25 2.75"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path d="M6 5.5h4M6 7.75h2.75" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** 进入/退出地图大屏 */
+function MapScreenButton({
+  active,
+  onClick,
+  fillHeight = false,
+}: {
+  active: boolean;
+  onClick: () => void;
+  /** 与搜索框同列时拉高，和整列厚度对齐 */
+  fillHeight?: boolean;
+}) {
+  const theme = useHostTheme();
+  const label = active ? "返回总览" : "地图";
+  return (
+    <button
+      type="button"
+      title={active ? "返回总览" : "打开地图大屏"}
+      aria-label={label}
+      aria-pressed={active}
+      onClick={onClick}
+      style={{
+        flexShrink: 0,
+        flex: fillHeight ? "1 1 0" : undefined,
+        width: fillHeight ? "100%" : undefined,
+        height: fillHeight ? undefined : 36,
+        minHeight: fillHeight ? 0 : 36,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        padding: "0 10px",
+        borderRadius: 8,
+        border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+        background: active ? theme.fill.secondary : theme.bg.elevated,
+        color: theme.text.primary,
+        cursor: "pointer",
+        font: "inherit",
+        fontSize: 12,
+        fontWeight: active ? 600 : 500,
+        whiteSpace: "nowrap",
+        boxSizing: "border-box",
+      }}
+    >
+      <IconMapGlobe />
+      {label}
+    </button>
+  );
+}
+
+/** 搜索框旁：对照 / 信源等侧栏按钮 */
+function SideHubButton({
+  active,
+  onClick,
+  title,
+  label,
+  icon,
+}: {
+  active: boolean;
+  onClick: () => void;
+  title: string;
+  label: string;
+  icon: ReactNode;
+}) {
+  const theme = useHostTheme();
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={label}
+      aria-pressed={active}
+      onClick={onClick}
+      style={{
+        flex: "1 1 0",
+        width: "100%",
+        minHeight: 0,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        padding: "0 10px",
+        borderRadius: 8,
+        border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+        background: active ? theme.fill.secondary : theme.bg.elevated,
+        color: theme.text.primary,
+        cursor: "pointer",
+        font: "inherit",
+        fontSize: 12,
+        fontWeight: active ? 600 : 500,
+        whiteSpace: "nowrap",
+        boxSizing: "border-box",
+      }}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 
@@ -22823,78 +24109,209 @@ function qualityTone(q: NbfcDataQuality): "success" | "warning" | "neutral" | "i
 
 function briefThemeBlurb(id: string, summary: string): string {
   const map: Record<string, string> = {
-    reg_license: "已投属地牌照/名录/催收——直接决定能否展业。",
-    asset_price: "资产质量与定价锚；融资热≠风险已好转。",
-    fx_macro: "利率、汇率、通胀——资金成本与锁汇。",
+    reg_license: "先看牌照、名录和催收规则，这直接决定能不能展业。",
+    asset_price: "看资产质量和定价，融资热闹不等于风险已经好转。",
+    fx_macro: "看利率、汇率和通胀，它们影响资金成本和锁汇。",
     other_weak: "弱相关背景，默认少看。",
-    // 兼容旧 JSON
-    reggeo: "展业属地监管。",
-    macro: "利率汇率与资金成本。",
-    credit: "信贷与行业整顿。",
-    infra: "支付与结算通道。",
-    capital: "上市募资窗口。",
-    overseas: "出海平台与流量。",
+    reggeo: "看展业属地监管。",
+    macro: "看利率汇率与资金成本。",
+    credit: "看信贷与行业整顿。",
+    infra: "看支付与结算通道。",
+    capital: "看上市募资窗口。",
+    overseas: "看出海平台与流量。",
     other: "其余快讯。",
   };
-  return map[id] || summary.slice(0, 36);
+  return map[id] || summary.slice(0, 48);
 }
 
 type AtlasRole = "am" | "boss" | "roadshow";
 
-const ATLAS_ROLE_LABEL: Record<AtlasRole, string> = {
-  am: "客户经理",
-  boss: "老板",
-  roadshow: "路演只读",
-};
-
-function AtlasRoleSwitch({
-  role,
-  onChange,
-}: {
-  role: AtlasRole;
-  onChange: (r: AtlasRole) => void;
-}) {
-  return (
-    <Row gap={6} wrap align="center">
-      <Text size="small" tone="tertiary">
-        视角
-      </Text>
-      {(["am", "boss", "roadshow"] as AtlasRole[]).map((r) => (
-        <FilterChip
-          key={r}
-          label={ATLAS_ROLE_LABEL[r]}
-          active={role === r}
-          onClick={() => onChange(r)}
-        />
-      ))}
-    </Row>
-  );
-}
+/** 总览不再展示「视角」切换；角色应由后台用户配置下发，前端只读 atlasRole。 */
 
 function BossWatchBar({
   verdict,
-  strongCount,
-  label = "本周该盯 · 消费信贷",
+  meta,
 }: {
   verdict: string;
-  strongCount: number;
-  label?: string;
+  /** 一行元信息，如：本周关注 · 2026-08-11 · 27 条 */
+  meta?: string;
+}) {
+  const lines = briefParagraphs(verdict);
+  return (
+    <Stack gap={8}>
+      {meta ? <HomeMeta>{meta}</HomeMeta> : null}
+      {lines.map((line, i) => (
+        <HomeProse key={`v-${i}`}>{line}</HomeProse>
+      ))}
+    </Stack>
+  );
+}
+
+/** 快讯时点：有钟点显示 HH:MM；有日显示 MM-DD；否则不硬编 */
+function flashClock(raw?: string): string {
+  if (!raw) return "—";
+  const hm = raw.match(/\b(\d{1,2}):(\d{2})\b/);
+  if (hm) return `${hm[1].padStart(2, "0")}:${hm[2]}`;
+  const day = raw.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (day) return `${day[2]}-${day[3]}`;
+  const month = raw.match(/^(\d{4})-(\d{2})$/);
+  if (month) return `${month[2]}月`;
+  return "—";
+}
+
+function flashSortKey(published?: string, fallback = ""): string {
+  const raw = (published || fallback || "").trim();
+  const day = raw.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (day) return `${day[1]}${day[2]}${day[3]}`;
+  const month = raw.match(/^(\d{4})-(\d{2})$/);
+  if (month) return `${month[1]}${month[2]}00`;
+  const hm = raw.match(/\b(\d{1,2}):(\d{2})\b/);
+  if (hm) return `9999${hm[1].padStart(2, "0")}${hm[2]}`;
+  return "00000000";
+}
+
+type FlashFeedItem = {
+  id: string;
+  timeLabel: string;
+  title: string;
+  body: string;
+  url?: string;
+  source?: string;
+  marketCode?: string;
+  marketName?: string;
+  lane: "watch" | "media";
+  sortKey: string;
+};
+
+/** 对齐 36氪快讯：左时间 · 国别·标题 · 正文 · 原文链接 */
+function flashDisplayTitle(item: FlashFeedItem): string {
+  const title = softenBriefText(item.title);
+  const mkt = (item.marketName || "").trim();
+  if (!mkt) return title;
+  if (title.includes(mkt)) return title;
+  // BOT/OJK/RBI 等缩写开头时，国名必须前置，否则分不清属地
+  return `${mkt} · ${title}`;
+}
+
+function NewsflashRow({
+  item,
+  expanded,
+  unread,
+  onToggle,
+}: {
+  item: FlashFeedItem;
+  expanded: boolean;
+  unread?: boolean;
+  onToggle: () => void;
 }) {
   const theme = useHostTheme();
   return (
     <div
       style={{
-        padding: "12px 14px",
-        borderRadius: 8,
-        border: `1px solid ${theme.stroke.tertiary}`,
-        background: theme.fill.quaternary,
+        display: "grid",
+        gridTemplateColumns: "44px minmax(0, 1fr)",
+        gap: 12,
+        padding: "12px 0",
+        borderBottom: `1px solid ${theme.stroke.tertiary}`,
       }}
     >
-      <div style={{ fontSize: 11, color: theme.text.tertiary, marginBottom: 4 }}>
-        {label}
-        {strongCount ? ` · ${strongCount} 条` : ""}
+      <div
+        style={{
+          fontSize: 12,
+          lineHeight: 1.4,
+          color: theme.text.tertiary,
+          fontVariantNumeric: "tabular-nums",
+          paddingTop: 2,
+        }}
+      >
+        {item.timeLabel}
       </div>
-      <div style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.primary }}>{verdict}</div>
+      <div style={{ position: "relative", minWidth: 0 }}>
+        {unread ? <UnreadBadge count={1} dot /> : null}
+        <button
+          type="button"
+          onClick={onToggle}
+          style={{
+            display: "block",
+            width: "100%",
+            margin: 0,
+            padding: 0,
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+            textAlign: "left",
+            font: "inherit",
+            color: "inherit",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              lineHeight: 1.45,
+              color: theme.text.primary,
+            }}
+          >
+            {flashDisplayTitle(item)}
+          </div>
+        </button>
+        {expanded ? (
+          <Stack gap={8} style={{ marginTop: 8 }}>
+            <HomeProse muted>{softenBriefText(item.body)}</HomeProse>
+            <Row gap={10} wrap align="center">
+              <HomeMeta>
+                {[item.marketName, item.source].filter(Boolean).join(" · ") || "快讯"}
+              </HomeMeta>
+              {item.url ? (
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    fontSize: 12,
+                    color: theme.text.primary,
+                    textDecoration: "underline",
+                  }}
+                >
+                  原文链接
+                </a>
+              ) : null}
+              <button
+                type="button"
+                onClick={onToggle}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  padding: 0,
+                  cursor: "pointer",
+                  font: "inherit",
+                  fontSize: 12,
+                  color: theme.text.tertiary,
+                }}
+              >
+                收起
+              </button>
+            </Row>
+          </Stack>
+        ) : (
+          <button
+            type="button"
+            onClick={onToggle}
+            style={{
+              marginTop: 6,
+              border: "none",
+              background: "transparent",
+              padding: 0,
+              cursor: "pointer",
+              font: "inherit",
+              fontSize: 12,
+              color: theme.text.tertiary,
+            }}
+          >
+            展开
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -22904,458 +24321,198 @@ function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
   const brief = MORNING_BRIEF_36KR;
   const theme = useHostTheme();
   const dayKey = watch.displayDate || brief.displayDate || brief.coverageDate || "na";
-  const [openMkt, setOpenMkt] = useCanvasState<string>(`ccWatchMkt_${dayKey}`, "");
+  const [filterMkt, setFilterMkt] = useCanvasState<string>(`ccWatchMkt_${dayKey}`, "");
   const [readMkts, setReadMkts] = useCanvasState<string>(`ccWatchRead_${dayKey}`, "");
-  const [openId, setOpenId] = useCanvasState<string>(`mornOpen_${dayKey}`, "");
-  const [readIds, setReadIds] = useCanvasState<string>(`mornRead_${dayKey}`, "");
-  const [openPlayer, setOpenPlayer] = useCanvasState<string>(`mornPlayer_${dayKey}`, "");
-  const [readPlayers, setReadPlayers] = useCanvasState<string>(`mornPlayerRead_${dayKey}`, "");
-  const [showKr, setShowKr] = useCanvasState<string>(`mornKr_${dayKey}`, "");
-  const [showWeak, setShowWeak] = useCanvasState<string>(`mornWeak_${dayKey}`, "");
+  const [openFlash, setOpenFlash] = useCanvasState<string>(`flashOpen_${dayKey}`, "");
+  const [readFlash, setReadFlash] = useCanvasState<string>(`flashRead_${dayKey}`, "");
   const readMktSet = new Set(readMkts.split("|").filter(Boolean));
-  const readSet = new Set(readIds.split("|").filter(Boolean));
-  const readPlayerSet = new Set(readPlayers.split("|").filter(Boolean));
-  const playerHits = role === "roadshow" ? [] : buildPlayerBriefHits(brief, credits);
+  const readFlashSet = new Set(readFlash.split("|").filter(Boolean));
 
-  const primaryThemes = brief.themes.filter(
-    (t) => t.primary !== false && (BRIEF_PRIMARY_IDS as readonly string[]).includes(t.id),
+  const investedMkts = watch.markets.filter((m) => (m.tier ?? "invested") === "invested");
+  const hotMkts = watch.markets.filter((m) => m.tier === "diandian_hot");
+  const focusMkts = [...investedMkts, ...hotMkts];
+  const watchTotal = focusMkts.reduce((n, m) => n + (m.count || 0), 0);
+  const unreadMktTotal = focusMkts.reduce(
+    (n, m) => n + (readMktSet.has(m.code) ? 0 : m.count || 0),
+    0,
   );
-  const weakThemes = brief.themes.filter((t) => t.id === "other_weak" || t.primary === false);
-  const legacyPrimary = brief.themes.filter(
-    (t) =>
-      !primaryThemes.includes(t) &&
-      t.id !== "other_weak" &&
-      t.primary !== false &&
-      !(BRIEF_PRIMARY_IDS as readonly string[]).includes(t.id),
-  );
-  const mainThemes = primaryThemes.length
-    ? primaryThemes
-    : legacyPrimary.length
-      ? legacyPrimary
-      : brief.themes.filter((t) => t.id !== "other_weak");
-
-  function openMarket(code: string) {
-    const next = openMkt === code ? "" : code;
-    setOpenMkt(next);
-    if (next) {
-      setOpenId("");
-      setOpenPlayer("");
-      if (!readMktSet.has(code)) setReadMkts([...readMktSet, code].join("|"));
-    }
-  }
-
-  function openTheme(id: string) {
-    const next = openId === id ? "" : id;
-    setOpenId(next);
-    if (next) {
-      setOpenMkt("");
-      setOpenPlayer("");
-    }
-    if (next && !readSet.has(id)) {
-      setReadIds([...readSet, id].join("|"));
-    }
-  }
-
-  function openPlayerCard(key: string) {
-    const next = openPlayer === key ? "" : key;
-    setOpenPlayer(next);
-    if (next) {
-      setOpenId("");
-      setOpenMkt("");
-    }
-    if (next && !readPlayerSet.has(key)) {
-      setReadPlayers([...readPlayerSet, key].join("|"));
-    }
-  }
-
-  const openMarketRow = watch.markets.find((m) => m.code === openMkt) ?? null;
-  const openRow = brief.themes.find((r) => r.id === openId) ?? null;
-  const openPlayerHit = playerHits.find((p) => p.key === openPlayer) ?? null;
-  const watchTotal = watch.stats.itemTotal ?? 0;
-  const strongCount = brief.stats.strong ?? brief.stats.focusHit ?? 0;
   const bossVerdict = watch.overallVerdict || brief.overallVerdict || "";
+  const dateLabel = watch.displayDate || brief.displayDate || "";
 
-  const themeCards = (rows: typeof brief.themes) => (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
-        gap: 10,
-      }}
-    >
-      {rows.map((row) => {
-        const unread = readSet.has(row.id) ? 0 : row.count;
-        const active = openId === row.id;
-        return (
-          <button
-            key={row.id}
-            type="button"
-            onClick={() => openTheme(row.id)}
-            style={{
-              position: "relative",
-              textAlign: "left",
-              padding: "12px 12px 14px",
-              borderRadius: 10,
-              border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
-              background: active ? theme.fill.quaternary : theme.bg.elevated,
-              cursor: "pointer",
-              color: theme.text.primary,
-              font: "inherit",
-              minHeight: 88,
-            }}
-            title={active ? "收起" : "查看快讯"}
-          >
-            <UnreadBadge count={unread} />
-            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6, paddingRight: 8 }}>
-              {row.title.replace("·", " · ")}
-            </div>
-            <div style={{ fontSize: 12, lineHeight: 1.45, color: theme.text.secondary, fontWeight: 400 }}>
-              {briefThemeBlurb(row.id, row.summary)}
-            </div>
-            <div style={{ fontSize: 11, color: theme.text.tertiary, marginTop: 6 }}>{row.count} 条</div>
-          </button>
-        );
-      })}
-    </div>
-  );
+  const watchFeed: FlashFeedItem[] = focusMkts
+    .flatMap((m) =>
+      (m.items || []).map((s, i) => {
+        const id = `w:${m.code}:${i}:${s.title.slice(0, 24)}`;
+        const timeRaw = s.published || "";
+        return {
+          id,
+          timeLabel: flashClock(timeRaw),
+          title: s.title,
+          body: storyToProse(s),
+          url: s.url,
+          source: s.source,
+          marketCode: m.code,
+          marketName: m.nameZh,
+          lane: "watch" as const,
+          sortKey: `${flashSortKey(s.published)}|${m.code}|${String(i).padStart(2, "0")}`,
+        };
+      }),
+    )
+    .sort((a, b) => (a.sortKey < b.sortKey ? 1 : a.sortKey > b.sortKey ? -1 : 0));
+
+  const visibleWatch = filterMkt
+    ? watchFeed.filter((x) => x.marketCode === filterMkt)
+    : watchFeed;
+
+  function selectMarket(code: string) {
+    const next = filterMkt === code ? "" : code;
+    setFilterMkt(next);
+    if (next && !readMktSet.has(next)) {
+      setReadMkts([...readMktSet, next].join("|"));
+    }
+  }
+
+  function toggleFlash(id: string, marketCode?: string) {
+    const next = openFlash === id ? "" : id;
+    setOpenFlash(next);
+    if (next) {
+      if (!readFlashSet.has(id)) setReadFlash([...readFlashSet, id].join("|"));
+      if (marketCode && !readMktSet.has(marketCode)) {
+        setReadMkts([...readMktSet, marketCode].join("|"));
+      }
+    }
+  }
+
+  const countryChip = (m: (typeof focusMkts)[0]) => {
+    const unread = readMktSet.has(m.code) ? 0 : m.count;
+    const active = filterMkt === m.code;
+    return (
+      <button
+        key={m.code}
+        type="button"
+        onClick={() => selectMarket(m.code)}
+        style={{
+          position: "relative",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          height: 28,
+          padding: "0 10px",
+          borderRadius: 8,
+          border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+          background: active ? theme.fill.secondary : theme.bg.elevated,
+          color: theme.text.primary,
+          cursor: "pointer",
+          font: "inherit",
+          fontSize: 12,
+          fontWeight: active ? 600 : 500,
+          lineHeight: 1,
+          boxSizing: "border-box",
+        }}
+      >
+        <UnreadBadge count={unread} />
+        {m.nameZh}
+        {!unread ? (
+          <span style={{ color: theme.text.tertiary, fontWeight: 400 }}>{m.count}</span>
+        ) : null}
+      </button>
+    );
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        消费信贷晨报 · {watch.displayDate || brief.displayDate || ""}
-      </CardHeader>
-      <CardBody>
-        <Stack gap={14}>
-          <Text size="small" tone="tertiary">
-            {`定向 ${watch.generatedAt}`}
-            {` · 展业六国 ${watchTotal} 条`}
-            {` · 辅扫 36氪 ${brief.stats.coverageTotal} 条`}
-            {strongCount ? `（标强相关 ${strongCount}）` : ""}
-          </Text>
-          {watch.note ? (
-            <Text size="small" tone="secondary">
-              {watch.note}
-            </Text>
-          ) : null}
-          <Text size="small" tone="tertiary">
-            信源序：{CC_SOURCE_TIERS.tiers.map((t) => `${t.id} ${t.nameZh}`).join(" → ")}
-            {` · T2 全量 ${listedDisclosureStats().total}（已填 KPI ${listedDisclosureStats().filled}）`}
-            {` · 竞争情报 ${competitiveQueueStats().subjects} 家（队列待扩 ${competitiveQueueStats().pending}）`}
-            {` · ${[...listedCoverageByRegion().entries()]
-              .map(([r, v]) => `${LISTED_REGION_LABEL[r] || r}${v.total}`)
-              .join(" / ")}`}
-          </Text>
-          {(() => {
-            const lc = licenseCreditPriorityStats({ focusOnly: true });
-            const trackBits = ["digibank", "payment", "online_credit"]
-              .map((t) => {
-                const b = lc.byTrack[t];
-                if (!b) return null;
-                return `${LICENSE_CREDIT_TRACK_LABEL[t] || t}${b.covered}/${b.total}`;
-              })
-              .filter(Boolean);
-            return (
-              <Text size="small" tone="tertiary">
-                {`牌照主轴（展业六国）：覆盖 ${lc.covered}/${lc.total} · 队列中 ${lc.queued} · 缺口 ${lc.gap}`}
-                {trackBits.length ? ` · ${trackBits.join(" · ")}` : ""}
-                {" · 优先：数字银行 / 支付牌照 / 线上信贷机构"}
-              </Text>
-            );
-          })()}
-
-          {(role === "boss" || role === "am") && bossVerdict ? (
-            <BossWatchBar
-              verdict={bossVerdict}
-              strongCount={watchTotal}
-              label="本周该盯 · 展业国定向"
-            />
-          ) : null}
-
-          {role === "roadshow" ? (
-            <Text size="small" tone="tertiary">
-              路演只读：展示展业国监管线索摘要，不展开玩家挂靠与内部备注。
-            </Text>
-          ) : null}
-
-          <Text size="small" weight="medium">
-            展业国定向扫描
-          </Text>
-          <Text size="small" tone="tertiary">
-            MX / TH / ID / PH / HK / IN · 点国别看线索与监管门户
-          </Text>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
-              gap: 10,
-            }}
-          >
-            {watch.markets.map((m) => {
-              const unread = readMktSet.has(m.code) ? 0 : m.count;
-              const active = openMkt === m.code;
-              return (
-                <button
-                  key={m.code}
-                  type="button"
-                  onClick={() => openMarket(m.code)}
-                  style={{
-                    position: "relative",
-                    textAlign: "left",
-                    padding: "12px 12px 14px",
-                    borderRadius: 10,
-                    border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
-                    background: active ? theme.fill.quaternary : theme.bg.elevated,
-                    cursor: "pointer",
-                    color: theme.text.primary,
-                    font: "inherit",
-                    minHeight: 88,
-                  }}
-                >
-                  <UnreadBadge count={unread} />
-                  <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, paddingRight: 8 }}>
-                    {m.nameZh}
-                    {m.regulator ? (
-                      <span style={{ fontWeight: 400, color: theme.text.tertiary }}> · {m.regulator}</span>
-                    ) : null}
-                  </div>
-                  <div style={{ fontSize: 12, lineHeight: 1.45, color: theme.text.secondary }}>
-                    {m.cashLoanHint || "核牌照与消费贷规则"}
-                  </div>
-                  <div style={{ fontSize: 11, color: theme.text.tertiary, marginTop: 6 }}>{m.count} 条</div>
-                </button>
-              );
-            })}
-          </div>
-
-          {openMarketRow ? (
-            <Stack gap={10}>
-              <Row gap={8} align="center" justify="space-between" wrap>
-                <Text size="small" weight="medium">
-                  {openMarketRow.nameZh} · {openMarketRow.count} 条
-                </Text>
-                <Text size="small" tone="tertiary">
-                  再点卡片可收起
-                </Text>
-              </Row>
-              {openMarketRow.cashLoanHint ? (
-                <Text size="small" tone="secondary">
-                  {openMarketRow.cashLoanHint}
-                </Text>
-              ) : null}
-              {openMarketRow.portals?.length ? (
-                <Row gap={10} wrap>
-                  {openMarketRow.portals.map((p) => (
-                    <a
-                      key={p.url}
-                      href={p.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ fontSize: 12, color: theme.text.secondary }}
-                    >
-                      {p.title} ↗
-                    </a>
-                  ))}
-                </Row>
-              ) : null}
-              <div
-                style={{
-                  maxHeight: 320,
-                  overflowY: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                }}
-              >
-                {openMarketRow.items.map((s, i) => (
-                  <div key={`${openMarketRow.code}-${i}-${s.title}`} style={{ fontSize: 13, lineHeight: 1.5 }}>
-                    <div style={{ color: theme.text.tertiary, marginBottom: 2, fontSize: 11 }}>
-                      {[s.published, s.source].filter(Boolean).join(" · ") || "·"}
-                    </div>
-                    {s.url ? (
-                      <a
-                        href={s.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: theme.text.primary, textDecoration: "none" }}
-                      >
-                        {s.title}
-                      </a>
-                    ) : (
-                      <span style={{ color: theme.text.secondary }}>{s.title}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Stack>
-          ) : (
-            <Text size="small" tone="tertiary">
-              点国别卡片查看定向线索；链接以监管官网为准。
-            </Text>
+    <Stack gap={16}>
+      {(role === "boss" || role === "am") && bossVerdict ? (
+        <BossWatchBar
+          verdict={bossVerdict}
+          meta={softenBriefText(
+            [
+              "本周关注",
+              dateLabel,
+              watchTotal ? `${watchTotal} 条` : "",
+              unreadMktTotal ? `未读 ${unreadMktTotal}` : "",
+            ]
+              .filter(Boolean)
+              .join(" · "),
           )}
+        />
+      ) : dateLabel || watchTotal || unreadMktTotal ? (
+        <HomeMeta>
+          {softenBriefText(
+            [
+              dateLabel,
+              watchTotal ? `${watchTotal} 条` : "",
+              unreadMktTotal ? `未读 ${unreadMktTotal}` : "",
+            ]
+              .filter(Boolean)
+              .join(" · "),
+          )}
+        </HomeMeta>
+      ) : null}
 
-          {role !== "roadshow" ? (
-            <Stack gap={8}>
-              <button
-                type="button"
-                onClick={() => setShowKr(showKr ? "" : "1")}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  padding: 0,
-                  textAlign: "left",
-                  cursor: "pointer",
-                  font: "inherit",
-                  color: theme.text.tertiary,
-                  fontSize: 12,
-                }}
-              >
-                {showKr
-                  ? "收起 36氪辅扫 ▾"
-                  : `展开 36氪辅扫（国内泛财经，弱相关为主 · ${brief.stats.coverageTotal} 条）▸`}
-              </button>
-              {showKr ? (
-                <Stack gap={12}>
-                  <Text size="small" weight="medium">
-                    36氪 · 消费信贷三板块（辅）
-                  </Text>
-                  {themeCards(mainThemes)}
-                  {weakThemes.length ? (
-                    <Stack gap={8}>
-                      <button
-                        type="button"
-                        onClick={() => setShowWeak(showWeak ? "" : "1")}
-                        style={{
-                          border: "none",
-                          background: "transparent",
-                          padding: 0,
-                          textAlign: "left",
-                          cursor: "pointer",
-                          font: "inherit",
-                          color: theme.text.tertiary,
-                          fontSize: 12,
-                        }}
-                      >
-                        {showWeak
-                          ? "收起弱相关 ▾"
-                          : `展开弱相关（${weakThemes.reduce((n, t) => n + t.count, 0)} 条）▸`}
-                      </button>
-                      {showWeak ? themeCards(weakThemes) : null}
-                    </Stack>
-                  ) : null}
-                  {playerHits.length && role === "am" ? (
-                    <Stack gap={8}>
-                      <Text size="small" weight="medium">
-                        玩家相关快讯（36氪关键词挂靠）
-                      </Text>
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
-                          gap: 10,
-                        }}
-                      >
-                        {playerHits.slice(0, 24).map((p) => {
-                          const unread = readPlayerSet.has(p.key) ? 0 : p.items.length;
-                          const active = openPlayer === p.key;
-                          return (
-                            <button
-                              key={p.key}
-                              type="button"
-                              onClick={() => openPlayerCard(p.key)}
-                              style={{
-                                position: "relative",
-                                textAlign: "left",
-                                padding: "12px 12px 14px",
-                                borderRadius: 10,
-                                border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
-                                background: active ? theme.fill.quaternary : theme.bg.elevated,
-                                cursor: "pointer",
-                                color: theme.text.primary,
-                                font: "inherit",
-                                minHeight: 72,
-                              }}
-                            >
-                              <UnreadBadge count={unread} />
-                              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, paddingRight: 8 }}>
-                                {p.label}
-                              </div>
-                              <div style={{ fontSize: 12, color: theme.text.secondary }}>
-                                {p.items.length} 条相关
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </Stack>
-                  ) : null}
-                  {openPlayerHit ? (
-                    <Stack gap={10}>
-                      <Text size="small" weight="medium">
-                        {openPlayerHit.label} · {openPlayerHit.items.length} 条
-                      </Text>
-                      <div
-                        style={{
-                          maxHeight: 280,
-                          overflowY: "auto",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 8,
-                        }}
-                      >
-                        {openPlayerHit.items.map((s, i) => (
-                          <div
-                            key={`${openPlayerHit.key}-${i}-${s.title}`}
-                            style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.secondary }}
-                          >
-                            <span style={{ color: theme.text.tertiary, marginRight: 8 }}>{s.time || "·"}</span>
-                            {s.title}
-                          </div>
-                        ))}
-                      </div>
-                    </Stack>
-                  ) : openRow ? (
-                    <Stack gap={10}>
-                      <Text size="small" weight="medium">
-                        {openRow.title} · {openRow.count} 条
-                      </Text>
-                      <div style={{ fontSize: 13, lineHeight: 1.6, color: theme.text.secondary }}>
-                        {openRow.commentary}
-                      </div>
-                      {openRow.sources?.length ? (
-                        <div
-                          style={{
-                            maxHeight: 280,
-                            overflowY: "auto",
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 8,
-                          }}
-                        >
-                          {openRow.sources.map((s, i) => (
-                            <div
-                              key={`${openRow.id}-${i}-${s.title}`}
-                              style={{ fontSize: 13, lineHeight: 1.5, color: theme.text.secondary }}
-                            >
-                              <span style={{ color: theme.text.tertiary, marginRight: 8 }}>{s.time || "·"}</span>
-                              {s.title}
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
-                    </Stack>
-                  ) : null}
-                </Stack>
-              ) : null}
-            </Stack>
-          ) : null}
-        </Stack>
-      </CardBody>
-    </Card>
+      <Stack gap={10}>
+        {investedMkts.length ? (
+          <Stack gap={6}>
+            <HomeMeta>展业国</HomeMeta>
+            <Row gap={8} wrap>
+              {investedMkts.map(countryChip)}
+            </Row>
+          </Stack>
+        ) : null}
+        {hotMkts.length ? (
+          <Stack gap={6}>
+            <HomeMeta>热点国</HomeMeta>
+            <Row gap={8} wrap>
+              {hotMkts.map(countryChip)}
+            </Row>
+          </Stack>
+        ) : null}
+      </Stack>
+
+      <Stack gap={0}>
+        {filterMkt ? (
+          <div style={{ marginBottom: 4 }}>
+            <HomeMeta>
+              {focusMkts.find((m) => m.code === filterMkt)?.nameZh || filterMkt}
+              {visibleWatch.length ? ` · ${visibleWatch.length} 条` : ""}
+            </HomeMeta>
+          </div>
+        ) : null}
+        {visibleWatch.length ? (
+          visibleWatch.map((item) => (
+            <NewsflashRow
+              key={item.id}
+              item={item}
+              expanded={openFlash === item.id}
+              unread={!readFlashSet.has(item.id) && !readMktSet.has(item.marketCode || "")}
+              onToggle={() => toggleFlash(item.id, item.marketCode)}
+            />
+          ))
+        ) : (
+          <HomeMeta>该国暂无快讯条目</HomeMeta>
+        )}
+      </Stack>
+    </Stack>
   );
 }
 
-function UnreadBadge({ count }: { count: number }) {
+function UnreadBadge({ count, dot }: { count: number; dot?: boolean }) {
   if (count <= 0) return null;
+  if (dot) {
+    return (
+      <span
+        style={{
+          position: "absolute",
+          top: 2,
+          right: -2,
+          width: 8,
+          height: 8,
+          borderRadius: 999,
+          background: "#fa5151",
+        }}
+        aria-hidden
+      />
+    );
+  }
   const label = count > 99 ? "99+" : String(count);
   return (
     <span
@@ -23772,7 +24929,7 @@ function MapPanel({ children }: { children: ReactNode }) {
   );
 }
 
-/** 地图右上角：透明图标 · 全屏 / 退出 */
+/** 地图右上角：线框图标钮 · 全屏 / 退出 */
 function MapChromeIconBtn({
   title,
   onClick,
@@ -23797,20 +24954,22 @@ function MapChromeIconBtn({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        border: "none",
-        borderRadius: 6,
-        background: "transparent",
-        color: theme.text.tertiary,
+        border: `1px solid ${theme.stroke.secondary}`,
+        borderRadius: 4,
+        background: theme.bg.elevated,
+        color: theme.text.secondary,
         cursor: "pointer",
-        opacity: 0.7,
+        transition: "border-color 120ms ease, color 120ms ease, background 120ms ease",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.opacity = "1";
-        e.currentTarget.style.color = theme.text.secondary;
+        e.currentTarget.style.borderColor = theme.stroke.primary;
+        e.currentTarget.style.color = theme.text.primary;
+        e.currentTarget.style.background = theme.fill.quaternary;
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.opacity = "0.7";
-        e.currentTarget.style.color = theme.text.tertiary;
+        e.currentTarget.style.borderColor = theme.stroke.secondary;
+        e.currentTarget.style.color = theme.text.secondary;
+        e.currentTarget.style.background = theme.bg.elevated;
       }}
     >
       {children}
@@ -23851,11 +25010,14 @@ function MapStage({
   present,
   onPresent,
   onExit,
+  showCornerToggle = false,
 }: {
   children: ReactNode;
   present: boolean;
   onPresent: () => void;
   onExit?: () => void;
+  /** 大屏：全屏按钮放在地图框右上角 */
+  showCornerToggle?: boolean;
 }) {
   return (
     <div
@@ -23866,40 +25028,68 @@ function MapStage({
         minHeight: present ? 0 : undefined,
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          zIndex: 8,
-          display: "flex",
-          gap: 2,
-          alignItems: "center",
-        }}
-      >
-        {present && onExit ? (
-          <MapChromeIconBtn title="退出全屏" onClick={onExit}>
-            <IconCollapse />
-          </MapChromeIconBtn>
-        ) : !present ? (
-          <MapChromeIconBtn title="全屏" onClick={onPresent}>
-            <IconExpand />
-          </MapChromeIconBtn>
-        ) : null}
-      </div>
+      {showCornerToggle ? (
+        <div
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            zIndex: 8,
+            display: "flex",
+            gap: 2,
+            alignItems: "center",
+          }}
+        >
+          {present && onExit ? (
+            <MapChromeIconBtn title="退出全屏" onClick={onExit}>
+              <IconCollapse />
+            </MapChromeIconBtn>
+          ) : !present ? (
+            <MapChromeIconBtn title="全屏" onClick={onPresent}>
+              <IconExpand />
+            </MapChromeIconBtn>
+          ) : null}
+        </div>
+      ) : null}
       {children}
     </div>
   );
 }
 
-/** 大屏地图国别计数：按机构 group 国别码 / countries 别名落点（避免「全球」刷满整图） */
+/** 大屏机构叠层：全球网络落点的主要枢纽（避免「全球」刷满 84 国，又避免只剩中国一颗钉） */
+const ECO_MAP_GLOBAL_HUBS: Exclude<CountryCode, "all">[] = [
+  "CN",
+  "HK",
+  "US",
+  "GB",
+  "SG",
+  "JP",
+  "IN",
+  "ID",
+  "TH",
+  "PH",
+  "MX",
+  "BR",
+  "DE",
+  "FR",
+  "CA",
+  "KR",
+  "MY",
+  "VN",
+  "TW",
+  "AE",
+];
+
+/** 大屏地图国别计数：组名国别码 / countries 别名；全球网络另落枢纽国 */
 function aggregateEcoCountsByCountry(type: InstitutionType): Record<string, number> {
   const out: Record<string, number> = {};
   const codes = (Object.keys(COUNTRY_LABEL) as CountryCode[]).filter(
     (c): c is Exclude<CountryCode, "all"> => c !== "all",
   );
-  for (const r of credits) {
-    if (!r.institutionTypes.includes(type)) continue;
+  const hitCountries = (
+    r: { group: string; countries: string },
+    covered: () => Exclude<CountryCode, "all">[],
+  ) => {
     const hits = new Set<Exclude<CountryCode, "all">>();
     for (const c of codes) {
       if (r.group.includes(`·${c}`) || new RegExp(`[·（(]${c}[）)]`).test(r.group)) {
@@ -23909,15 +25099,50 @@ function aggregateEcoCountsByCountry(type: InstitutionType): Record<string, numb
       const aliases = COUNTRY_ALIASES[c] ?? [];
       if (aliases.some((a) => r.countries.includes(a))) hits.add(c);
     }
-    if (hits.size === 0 && !hasWorldwideCoverage(r.countries)) {
-      for (const c of countriesCoveredByCreditRow(r)) hits.add(c);
+    if (hasWorldwideCoverage(r.countries)) {
+      // 全球网络：保留上文点名国，并落到枢纽，供「市场 × 机构」叠层同时可见
+      for (const c of ECO_MAP_GLOBAL_HUBS) hits.add(c);
+    } else if (hits.size === 0) {
+      for (const c of covered()) hits.add(c);
     }
-    for (const c of hits) out[c] = (out[c] ?? 0) + 1;
+    return hits;
+  };
+  for (const r of credits) {
+    if (!r.institutionTypes.includes(type)) continue;
+    for (const c of hitCountries(r, () => countriesCoveredByCreditRow(r))) {
+      out[c] = (out[c] ?? 0) + 1;
+    }
+  }
+  // 玩家含场景原生（对照页同口径），一并落点
+  if (type === "玩家") {
+    for (const r of scenes) {
+      if (!r.institutionTypes.includes("玩家")) continue;
+      for (const c of hitCountries(r, () => countriesCoveredBySceneRow(r))) {
+        out[c] = (out[c] ?? 0) + 1;
+      }
+    }
   }
   return out;
 }
 
-/** 大屏：市场 × 展业 / 其他机构（同一底图切换图层，固定画幅） */
+function mapFullscreenCorner(
+  present: boolean,
+  onPresent?: () => void,
+  onExit?: () => void,
+): ReactNode {
+  if (onPresent == null) return null;
+  return present && onExit ? (
+    <MapChromeIconBtn title="退出全屏" onClick={onExit}>
+      <IconCollapse />
+    </MapChromeIconBtn>
+  ) : !present ? (
+    <MapChromeIconBtn title="全屏" onClick={onPresent}>
+      <IconExpand />
+    </MapChromeIconBtn>
+  ) : null;
+}
+
+/** 大屏：市场 × 展业 / 其他机构（绿色面填，无点阵；IMF/世行筛选） */
 function BigScreenOverlay({
   height = 560,
   bare = false,
@@ -23942,29 +25167,18 @@ function BigScreenOverlay({
     () => (ecoType ? aggregateEcoCountsByCountry(ecoType) : undefined),
     [ecoType],
   );
-  const both = showMarket && showInvested && !ecoOn;
-  const marketEco = showMarket && ecoOn;
-  const title = marketEco
-    ? `市场 × ${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}`
-    : ecoOn
-      ? `${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}分布`
-      : both
-        ? "市场 × 展业"
-        : showMarket
-          ? "市场放贷热力图"
-          : "展业热力图";
-  const subtitle = marketEco
-    ? `琥珀点=市场放贷；蓝点=${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}样本数 · 浅底透图`
-    : ecoOn
-      ? `${INSTITUTION_TYPE_LABEL[ecoType as InstitutionType]}：蓝点=各国样本数 · 浅底透图`
-      : both
-        ? "琥珀点=市场放贷；蓝点=展业在贷 · 浅底透图 · 图层开关不重载底图"
-        : showMarket
-          ? "市场放贷：琥珀点色/点径 · 浅底透图 · 点击有数据国家可放大"
-          : "展业在贷：蓝点色/点径 · 浅底透图 · 点击国家查看已投平台";
+  const ecoTotalUnique = useMemo(() => {
+    if (!ecoType) return undefined;
+    let n = credits.filter((r) => r.institutionTypes.includes(ecoType)).length;
+    if (ecoType === "玩家") {
+      n += scenes.filter((r) => r.institutionTypes.includes("玩家")).length;
+    }
+    return n;
+  }, [ecoType]);
 
+  const corner = mapFullscreenCorner(present, onPresent, onExit);
   const globe = (
-    <CombinedHeatGlobe
+    <FullMarketChoropleth
       height={height}
       fill={bare}
       legendPlacement="bottom"
@@ -23972,33 +25186,21 @@ function BigScreenOverlay({
       showInvested={showInvested && !ecoOn}
       showEco={ecoOn}
       ecoCounts={ecoCounts}
+      ecoTotalUnique={ecoTotalUnique}
       ecoLabel={ecoType ? INSTITUTION_TYPE_LABEL[ecoType] : undefined}
+      mapCorner={corner}
     />
   );
 
-  /** 地图与下方图例分栏：图例在地图框外，避免叠底图只露出一国 */
   const frame = bare ? (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        minHeight: 0,
-      }}
-    >
-      {globe}
-    </div>
+    <div style={{ position: "relative", width: "100%", height: "100%", minHeight: 0 }}>{globe}</div>
   ) : (
     <div style={{ width: "100%" }}>{globe}</div>
   );
 
   const staged =
     onPresent != null ? (
-      <MapStage
-        present={present}
-        onPresent={onPresent ?? (() => undefined)}
-        onExit={onExit}
-      >
+      <MapStage present={present} onPresent={onPresent ?? (() => undefined)} onExit={onExit} showCornerToggle={false}>
         {bare ? frame : <MapPanel>{frame}</MapPanel>}
       </MapStage>
     ) : bare ? (
@@ -24008,163 +25210,88 @@ function BigScreenOverlay({
     );
 
   if (bare) return staged;
-  return (
-    <Stack gap={14}>
-      <Stack gap={4} style={{ minHeight: 48 }}>
-        <H2>{title}</H2>
-        <Text size="small" tone="secondary">
-          {subtitle}
-        </Text>
-      </Stack>
-      {staged}
-    </Stack>
-  );
+  return staged;
 }
 
-/** 大屏：市场放贷 */
-function BigScreenOverview({
-  height = 440,
-  bare = false,
-  present = false,
-  onPresent,
-}: {
-  height?: number;
-  bare?: boolean;
-  present?: boolean;
-  onPresent?: () => void;
-}) {
-  const map = bare ? (
-    <LendingHeatGlobe height={height} fill legendPlacement="bottom" />
-  ) : (
-    <MapPanel>
-      <LendingHeatGlobe height={height} />
-    </MapPanel>
-  );
-  const staged =
-    onPresent != null ? (
-      <MapStage present={present} onPresent={onPresent}>
-        {map}
-      </MapStage>
-    ) : (
-      map
-    );
-  if (bare) return staged;
-  return (
-    <Stack gap={14}>
-      <Stack gap={4}>
-        <H2>市场放贷热力图</H2>
-        <Text size="small" tone="secondary">
-          市场放贷总量(USD)：灰阶分档浅→深 · 点击有数据国家可放大
-        </Text>
-      </Stack>
-      {staged}
-    </Stack>
-  );
-}
-
-/** 大屏：展业（已投） */
-function BigScreenInvested({
-  height = 440,
-  bare = false,
-  present = false,
-  onPresent,
-}: {
-  height?: number;
-  bare?: boolean;
-  present?: boolean;
-  onPresent?: () => void;
-}) {
-  const map = bare ? (
-    <InvestedHeatGlobe height={height} fill legendPlacement="bottom" />
-  ) : (
-    <MapPanel>
-      <InvestedHeatGlobe height={height} />
-    </MapPanel>
-  );
-  const staged =
-    onPresent != null ? (
-      <MapStage present={present} onPresent={onPresent}>
-        {map}
-      </MapStage>
-    ) : (
-      map
-    );
-  if (bare) return staged;
-  return (
-    <Stack gap={14}>
-      <Stack gap={4}>
-        <H2>展业热力图</H2>
-        <Text size="small" tone="secondary">
-          展业在贷：强调色深浅 + 圆点大小 · 点击国家查看已投平台
-        </Text>
-      </Stack>
-      {staged}
-    </Stack>
-  );
-}
-
-/** 大屏：宏观因子地域分布 */
+/** 大屏：宏观因子地域分布（可叠展业徽章） */
 function BigScreenMacro({
   height = 520,
   bare = false,
   factor,
+  showInvested = false,
   present = false,
   onPresent,
+  onExit,
 }: {
   height?: number;
   bare?: boolean;
   factor: MacroMapFactorId;
+  showInvested?: boolean;
   present?: boolean;
   onPresent?: () => void;
+  onExit?: () => void;
 }) {
-  const meta = MACRO_MAP_FACTORS.find((f) => f.id === factor);
+  const corner = mapFullscreenCorner(present, onPresent, onExit);
   const map = bare ? (
-    <MacroHeatGlobe height={height} factor={factor} fill legendPlacement="bottom" />
+    <MacroHeatGlobe
+      height={height}
+      factor={factor}
+      fill
+      legendPlacement="bottom"
+      showInvested={showInvested}
+      mapCorner={corner}
+    />
   ) : (
     <MapPanel>
-      <MacroHeatGlobe height={height} factor={factor} />
+      <MacroHeatGlobe
+        height={height}
+        factor={factor}
+        legendPlacement="bottom"
+        showInvested={showInvested}
+        mapCorner={corner}
+      />
     </MapPanel>
   );
   const staged =
     onPresent != null ? (
-      <MapStage present={present} onPresent={onPresent}>
+      <MapStage present={present} onPresent={onPresent} onExit={onExit} showCornerToggle={false}>
         {map}
       </MapStage>
     ) : (
       map
     );
-  if (bare) return staged;
-  return (
-    <Stack gap={14}>
-      <Stack gap={4}>
-        <H2>宏观因子 · 地域分布</H2>
-        <Text size="small" tone="secondary">
-          {meta?.label ?? factor}：色阶=各国读数高低 · 点击国家看全套宏观 + 放贷/已投对照 ·{" "}
-          {meta?.blurb}
-        </Text>
-      </Stack>
-      {staged}
-    </Stack>
-  );
+  return staged;
 }
 
 function BigScreen() {
   const theme = useHostTheme();
-  /** 市场 / 展业可同时亮起；监管名单、对照为独立页；其他机构为第二列选类型上图 */
   const [showMarket, setShowMarket] = useCanvasState<boolean>("screenMkt2", true);
   const [showInvested, setShowInvested] = useCanvasState<boolean>("screenInv2", true);
+  const [showMacro, setShowMacro] = useCanvasState<boolean>("screenMacro1", false);
+  const [macroFactor, setMacroFactor] = useCanvasState<MacroMapFactorId>("screenMacroFactor2", "gdpPc");
   const [showRoster, setShowRoster] = useCanvasState<boolean>("screenRoster2", false);
-  const [showCompare, setShowCompare] = useCanvasState<boolean>("screenCmp1", false);
   const [ecoType, setEcoType] = useCanvasState<InstitutionType | "">("screenEcoType1", "");
   const [ecoPickerOpen, setEcoPickerOpen] = useCanvasState<boolean>("screenEcoOpen1", false);
+  /** 宏观与机构可同时点亮时，底图焦点：macro | eco | market */
+  const [mapFocus, setMapFocus] = useCanvasState<"market" | "macro" | "eco">("screenMapFocus1", "market");
   const [present, setPresent] = useCanvasState<boolean>("screenPresent1", false);
   const [vh, setVh] = useState(800);
+  const [vw, setVw] = useState(1200);
+  const [paneH, setPaneH] = useState(560);
+  const mapPaneRef = useRef<HTMLDivElement | null>(null);
 
-  const countEcoType = (t: InstitutionType) =>
-    credits.filter((r) => r.institutionTypes.includes(t)).length;
+  const countEcoType = (t: InstitutionType) => {
+    const nCredit = credits.filter((r) => r.institutionTypes.includes(t)).length;
+    if (t !== "玩家") return nCredit;
+    return nCredit + scenes.filter((r) => r.institutionTypes.includes("玩家")).length;
+  };
 
   useEffect(() => {
-    const sync = () => setVh(typeof window !== "undefined" ? window.innerHeight : 800);
+    const sync = () => {
+      if (typeof window === "undefined") return;
+      setVh(window.innerHeight);
+      setVw(window.innerWidth);
+    };
     sync();
     window.addEventListener("resize", sync);
     return () => window.removeEventListener("resize", sync);
@@ -24172,8 +25299,30 @@ function BigScreen() {
 
   useEffect(() => {
     if (!present) return;
+    const el = mapPaneRef.current;
+    if (!el || typeof ResizeObserver === "undefined") {
+      setPaneH(Math.max(360, Math.round(vh * 0.78)));
+      return;
+    }
+    const apply = () => {
+      const h = Math.floor(el.clientHeight);
+      if (h > 0) setPaneH(h);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [present, vh, showRoster]);
+
+  useEffect(() => {
+    if (!present) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPresent(false);
+      if (e.key === "Escape") {
+        setPresent(false);
+        if (typeof document !== "undefined" && document.fullscreenElement) {
+          void document.exitFullscreen?.().catch(() => undefined);
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -24187,7 +25336,7 @@ function BigScreen() {
       try {
         void Promise.resolve(req()).catch(() => undefined);
       } catch {
-        /* iframe 等环境可能拒绝浏览器全屏，应用内铺满仍可用 */
+        /* iframe 等环境可能拒绝浏览器全屏 */
       }
     }
   };
@@ -24201,7 +25350,6 @@ function BigScreen() {
 
   const leaveSpecial = () => {
     setShowRoster(false);
-    setShowCompare(false);
   };
 
   const clearEco = () => {
@@ -24209,249 +25357,394 @@ function BigScreen() {
     setEcoPickerOpen(false);
   };
 
-  const toggleMarket = () => {
-    if (showRoster || showCompare) {
-      leaveSpecial();
+  const restoreDefaultMap = () => {
+    if (!showMarket && !showInvested && !ecoType && !showMacro) {
       setShowMarket(true);
+      setShowInvested(true);
+    }
+  };
+
+  const toggleMarket = () => {
+    if (showRoster) {
+      leaveSpecial();
+      clearEco();
+      setShowMacro(false);
+      setShowMarket(true);
+      setMapFocus("market");
       return;
     }
-    if (showMarket && !showInvested && !ecoType) return; // 至少保留一层
-    setShowMarket(!showMarket);
+    if (showMacro) {
+      // 市场与宏观可并存：点市场时切回市场底图，宏观芯片保持可再点回
+      setShowMacro(false);
+      setShowMarket(true);
+      setMapFocus("market");
+      return;
+    }
+    if (ecoType) {
+      // 市场与机构可并存；仅切到底图焦点
+      setMapFocus("market");
+    }
+    if (showMarket) {
+      if (!showInvested && !ecoType) return;
+      setShowMarket(false);
+      return;
+    }
+    setShowMarket(true);
+    setMapFocus("market");
   };
 
   const toggleInvested = () => {
-    if (showRoster || showCompare) {
+    if (showRoster) {
       leaveSpecial();
       clearEco();
+      setShowMacro(false);
       setShowInvested(true);
+      setMapFocus("market");
       return;
     }
-    if (ecoType) clearEco();
-    if (showInvested && !showMarket) return;
-    setShowInvested(!showInvested);
+    // 宏观底图上可叠展业锚点，不再因点展业而关掉宏观
+    if (ecoType && !showMacro) {
+      // 机构面填时展业点阵互斥（同 FullMarketChoropleth）
+      clearEco();
+    }
+    if (showInvested) {
+      if (!showMarket && !showMacro && !ecoType) setShowMarket(true);
+      setShowInvested(false);
+      return;
+    }
+    setShowInvested(true);
+    if (showMacro) setMapFocus("macro");
+    else setMapFocus("market");
+  };
+
+  const toggleMacro = () => {
+    if (showMacro && mapFocus === "macro") {
+      setShowMacro(false);
+      if (!showMarket && !ecoType) setShowMarket(true);
+      setMapFocus(ecoType ? "eco" : "market");
+      restoreDefaultMap();
+      return;
+    }
+    if (showMacro && mapFocus !== "macro") {
+      // 已开宏观但焦点在机构：切回宏观底图（两芯片保持点亮）
+      setMapFocus("macro");
+      setShowRoster(false);
+      return;
+    }
+    setShowRoster(false);
+    setShowMacro(true);
+    setMapFocus("macro");
+    // 保留展业/机构状态，便于同时点亮
   };
 
   const toggleRoster = () => {
     if (showRoster) {
       setShowRoster(false);
-      if (!showMarket && !showInvested && !ecoType) {
-        setShowMarket(true);
-        setShowInvested(true);
-      }
+      restoreDefaultMap();
       return;
     }
     clearEco();
-    setShowCompare(false);
+    setShowMacro(false);
     setShowRoster(true);
   };
 
-  const toggleCompare = () => {
-    if (showCompare) {
-      setShowCompare(false);
-      if (!showMarket && !showInvested && !ecoType) {
-        setShowMarket(true);
-        setShowInvested(true);
+  const toggleEcoMode = () => {
+    if (ecoType || ecoPickerOpen) {
+      if (mapFocus === "eco" && showMacro) {
+        // 机构已开时再点：若宏观也开着，先把焦点切回宏观而不清机构
+        setMapFocus("macro");
+        return;
       }
+      clearEco();
+      setMapFocus(showMacro ? "macro" : "market");
+      restoreDefaultMap();
       return;
     }
-    clearEco();
     setShowRoster(false);
-    setShowCompare(true);
-  };
-
-  const toggleEcoPicker = () => {
-    if (showRoster || showCompare) leaveSpecial();
-    setEcoPickerOpen(!ecoPickerOpen);
+    setEcoPickerOpen(true);
+    setMapFocus("eco");
+    if (!showMarket && !showMacro) setShowMarket(true);
   };
 
   const selectEcoType = (t: InstitutionType) => {
-    leaveSpecial();
+    setShowRoster(false);
     if (ecoType === t) {
       clearEco();
-      if (!showMarket && !showInvested) {
-        setShowMarket(true);
-        setShowInvested(true);
-      }
+      setMapFocus(showMacro ? "macro" : "market");
+      restoreDefaultMap();
       return;
     }
     setEcoType(t);
-    setEcoPickerOpen(false);
+    setEcoPickerOpen(true);
+    setMapFocus("eco");
+    // 机构面填与展业点阵互斥；宏观可与机构同时点亮（焦点在机构图）
     setShowInvested(false);
-    if (!showMarket) setShowMarket(true);
+    if (!showMarket && !showMacro) setShowMarket(true);
   };
 
-  const presentMapH = Math.max(640, Math.round(vh * 0.92));
-  /** 固定画幅高度；图层只改 props，不换组件 */
-  const normalMapH = 560;
-  const onMap = !showRoster && !showCompare;
+  const compactMap = vw < 1100;
+  /** 小屏：按视口拉高嵌入地图；宽屏保持原画幅量级 */
+  const normalMapH = compactMap
+    ? Math.round(Math.min(Math.max(vh * 0.58, 560), 780))
+    : 680;
+  /** 全屏画幅取容器实测高度，图层切换不改 height 算法 */
+  const mapH = present ? Math.max(400, paneH) : normalMapH;
+  const ecoMode = Boolean(ecoType || ecoPickerOpen);
+  const showMacroMap = showMacro && mapFocus === "macro";
+  const showEcoMap = ecoMode && mapFocus === "eco";
+
+  const modeStatus = showRoster
+    ? "非银名单"
+    : showMacroMap
+      ? `宏观 · ${MACRO_MAP_FACTORS.find((f) => f.id === macroFactor)?.label ?? ""}${
+          showInvested ? " × 展业" : ""
+        }${ecoMode ? " · 机构开" : ""}`
+      : showEcoMap
+        ? `${showMacro ? "宏观×" : ""}机构 · ${
+            ecoType ? INSTITUTION_TYPE_LABEL[ecoType] : "选类型"
+          }`
+        : showMarket && showInvested
+          ? "市场 × 展业"
+          : showMarket
+            ? "全市场"
+            : showInvested
+              ? "展业"
+              : "地图";
 
   const layerTabs = (
-    <Stack gap={8}>
-      <Row gap={8} wrap align="center">
-        <Text size="small" tone="tertiary">
-          常用
-        </Text>
-        <FilterChip
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 10,
+        alignItems: "center",
+        width: "100%",
+        justifyContent: "space-between",
+      }}
+    >
+      <ScreenSegTrack>
+        <ScreenSegChip
           label="市场"
-          active={showMarket && onMap}
+          active={showMarket && !showRoster && mapFocus === "market"}
           onClick={toggleMarket}
         />
-        <FilterChip
+        <ScreenSegChip
           label="展业"
-          active={showInvested && onMap && !ecoType}
+          active={showInvested && !showRoster && !(showEcoMap && Boolean(ecoType))}
           onClick={toggleInvested}
         />
-        <FilterChip label="非银玩家统计信息（监管名单）" active={showRoster} onClick={toggleRoster} />
-        <FilterChip label="对照" active={showCompare} onClick={toggleCompare} />
-      </Row>
-      <Row gap={8} wrap align="center">
-        <Text size="small" tone="tertiary">
-          其他
-        </Text>
-        <FilterChip
-          label={
-            ecoType
-              ? `${INSTITUTION_TYPE_LABEL[ecoType]} · 地图`
-              : ecoPickerOpen
-                ? "机构 · 收起"
-                : "机构"
-          }
-          active={Boolean(ecoType) || ecoPickerOpen}
-          clearable={Boolean(ecoType)}
-          onClick={() => {
-            if (ecoType && !ecoPickerOpen) {
-              clearEco();
-              if (!showMarket && !showInvested) {
-                setShowMarket(true);
-                setShowInvested(true);
-              }
-              return;
-            }
-            toggleEcoPicker();
-          }}
+        <ScreenSegChip label="宏观" active={showMacro && !showRoster} onClick={toggleMacro} />
+        <ScreenSegChip
+          label={ecoType ? INSTITUTION_TYPE_LABEL[ecoType] : "机构"}
+          active={ecoMode && !showRoster}
+          clearable={ecoMode}
+          onClick={toggleEcoMode}
         />
-        {ecoType ? (
-          <Text size="small" tone="secondary">
-            面填市场 × 圆点机构分布；点类型可切换
-          </Text>
-        ) : null}
-      </Row>
-      {ecoPickerOpen ? (
-        <Stack
-          gap={8}
-          style={{
-            padding: 12,
-            borderRadius: 10,
-            border: `1px solid ${theme.stroke.tertiary}`,
-            background: theme.bg.editor,
-            maxWidth: 920,
-          }}
-        >
-          <Text size="small" weight="medium">
-            选择机构类型上图（与图一生态入口同口径；不含玩家）
-          </Text>
-          {INST_BUCKET_ORDER.filter((b) => b !== "用户端").map((bucket) => (
-            <Stack gap={6} key={bucket}>
-              <Text size="small" tone="secondary">
-                {INST_BUCKET_LABEL[bucket]}
-              </Text>
-              <Row gap={6} wrap>
-                {INST_BUCKET_TYPES[bucket]
-                  .filter((t) => t !== "玩家")
-                  .map((t) => (
-                    <FilterChip
-                      key={t}
-                      label={`${INSTITUTION_TYPE_LABEL[t]} · ${countEcoType(t)}`}
-                      active={ecoType === t}
-                      clearable
-                      onClick={() => selectEcoType(t)}
-                    />
-                  ))}
-              </Row>
-            </Stack>
-          ))}
-        </Stack>
-      ) : null}
-    </Stack>
+        <ScreenSegChip label="非银名单" active={showRoster} onClick={toggleRoster} />
+      </ScreenSegTrack>
+      <ScreenStatusPills
+        items={[
+          { label: "Atlas", tone: "accent" },
+          { label: "Live", tone: "live" },
+          { label: modeStatus },
+        ]}
+      />
+    </div>
   );
 
-  const mapPane =
-    showRoster || showCompare ? null : (
-      <BigScreenOverlay
-        height={present ? presentMapH : normalMapH}
-        bare={present}
-        present={present}
-        onPresent={enterPresent}
-        onExit={exitPresent}
-        showMarket={showMarket}
-        showInvested={showInvested}
-        ecoType={ecoType}
-      />
-    );
+  /** 第二行：宏观=因子；机构=类型；可与宏观同时开时按焦点切换；否则 IMF/世行 */
+  const mapSubChrome = !showRoster ? (
+    <div
+      style={{
+        minHeight: 36,
+        display: "flex",
+        alignItems: "flex-start",
+        width: "100%",
+        position: "relative",
+      }}
+    >
+      {showMacroMap ? (
+        <ScreenSegTrack>
+          {MACRO_MAP_FACTORS.map((f) => (
+            <ScreenSegChip
+              key={f.id}
+              label={f.label}
+              active={macroFactor === f.id}
+              onClick={() => setMacroFactor(f.id)}
+            />
+          ))}
+        </ScreenSegTrack>
+      ) : showEcoMap ? (
+        <div style={{ width: "100%", maxHeight: 96, overflow: "auto" }}>
+          <ScreenSegTrack style={{ width: "100%", overflow: "visible" }}>
+            {INST_BUCKET_ORDER.flatMap((bucket) =>
+              INST_BUCKET_TYPES[bucket].map((t) => (
+                <ScreenSegChip
+                  key={t}
+                  label={`${INSTITUTION_TYPE_LABEL[t]} · ${countEcoType(t)}`}
+                  active={ecoType === t}
+                  clearable
+                  onClick={() => selectEcoType(t)}
+                />
+              )),
+            )}
+          </ScreenSegTrack>
+        </div>
+      ) : showMarket ? (
+        <ScreenImfWbFilterBar />
+      ) : null}
+    </div>
+  ) : null;
+
+  const mapPane = showRoster ? null : showMacroMap ? (
+    <BigScreenMacro
+      key={`macro-${macroFactor}`}
+      height={mapH}
+      bare={present}
+      factor={macroFactor}
+      showInvested={showInvested}
+      present={present}
+      onPresent={enterPresent}
+      onExit={exitPresent}
+    />
+  ) : (
+    <BigScreenOverlay
+      key={`mkt-${showMarket ? 1 : 0}-${showInvested ? 1 : 0}-${ecoType || "none"}`}
+      height={mapH}
+      bare={present}
+      present={present}
+      onPresent={enterPresent}
+      onExit={exitPresent}
+      showMarket={showMarket}
+      showInvested={showInvested}
+      ecoType={showEcoMap ? ecoType : ""}
+    />
+  );
 
   if (present) {
-    return (
+    const shell = (
       <div
         style={{
           position: "fixed",
           inset: 0,
-          zIndex: 9999,
+          zIndex: 99999,
           background: theme.bg.chrome,
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          paddingLeft: "env(safe-area-inset-left, 0px)",
+          paddingRight: "env(safe-area-inset-right, 0px)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
         <div
+          aria-hidden
           style={{
-            position: "absolute",
-            top: 10,
-            left: 12,
-            zIndex: 20,
+            height: 2,
+            flexShrink: 0,
+            background: theme.accent.primary,
+          }}
+        />
+        <div
+          data-screen-chrome
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            flex: "0 0 auto",
+            position: "relative",
+            zIndex: 100,
+            padding: "12px 16px 10px",
+            background: theme.bg.elevated,
+            borderBottom: `1px solid ${theme.stroke.secondary}`,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
             pointerEvents: "auto",
+            isolation: "isolate",
           }}
         >
           {layerTabs}
+          {mapSubChrome}
         </div>
         {showRoster ? (
-          <div style={{ flex: 1, overflow: "auto", padding: "56px 16px 16px" }}>
+          <div style={{ flex: 1, overflow: "auto", padding: "12px 16px 16px", position: "relative", zIndex: 1 }}>
             <NbfcStatsSubpage />
           </div>
-        ) : showCompare ? (
-          <div style={{ flex: 1, overflow: "auto", padding: "56px 16px 16px" }}>
-            <CompareHubPanel dense />
-          </div>
         ) : (
-          <div style={{ flex: 1, minHeight: 0, position: "relative" }}>{mapPane}</div>
+          <div
+            ref={mapPaneRef}
+            style={{
+              flex: 1,
+              minHeight: 0,
+              position: "relative",
+              zIndex: 1,
+              padding: "10px 14px 14px",
+              isolation: "isolate",
+              background: theme.bg.chrome,
+            }}
+          >
+            {mapPane}
+          </div>
         )}
       </div>
     );
+    return typeof document !== "undefined" ? createPortal(shell, document.body) : shell;
   }
 
   return (
     <Stack gap={16}>
-      <Stack gap={6}>
-        <H1>大屏</H1>
-        <Text size="small" tone="secondary">
-          第一列常用：市场 / 展业 / 非银名单 / 对照。第二列「机构」可选支付、监管、流量等上图对照；全屏同样可用。
-        </Text>
+      <Stack
+        gap={10}
+        style={{
+          padding: "12px 14px",
+          borderRadius: 4,
+          border: `1px solid ${theme.stroke.secondary}`,
+          background: theme.bg.elevated,
+        }}
+      >
+        {layerTabs}
+        {mapSubChrome}
       </Stack>
-
-      {layerTabs}
-
-      {showRoster ? <NbfcStatsSubpage /> : showCompare ? <CompareHubPanel dense /> : mapPane}
+      {showRoster ? (
+        <NbfcStatsSubpage />
+      ) : (
+        <div
+          style={{
+            width: "100%",
+            minHeight: compactMap ? Math.round(Math.min(vh * 0.52, 640)) : undefined,
+          }}
+        >
+          {mapPane}
+        </div>
+      )}
     </Stack>
   );
 }
 
 
+
 export default function Canvas() {
-  type AtlasHub = "home" | "scenes" | "macro" | "compare" | InstitutionType;
+  type AtlasHub = "home" | "scenes" | "macro" | "compare" | "sources" | InstitutionType;
   const [appTab, setAppTab] = useCanvasState<AppTab>("appTab1", "crm");
   const [hub, setHub] = useCanvasState<AtlasHub>("hub7", "home");
-  const [atlasRole, setAtlasRole] = useCanvasState<AtlasRole>("atlasRole", "am");
+  const [sourceReturnHub, setSourceReturnHub] = useCanvasState<string>("sourceCiteReturnHub", "");
+  const [, setSourceFocus] = useCanvasState<string>("sourceCiteFocus", "");
+  // 视角切换已隐藏；后台用户角色接上前固定客户经理（避免本地曾选路演后无法切回）
+  const atlasRole: AtlasRole = "am";
   const isInstHub =
-    hub !== "home" && hub !== "scenes" && hub !== "macro" && hub !== "compare";
+    hub !== "home" &&
+    hub !== "scenes" &&
+    hub !== "macro" &&
+    hub !== "compare" &&
+    hub !== "sources";
+  const [ecoNavOpen, setEcoNavOpen] = useCanvasState("ecoNavOpen1", "");
+  /** 情报：快讯（监管/媒体）| 研报（机构研报） */
+  const [intelLane, setIntelLane] = useCanvasState<"flash" | "research">("intelLane1", "flash");
+  /** 生态机构与数字经济 / 国别宏观互斥，不可同时点亮 */
+  const ecoNavExpanded =
+    (ecoNavOpen === "1" || isInstHub) && hub !== "scenes" && hub !== "macro";
+  const ecoTypeCount = INST_BUCKET_ORDER.reduce((n, b) => n + INST_BUCKET_TYPES[b].length, 0);
   const [region, setRegion] = useCanvasState<Region>("region5", "all");
   const [langZone, setLangZone] = useCanvasState<LangZoneFilter>("langZone1", "all");
   const [country, setCountry] = useCanvasState<CountryCode>("country8", "all");
@@ -24667,7 +25960,7 @@ export default function Canvas() {
 
   /** 反向映射用池：不受洲际/国家筛选，只看该机构类型（及资金细分）全量覆盖 */
   const hubGeoCoverage = (() => {
-    if (hub === "home" || hub === "scenes" || hub === "macro") {
+    if (hub === "home" || hub === "scenes" || hub === "macro" || hub === "sources") {
       return collectGeoCoverage([]);
     }
     if (hub === "玩家") {
@@ -24820,9 +26113,11 @@ export default function Canvas() {
   if (appTab === "screen") {
     return (
       <PersistScrollShell>
-        <Stack gap={20} style={{ scrollbarGutter: "stable", overflowAnchor: "none" }}>
+        <Stack gap={16} style={{ scrollbarGutter: "stable", overflowAnchor: "none" }}>
           <SessionChrome />
-          <AppTabBar appTab={appTab} setAppTab={setAppTab} />
+          <Row gap={8} align="center" justify="end">
+            <MapScreenButton active onClick={() => setAppTab("crm")} />
+          </Row>
           <BigScreen />
         </Stack>
       </PersistScrollShell>
@@ -24831,110 +26126,159 @@ export default function Canvas() {
 
   return (
     <PersistScrollShell>
-    <Stack gap={20} style={{ scrollbarGutter: "stable", overflowAnchor: "none" }}>
+    <Stack gap={16} style={{ scrollbarGutter: "stable", overflowAnchor: "none" }}>
       <SessionChrome />
-      <AppTabBar appTab={appTab} setAppTab={setAppTab} />
 
-      <H1>CRM生态系统</H1>
-
-      <CursorStyleComposer
-        value={keyword}
-        onChange={setKeyword}
-        onSubmit={({ text, attachments }) => {
-          const draft = draftFromComposerCreate(text, attachments);
-          if (draft) {
-            const key = creditBrandKey(draft.group);
-            const exists =
-              liveCredits.some((r) => creditBrandKey(r.group) === key) ||
-              createdPlayers.some((d) => creditBrandKey(d.group) === key);
-            if (exists) {
-              setKeyword(draft.brands);
-              setHub("玩家");
-              setPrimary("credit");
-              return `已存在相近玩家「${draft.brands}」，已跳转名单并检索`;
+      <Row gap={8} align="start">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <CursorStyleComposer
+            value={keyword}
+            onChange={setKeyword}
+            sideSlot={
+              <>
+                <MapScreenButton fillHeight active={false} onClick={() => setAppTab("screen")} />
+                <SideHubButton
+                  active={hub === "compare"}
+                  title="对照"
+                  label="对照"
+                  icon={<IconCompare />}
+                  onClick={() => setHub(hub === "compare" ? "home" : "compare")}
+                />
+                <SideHubButton
+                  active={hub === "sources"}
+                  title="信源"
+                  label="信源"
+                  icon={<IconSourceCite />}
+                  onClick={() => {
+                    if (hub === "sources") {
+                      const target =
+                        sourceReturnHub && sourceReturnHub !== "sources"
+                          ? (sourceReturnHub as AtlasHub)
+                          : "home";
+                      setHub(target);
+                      setSourceReturnHub("");
+                      setSourceFocus("");
+                    } else {
+                      setSourceReturnHub(hub);
+                      setHub("sources");
+                    }
+                  }}
+                />
+              </>
             }
-            setCreatedPlayers((prev) => [draft, ...prev].slice(0, 50));
-            setKeyword(draft.brands);
-            setHub("玩家");
-            setPrimary("credit");
-            return `已创设玩家「${draft.brands}」，已进入信贷原生名单`;
-          }
-          const q = text.trim();
-          if (!q && !attachments.length) {
-            return "输入关键词检索，或写「创设…玩家名」建档";
-          }
-          if (!q && attachments.length) {
-            return `已附带 ${attachments.length} 项材料；请补充「创设…玩家名」后发送建档`;
-          }
-          setHub("home");
-          return `检索：${q}`;
-        }}
-      />
+            onSubmit={({ text, attachments }) => {
+              const draft = draftFromComposerCreate(text, attachments);
+              if (draft) {
+                const key = creditBrandKey(draft.group);
+                const exists =
+                  liveCredits.some((r) => creditBrandKey(r.group) === key) ||
+                  createdPlayers.some((d) => creditBrandKey(d.group) === key);
+                if (exists) {
+                  setKeyword(draft.brands);
+                  setHub("玩家");
+                  setPrimary("credit");
+                  return `已存在相近玩家「${draft.brands}」，已跳转名单并检索`;
+                }
+                setCreatedPlayers((prev) => [draft, ...prev].slice(0, 50));
+                setKeyword(draft.brands);
+                setHub("玩家");
+                setPrimary("credit");
+                return `已创设玩家「${draft.brands}」，已进入信贷原生名单`;
+              }
+              const q = text.trim();
+              if (!q && !attachments.length) {
+                return "输入关键词检索，或写「创设…玩家名」建档";
+              }
+              if (!q && attachments.length) {
+                return `已附带 ${attachments.length} 项材料；请补充「创设…玩家名」后发送建档`;
+              }
+              setHub("home");
+              return `检索：${q}`;
+            }}
+          />
+        </div>
+      </Row>
 
       <Stack gap={8}>
-        <Text size="small" weight="medium">
-          机构类型入口
-        </Text>
-        <Row gap={6} wrap>
-          <FilterChip label="总览" active={hub === "home"} onClick={() => setHub("home")} />
+        <Row gap={6} wrap align="center">
+          <FilterChip
+            label="快讯"
+            active={hub === "home" && !ecoNavExpanded && intelLane === "flash"}
+            onClick={() => {
+              setEcoNavOpen("");
+              setIntelLane("flash");
+              setHub("home");
+            }}
+          />
+          <FilterChip
+            label="研报"
+            active={hub === "home" && !ecoNavExpanded && intelLane === "research"}
+            onClick={() => {
+              setEcoNavOpen("");
+              setIntelLane("research");
+              setHub("home");
+            }}
+          />
+          <FilterChip
+            label={`国别宏观 ${Object.keys(COUNTRY_MACRO).length}`}
+            active={hub === "macro"}
+            clearable
+            onClick={() => setHub(hub === "macro" ? "home" : "macro")}
+          />
+          <FilterChip
+            label={`数字经济 ${SCENE_WIDE_TABLE.length + WEB3_SCENE_WIDE_TABLE.length}`}
+            active={hub === "scenes"}
+            clearable
+            onClick={() => {
+              setEcoNavOpen("");
+              setHub(hub === "scenes" ? "home" : "scenes");
+            }}
+          />
+          <FilterChip
+            label={`生态机构 ${ecoTypeCount}`}
+            active={ecoNavExpanded}
+            clearable
+            onClick={() => {
+              if (isInstHub) {
+                setHub("home");
+                setEcoNavOpen("");
+                return;
+              }
+              if (ecoNavExpanded) {
+                setEcoNavOpen("");
+                return;
+              }
+              if (hub === "scenes") setHub("home");
+              setEcoNavOpen("1");
+            }}
+          />
         </Row>
-        <Stack gap={4}>
-          <Text size="small" tone="secondary" weight="medium">
-            场景与宏观
-          </Text>
-          <Row gap={6} wrap>
-            <FilterChip
-              label={`线上数字经济 · ${SCENE_WIDE_TABLE.length + WEB3_SCENE_WIDE_TABLE.length}`}
-              active={hub === "scenes"}
-              clearable
-              onClick={() => setHub(hub === "scenes" ? "home" : "scenes")}
-            />
-            <FilterChip
-              label={`国别宏观 · ${Object.keys(COUNTRY_MACRO).length}`}
-              active={hub === "macro"}
-              clearable
-              onClick={() => setHub(hub === "macro" ? "home" : "macro")}
-            />
-            <FilterChip
-              label="对照"
-              active={hub === "compare"}
-              clearable
-              onClick={() => setHub(hub === "compare" ? "home" : "compare")}
-            />
-          </Row>
-        </Stack>
-        {INST_BUCKET_ORDER.map((bucket) => (
-          <Stack gap={4}>
-            <Text size="small" tone="secondary" weight="medium">
-              {INST_BUCKET_LABEL[bucket]}
-            </Text>
-            <Row gap={6} wrap>
-              {INST_BUCKET_TYPES[bucket].map((t) => (
-                <FilterChip
-                  label={`${INSTITUTION_TYPE_LABEL[t]} · ${countInstitutionType(t)}`}
-                  active={hub === t}
-                  clearable
-                  onClick={() => setHub(hub === t ? "home" : t)}
-                />
-              ))}
-            </Row>
+        {ecoNavExpanded ? (
+          <Stack gap={8}>
+            {INST_BUCKET_ORDER.map((bucket) => (
+              <Stack key={bucket} gap={4}>
+                <Text size="small" tone="tertiary" weight="medium">
+                  {INST_BUCKET_LABEL[bucket]}
+                </Text>
+                <Row gap={6} wrap>
+                  {INST_BUCKET_TYPES[bucket].map((t) => (
+                    <FilterChip
+                      key={t}
+                      label={`${INSTITUTION_TYPE_LABEL[t]} ${countInstitutionType(t)}`}
+                      active={hub === t}
+                      clearable
+                      onClick={() => setHub(hub === t ? "home" : t)}
+                    />
+                  ))}
+                </Row>
+              </Stack>
+            ))}
           </Stack>
-        ))}
+        ) : null}
       </Stack>
 
       {hub === "home" ? (
         <Stack gap={16}>
-          <AtlasRoleSwitch role={atlasRole} onChange={setAtlasRole} />
-          {atlasRole === "boss" ? (
-            <Text size="small" tone="tertiary">
-              老板视角：先看「本周该盯」与消费信贷三板块；地图与机构库按需下钻。
-            </Text>
-          ) : null}
-          {atlasRole === "roadshow" ? (
-            <Text size="small" tone="tertiary">
-              路演只读：隐藏玩家挂靠；机密访谈/尽调需登录后另开（水印后续）。
-            </Text>
-          ) : null}
           {kw ? (
             <Stack gap={12}>
               <H2>搜索结果 · {searchHitCount}</H2>
@@ -25011,183 +26355,28 @@ export default function Canvas() {
               <Divider />
             </Stack>
           ) : null}
-          <H2>生态角色</H2>
-          <Stack gap={12}>
-            {INST_BUCKET_ORDER.map((bucket) => {
-              const types = INST_BUCKET_TYPES[bucket];
-              return (
-              <Stack gap={6}>
-                <Text size="small" weight="medium" tone="secondary">
-                  {INST_BUCKET_LABEL[bucket]}
-                </Text>
-                <Grid
-                  columns={3}
-                  gap={8}
-                  align="stretch"
-                >
-                  {types.map((t) => (
-                    <div
-                      style={{ cursor: "pointer", minWidth: 0, height: "100%" }}
-                      onClick={() => setHub(t)}
-                      onKeyDown={(e: { key: string; preventDefault: () => void }) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          setHub(t);
-                        }
-                      }}
-                      role="button"
-                      tabIndex={0}
-                      title={`查看${INSTITUTION_TYPE_LABEL[t]}名单`}
-                    >
-                      <Card style={{ height: "100%" }}>
-                        <CardHeader
-                          trailing={
-                            <Row gap={6} align="center">
-                              <Pill tone="neutral" size="sm">
-                                {String(countInstitutionType(t))}
-                              </Pill>
-                              <Text size="small" tone="tertiary" as="span">
-                                →
-                              </Text>
-                            </Row>
-                          }
-                        >
-                          {INSTITUTION_TYPE_LABEL[t]}
-                        </CardHeader>
-                        <CardBody>
-                          <Text
-                            size="small"
-                            tone="tertiary"
-                            style={{
-                              fontSize: 11,
-                              lineHeight: 1.35,
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {INSTITUTION_TYPE_BLURB[t]}
-                          </Text>
-                        </CardBody>
-                      </Card>
-                    </div>
-                  ))}
-                </Grid>
-              </Stack>
-              );
-            })}
-          </Stack>
 
-          <Divider />
-          <H2>场景与宏观</H2>
-          <Grid
-            columns={3}
-            gap={8}
-            align="stretch"
-          >
-            <div
-              style={{ cursor: "pointer", minWidth: 0, height: "100%" }}
-              onClick={() => setHub("scenes")}
-              onKeyDown={(e: { key: string; preventDefault: () => void }) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setHub("scenes");
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              title="查看线上数字经济场景"
-            >
-              <Card style={{ height: "100%" }}>
-                <CardHeader
-                  trailing={
-                    <Row gap={6} align="center">
-                      <Pill tone="neutral" size="sm">
-                        {String(SCENE_WIDE_TABLE.length + WEB3_SCENE_WIDE_TABLE.length)}
-                      </Pill>
-                      <Text size="small" tone="tertiary" as="span">
-                        →
-                      </Text>
-                    </Row>
-                  }
-                >
-                  线上数字经济
-                </CardHeader>
-                <CardBody>
-                  <Text
-                    size="small"
-                    tone="tertiary"
-                    style={{
-                      fontSize: 11,
-                      lineHeight: 1.35,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    Web2 / Web3 / Agent 场景词条；点选后按层筛选浏览
-                  </Text>
-                </CardBody>
-              </Card>
-            </div>
-            <div
-              style={{ cursor: "pointer", minWidth: 0, height: "100%" }}
-              onClick={() => setHub("macro")}
-              onKeyDown={(e: { key: string; preventDefault: () => void }) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setHub("macro");
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              title="查看国别宏观因子"
-            >
-              <Card style={{ height: "100%" }}>
-                <CardHeader
-                  trailing={
-                    <Row gap={6} align="center">
-                      <Pill tone="neutral" size="sm">
-                        {String(Object.keys(COUNTRY_MACRO).length)}
-                      </Pill>
-                      <Text size="small" tone="tertiary" as="span">
-                        →
-                      </Text>
-                    </Row>
-                  }
-                >
-                  国别宏观因子
-                </CardHeader>
-                <CardBody>
-                  <Text
-                    size="small"
-                    tone="tertiary"
-                    style={{
-                      fontSize: 11,
-                      lineHeight: 1.35,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    点选洲际/国家筛宏观快照；框架表作备查
-                  </Text>
-                </CardBody>
-              </Card>
-            </div>
-          </Grid>
+          {!ecoNavExpanded ? (
+            intelLane === "flash" ? (
+              <MorningBriefHome role={atlasRole} />
+            ) : atlasRole !== "roadshow" ? (
+              <ResearchLibraryHomePanel />
+            ) : (
+              <HomeMeta>路演视角不展示研报明细。</HomeMeta>
+            )
+          ) : null}
+        </Stack>
+      ) : null}
 
-          <Divider />
-          <MorningBriefHome role={atlasRole} />
+      {hub === "sources" ? (
+        <Stack gap={16}>
+          <SourceCatalogPanel />
         </Stack>
       ) : null}
 
       {hub === "scenes" ? (
         <Stack gap={16}>
-          <H2>线上数字经济场景</H2>
+          <H2>数字经济场景</H2>
           <Text size="small" tone="tertiary">
             Web2 / Web3 / Agent · 词条：名称 → 行为/目的 → 玩家名单
           </Text>
@@ -25222,10 +26411,12 @@ export default function Canvas() {
                 ))}
               </Row>
             </Stack>
-            <Stack gap={4}>
-              <Text size="small" weight="medium">
-                语言区
-              </Text>
+            <SoftFold
+              title="语言区"
+              hint="按展业语言区收窄；选项随洲际变化。默认收起。"
+              count={languageZonesForRegion(region).length}
+              defaultOpen={langZone !== "all"}
+            >
               <Text size="small" tone="tertiary">
                 按展业语言区收窄；选项随洲际变化
               </Text>
@@ -25251,11 +26442,13 @@ export default function Canvas() {
                   />
                 ))}
               </Row>
-            </Stack>
-            <Stack gap={4}>
-              <Text size="small" weight="medium">
-                涉足国家/地区
-              </Text>
+            </SoftFold>
+            <SoftFold
+              title="涉足国家/地区"
+              hint="默认收起；展开后点选单国看宏观快照。"
+              count={Math.max(0, countriesForRegionAndLang(region, langZone).length - 1)}
+              defaultOpen={country !== "all"}
+            >
               <Row gap={6} wrap>
                 {countriesForRegionAndLang(region, langZone).map((k) => (
                   <FilterChip
@@ -25266,7 +26459,7 @@ export default function Canvas() {
                   />
                 ))}
               </Row>
-            </Stack>
+            </SoftFold>
             <CountryMacroPanel country={country} />
             <MacroFactorFrameworkOverview />
           </Stack>
@@ -25277,7 +26470,7 @@ export default function Canvas() {
         <Stack gap={16}>
           <H2>对照</H2>
           <Text size="small" tone="tertiary">
-            国别宏观、玩家及其它机构均可多选并排对照（最多 6 个）；大屏页也可进入对照。
+            国别宏观、玩家及其它机构均可多选并排对照（最多 6 个）。
           </Text>
           <CompareHubPanel />
         </Stack>

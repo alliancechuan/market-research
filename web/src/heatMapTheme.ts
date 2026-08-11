@@ -66,6 +66,28 @@ export function heatColorAdded(t: number, theme: CanvasHostTheme): string {
   return lerpHex("#D9E6F0", tip, 0.25 + x * 0.75);
 }
 
+/** 全市场面填：鼠尾草绿（对齐大屏原图；非 Material 鲜绿） */
+const SAGE_STOPS = ["#C9D4BC", "#B0C0A4", "#97AD8C", "#7E9674", "#667E5E"] as const;
+/** 展业已投国强调：深绿（原图 MX/IN/SEA） */
+const FOREST_INVESTED = "#1A4730";
+
+export function heatColorGreen(t: number): string {
+  const x = Math.min(1, Math.max(0, t));
+  const n = SAGE_STOPS.length - 1;
+  const i = Math.min(n - 1, Math.floor(x * n));
+  const local = x * n - i;
+  return lerpHex(SAGE_STOPS[i], SAGE_STOPS[i + 1], local);
+}
+
+/** 展业叠层：已投国深绿面填 */
+export function heatColorInvestedForest(): string {
+  return FOREST_INVESTED;
+}
+
+export function heatStopsGreen(): string[] {
+  return [...SAGE_STOPS];
+}
+
 /**
  * 宏观点阵风险色：浅沙 → 琥珀 → 锈橙（不透明）。
  * 用于「浅底 + 点阵」大屏，避免整国 choropleth 压死底图。

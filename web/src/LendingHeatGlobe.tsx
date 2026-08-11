@@ -25,6 +25,8 @@ import {
   MapCountryMacroBrief,
   RankBarList,
   type MapLegendPlacement,
+  useMapViewport,
+  mapFrameWidth,
 } from "./HeatMapChrome";
 import { heatColorWarm } from "./heatMapTheme";
 import { formatCountryLanguageLine } from "./data/countryLanguage";
@@ -267,7 +269,8 @@ export function LendingHeatGlobe({
   legendPlacement?: MapLegendPlacement;
 }) {
   const { c } = useMapChrome();
-  const width = Math.round(height * 2.05);
+  const { aspect } = useMapViewport(fill);
+  const width = mapFrameWidth(height, aspect);
   const bottomLegend = fill || legendPlacement === "bottom";
   const place: MapLegendPlacement = bottomLegend ? "bottom" : "side";
   const lending = useMemo(() => aggregateLendingUsdBn(), []);
@@ -454,7 +457,7 @@ export function LendingHeatGlobe({
               alignItems: "center",
             }}
           >
-            <Button variant="secondary" onClick={() => setFocus(null)}>
+            <Button variant="secondary" size="sm" onClick={() => setFocus(null)}>
               返回全球
             </Button>
             <MapChip>已放大：{COUNTRY_LABEL_ZH[focus] ?? focus}</MapChip>

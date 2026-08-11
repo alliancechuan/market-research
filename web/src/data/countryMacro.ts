@@ -1,4 +1,9 @@
 import raw from "./country-macro.json";
+import {
+  collectMacroCiteNos,
+  citeNosFromSnapAsOf,
+  enrichMacroField,
+} from "./macroFieldProvenance";
 
 export type CountryMacroSnap = {
   asOf?: string;
@@ -125,6 +130,12 @@ export function synthesizeCashLoanBrief(snap: CountryMacroSnap): string {
 export type CashLoanMacroMetric = {
   label: string;
   value: string;
+  /** 时点或时段（读数内抽取，缺则对照包兜底） */
+  asOf?: string;
+  /** 统一信源编号 〔n〕 */
+  citeNos?: number[];
+  /** 时点是否来自国别对照包而非字段自身 */
+  asOfFromSnap?: boolean;
   /** watch=留意 hot=高压 ok=偏稳 */
   flag?: "watch" | "hot" | "ok";
 };
@@ -139,17 +150,32 @@ export type CashLoanMacroGroup = {
   metrics: CashLoanMacroMetric[];
 };
 
-function metric(label: string, value: string | undefined, flag?: CashLoanMacroMetric["flag"]): CashLoanMacroMetric | null {
-  const v = (value || "").trim();
-  if (!v) return null;
-  return { label, value: v, flag };
+function metric(
+  label: string,
+  field: keyof CountryMacroSnap,
+  raw: string | undefined,
+  snapAsOf: string | undefined,
+  flag?: CashLoanMacroMetric["flag"],
+): CashLoanMacroMetric | null {
+  const enriched = enrichMacroField(field, raw, snapAsOf);
+  if (!enriched) return null;
+  return {
+    label,
+    value: enriched.value,
+    asOf: enriched.asOf,
+    citeNos: enriched.citeNos,
+    asOfFromSnap: enriched.asOfFromSnap,
+    flag,
+  };
 }
 
 /**
  * 把国别快照按「消费信贷怎么用」分组，便于卡片上直接读业务含义。
  * 决策序：①监管基建（本函数不含）→②汇兑→③客群偿还→④信贷过热→⑤景气定价压测。
+ * 每条读数带时点/时段与 〔n〕，底部可汇总进统一信源目录。
  */
 export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroGroup[] {
+  const pack = snap.asOf;
   const gdpPc = firstNumber(snap.gdpPerCapitaUsd);
   const infl = firstNumber(snap.inflation);
   const rate = firstNumber(snap.policyRate);
@@ -176,11 +202,17 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
       title: "汇兑与跨境",
       soWhat: "能不能锁汇、资金进出是否顺；波幅大则定价与拨备要留汇兑缓冲。",
       metrics: [
-        metric("外汇储备", snap.fxReserves),
-        metric("经常账户", snap.currentAccount, ca != null && ca <= -5 ? "hot" : ca != null && ca < 0 ? "watch" : ca != null ? "ok" : undefined),
-        metric("年内汇率波动", snap.fxVolInYear, fxFlag),
-        metric("汇率水平", snap.fxTrend || snap.fxHint),
-        metric("政策利率", snap.policyRate, rate != null && rate >= 10 ? "watch" : undefined),
+        metric("外汇储备", "fxReserves", snap.fxReserves, pack),
+        metric(
+          "经常账户",
+          "currentAccount",
+          snap.currentAccount,
+          pack,
+          ca != null && ca <= -5 ? "hot" : ca != null && ca < 0 ? "watch" : ca != null ? "ok" : undefined,
+        ),
+        metric("年内汇率波动", "fxVolInYear", snap.fxVolInYear, pack, fxFlag),
+        metric("汇率水平", snap.fxTrend ? "fxTrend" : "fxHint", snap.fxTrend || snap.fxHint, pack),
+        metric("政策利率", "policyRate", snap.policyRate, pack, rate != null && rate >= 10 ? "watch" : undefined),
       ].filter(Boolean) as CashLoanMacroMetric[],
     },
     {
@@ -189,15 +221,15 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
       title: "客群与偿还",
       soWhat: "谁在借、收入稳不稳；就业弱/一产高则逾期季节性与收入波动更大。",
       metrics: [
-        metric("总人口", snap.population),
-        metric("年龄结构", snap.ageStructure),
-        metric("失业率", snap.unemployment, unemp != null && unemp >= 8 ? "hot" : undefined),
-        metric("就业/人口", snap.employedToPop),
-        metric("人均收入", snap.incomePerCapita),
-        metric("人均GDP", snap.gdpPerCapitaUsd, gdpPcFlag),
-        metric("三产结构", snap.sectorMix),
-        metric("消费者信心", snap.consumerConfidence),
-        metric("就业备注", snap.employmentNote),
+        metric("总人口", "population", snap.population, pack),
+        metric("年龄结构", "ageStructure", snap.ageStructure, pack),
+        metric("失业率", "unemployment", snap.unemployment, pack, unemp != null && unemp >= 8 ? "hot" : undefined),
+        metric("就业/人口", "employedToPop", snap.employedToPop, pack),
+        metric("人均收入", "incomePerCapita", snap.incomePerCapita, pack),
+        metric("人均GDP", "gdpPerCapitaUsd", snap.gdpPerCapitaUsd, pack, gdpPcFlag),
+        metric("三产结构", "sectorMix", snap.sectorMix, pack),
+        metric("消费者信心", "consumerConfidence", snap.consumerConfidence, pack),
+        metric("就业备注", "employmentNote", snap.employmentNote, pack),
       ].filter(Boolean) as CashLoanMacroMetric[],
     },
     {
@@ -206,9 +238,9 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
       title: "信贷过热",
       soWhat: "市场还能不能加杠杆；居民杠杆近过热带则新客与额度应更紧。",
       metrics: [
-        metric("居民杠杆率", snap.householdDebtToGdp, hhFlag),
-        metric("消费/私营信贷", snap.privCreditOrConsumer),
-        metric("政府债务/GDP", snap.debtToGdp),
+        metric("居民杠杆率", "householdDebtToGdp", snap.householdDebtToGdp, pack, hhFlag),
+        metric("消费/私营信贷", "privCreditOrConsumer", snap.privCreditOrConsumer, pack),
+        metric("政府债务/GDP", "debtToGdp", snap.debtToGdp, pack),
       ].filter(Boolean) as CashLoanMacroMetric[],
     },
     {
@@ -217,12 +249,21 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
       title: "景气与定价压测",
       soWhat: "定价锚与贷后压测：高息高通胀抬资金成本，GDP偏弱则vintage更易恶化。",
       metrics: [
-        metric("GDP同比", snap.gdpYoY, gdpYoY != null && gdpYoY < 1 ? "watch" : undefined),
-        metric("通胀", snap.inflation, inflFlag),
-        metric("政策利率", snap.policyRate, rate != null && rate >= 10 ? "hot" : undefined),
+        metric("GDP同比", "gdpYoY", snap.gdpYoY, pack, gdpYoY != null && gdpYoY < 1 ? "watch" : undefined),
+        metric("通胀", "inflation", snap.inflation, pack, inflFlag),
+        metric("政策利率", "policyRate", snap.policyRate, pack, rate != null && rate >= 10 ? "hot" : undefined),
       ].filter(Boolean) as CashLoanMacroMetric[],
     },
   ];
 
   return groups.filter((g) => g.metrics.length > 0);
+}
+
+/** 国别宏观卡用到的全部信源编号（指标 + 补充 + 对照包提示） */
+export function collectCountryMacroCiteNos(snap: CountryMacroSnap): number[] {
+  const groups = buildCashLoanMacroGroups(snap);
+  const metrics = groups.flatMap((g) => g.metrics);
+  const note = displayCreditNote(snap);
+  const packCites = citeNosFromSnapAsOf(snap.asOf).map((n) => ({ citeNos: [n] }));
+  return collectMacroCiteNos([...metrics, ...packCites], [note, snap.creditNote, snap.asOf, snap.cashLoanVerdict]);
 }

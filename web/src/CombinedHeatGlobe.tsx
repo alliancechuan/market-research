@@ -13,6 +13,7 @@ import {
 import {
   INVESTED_BY_CODE,
   PRODUCER_HOLDINGS,
+  TOTAL_OUTSTANDING_HEAT_USD,
   formatUsdCompact,
 } from "./data/producerHoldings";
 import {
@@ -33,6 +34,8 @@ import {
   MapCountryMacroBrief,
   RankBarList,
   type MapLegendPlacement,
+  useMapViewport,
+  mapFrameWidth,
 } from "./HeatMapChrome";
 import { heatColorWarm } from "./heatMapTheme";
 import { formatCountryLanguageLine } from "./data/countryLanguage";
@@ -229,7 +232,8 @@ export function CombinedHeatGlobe({
   ecoLabel?: string;
 }) {
   const { theme, c } = useMapChrome();
-  const width = Math.round(height * 2.05);
+  const { aspect, focusRightFrac, focusMapMinFrac } = useMapViewport(fill);
+  const width = mapFrameWidth(height, aspect);
   const bottomLegend = fill || legendPlacement === "bottom";
   const place: MapLegendPlacement = bottomLegend ? "bottom" : "side";
   const marketOn = showMarket;
@@ -319,11 +323,11 @@ export function CombinedHeatGlobe({
     const proj = geoNaturalEarth1();
     if (focusFeature) {
       // 焦点态：左侧放大国土，右侧留给详情浮层；上下留出顶栏
-      const rightPad = bottomLegend ? Math.round(width * 0.54) : 28;
+      const rightPad = bottomLegend ? Math.round(width * focusRightFrac) : 28;
       proj.fitExtent(
         [
           [28, 64],
-          [Math.max(width - rightPad, width * 0.42), height - 36],
+          [Math.max(width - rightPad, width * focusMapMinFrac), height - 36],
         ],
         focusFeature,
       );
@@ -339,7 +343,7 @@ export function CombinedHeatGlobe({
     }
     const pathGen = geoPath(proj);
     return { pathGen, outline: pathGen({ type: "Sphere" }), projection: proj };
-  }, [width, height, focusFeature, yaw, bottomLegend]);
+  }, [width, height, focusFeature, yaw, bottomLegend, focusRightFrac, focusMapMinFrac]);
 
   const graticulePath = useMemo(() => pathGen(geoGraticule10()), [pathGen]);
 
@@ -641,7 +645,7 @@ export function CombinedHeatGlobe({
               已放大：{COUNTRY_LABEL_ZH[focus] ?? INVESTED_BY_CODE[focus]?.country_zh ?? focus}
             </MapChip>
             {!bottomLegend ? (
-              <Button variant="secondary" onClick={() => setFocus(null)}>
+              <Button variant="secondary" size="sm" onClick={() => setFocus(null)}>
                 返回全球
               </Button>
             ) : null}
@@ -943,8 +947,9 @@ export function CombinedHeatGlobe({
               {ecoRanked.reduce((s, [, n]) => s + n, 0)} 家 · 点击横条放大
             </div>
           ) : investedOn ? (
-            <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 8 }}>
-              浅底透图 · 展业 {investedRanked.length} 国 · 基金合计{" "}
+            <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 8, lineHeight: 1.45 }}>
+              浅底透图 · 展业 {investedRanked.length} 国 · 在贷热力合计{" "}
+              {formatUsdCompact(TOTAL_OUTSTANDING_HEAT_USD)} · 基金合计{" "}
               {formatUsdCompact(PRODUCER_HOLDINGS.total_investment_usd)} · 点击点/横条放大
             </div>
           ) : (
@@ -953,13 +958,13 @@ export function CombinedHeatGlobe({
             </div>
           )}
           <RankBarList
-            compact={false}
+            compact={bottomLegend}
             maxVisible={bottomLegend ? 20 : undefined}
             scaleHint={
               ecoOn
                 ? `条长 ∝ ${ecoLabel ?? "其他机构"}样本数`
                 : investedOn
-                  ? "条长 ∝ 展业在贷（相对列表最大值）"
+                  ? "条长 ∝ 已投生产商在贷（非本基金本金；缺数国用基金投资额近似）"
                   : "条长 ∝ 市场放贷 USD bn（相对列表最大值）"
             }
             onSelect={(code) => setFocus(code)}
@@ -976,16 +981,21 @@ export function CombinedHeatGlobe({
                         : undefined,
                   }))
                 : investedOn
-                  ? investedRanked.map((row) => ({
-                      key: row.country_code,
-                      label: COUNTRY_LABEL_ZH[row.country_code] ?? row.country_zh,
-                      value: row.outstanding_usd_for_heat,
-                      valueLabel: formatUsdCompact(row.outstanding_usd_for_heat),
-                      secondaryLabel:
+                  ? investedRanked.map((row) => {
+                      const fundBit = `基金 ${formatUsdCompact(row.investment_usd)}`;
+                      const proxyBit = row.outstanding_known === false ? "在贷暂用基金近似" : null;
+                      const mkt =
                         bothOn && lending[row.country_code]
                           ? `市场约 USD ${lending[row.country_code].toFixed(1)} bn`
-                          : undefined,
-                    }))
+                          : null;
+                      return {
+                        key: row.country_code,
+                        label: COUNTRY_LABEL_ZH[row.country_code] ?? row.country_zh,
+                        value: row.outstanding_usd_for_heat,
+                        valueLabel: formatUsdCompact(row.outstanding_usd_for_heat),
+                        secondaryLabel: [fundBit, proxyBit, mkt].filter(Boolean).join(" · "),
+                      };
+                    })
                   : Object.entries(lending)
                       .filter(([, bn]) => bn > 0)
                       .sort((a, b) => b[1] - a[1])
@@ -999,7 +1009,7 @@ export function CombinedHeatGlobe({
           />
           {(investedOn || ecoOn) && (INVESTED_BY_CODE.HK || (ecoMap.HK ?? 0) > 0) && !mapCodes.has("HK") ? (
             <div style={{ marginTop: 10, fontSize: 11, color: c.textSecondary, lineHeight: 1.5 }}>
-              中国香港在底图无独立面，地图上以锚点标出，可直接点击。
+              中国香港在底图无独立面，地图上以锚点标出；下表含香港一行，可点击放大。
             </div>
           ) : null}
           <div style={{ marginTop: 12 }}>
@@ -1007,12 +1017,12 @@ export function CombinedHeatGlobe({
               {marketEcoOn
                 ? `琥珀点=市场放贷；蓝点=${ecoLabel ?? "其他机构"}样本数。切换图层不重载底图。`
                 : bothOn
-                  ? "琥珀点=市场放贷；蓝点=展业在贷。切换图层不重载底图。"
+                  ? "琥珀点=市场放贷；蓝点=已投生产商在贷（≠基金本金）。切换图层不重载底图。"
                   : marketOn
                     ? "琥珀点色/点径=市场放贷强弱。"
                     : ecoOnly
                       ? `蓝点色/点径=${ecoLabel ?? "其他机构"}样本数强弱。`
-                      : "蓝点色/点径=展业在贷强弱。"}
+                      : "蓝点色/点径=已投生产商在贷强弱（≠基金本金）。"}
             </MapMuted>
           </div>
         </MapSideLegend>

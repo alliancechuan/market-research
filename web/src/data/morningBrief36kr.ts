@@ -12,6 +12,12 @@ export type MorningBriefSource = {
   /** strong | weak | noise */
   relevance?: string;
   cashLoanHint?: string;
+  /** 叙事五问：展开优先展示 */
+  who?: string;
+  when?: string;
+  what?: string;
+  how?: string;
+  result?: string;
 };
 
 /** 对齐消费信贷三板块 + 弱相关 */

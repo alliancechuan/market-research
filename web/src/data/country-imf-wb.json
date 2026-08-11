@@ -1,0 +1,714 @@
+{
+  "asOf": "2026-08-12",
+  "note": "国别筛选：IMF发展标签（发达/新兴发展中）+ 世行收入分组。用于大屏全市场在贷面填过滤。世行收入来自 Country API incomeLevel；IMF 对照 WEO Advanced Economies 名录。台湾世行无独立条目，按高收入惯例。",
+  "imfOptions": [
+    {
+      "id": "all",
+      "labelZh": "全部 (IMF)"
+    },
+    {
+      "id": "advanced",
+      "labelZh": "发达经济体"
+    },
+    {
+      "id": "emerging",
+      "labelZh": "新兴与发展中经济体"
+    }
+  ],
+  "wbOptions": [
+    {
+      "id": "all",
+      "labelZh": "全部 (世行收入)"
+    },
+    {
+      "id": "high",
+      "labelZh": "高收入"
+    },
+    {
+      "id": "upper_middle",
+      "labelZh": "中高收入"
+    },
+    {
+      "id": "lower_middle",
+      "labelZh": "中低收入"
+    },
+    {
+      "id": "low",
+      "labelZh": "低收入"
+    }
+  ],
+  "byCode": {
+    "AE": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "ARE"
+    },
+    "AO": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "AGO"
+    },
+    "AR": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "ARG"
+    },
+    "BD": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "BGD"
+    },
+    "BF": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "low",
+      "wbIncomeZh": "低收入",
+      "wbIncomeEn": "Low income",
+      "iso3": "BFA"
+    },
+    "BH": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "BHR"
+    },
+    "BJ": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "BEN"
+    },
+    "BR": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "BRA"
+    },
+    "BW": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "BWA"
+    },
+    "CA": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "CAN"
+    },
+    "CD": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "low",
+      "wbIncomeZh": "低收入",
+      "wbIncomeEn": "Low income",
+      "iso3": "COD"
+    },
+    "CI": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "CIV"
+    },
+    "CL": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "CHL"
+    },
+    "CM": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "CMR"
+    },
+    "CN": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "CHN"
+    },
+    "CO": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "COL"
+    },
+    "DE": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "DEU"
+    },
+    "DZ": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "DZA"
+    },
+    "EG": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "EGY"
+    },
+    "ES": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "ESP"
+    },
+    "ET": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "low",
+      "wbIncomeZh": "低收入",
+      "wbIncomeEn": "Low income",
+      "iso3": "ETH"
+    },
+    "FR": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "FRA"
+    },
+    "GA": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "GAB"
+    },
+    "GB": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "GBR"
+    },
+    "GH": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "GHA"
+    },
+    "HK": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "HKG"
+    },
+    "ID": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "IDN"
+    },
+    "IE": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "IRL"
+    },
+    "IL": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "ISR"
+    },
+    "IN": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "IND"
+    },
+    "IQ": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "IRQ"
+    },
+    "IR": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "IRN"
+    },
+    "IT": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "ITA"
+    },
+    "JO": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "JOR"
+    },
+    "JP": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "JPN"
+    },
+    "KE": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "KEN"
+    },
+    "KG": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "KGZ"
+    },
+    "KR": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "KOR"
+    },
+    "KW": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "KWT"
+    },
+    "KZ": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "KAZ"
+    },
+    "LB": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "LBN"
+    },
+    "LK": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "LKA"
+    },
+    "LY": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "LBY"
+    },
+    "MA": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "MAR"
+    },
+    "MG": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "low",
+      "wbIncomeZh": "低收入",
+      "wbIncomeEn": "Low income",
+      "iso3": "MDG"
+    },
+    "ML": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "low",
+      "wbIncomeZh": "低收入",
+      "wbIncomeEn": "Low income",
+      "iso3": "MLI"
+    },
+    "MN": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "MNG"
+    },
+    "MU": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "MUS"
+    },
+    "MX": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "MEX"
+    },
+    "MY": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "MYS"
+    },
+    "MZ": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "low",
+      "wbIncomeZh": "低收入",
+      "wbIncomeEn": "Low income",
+      "iso3": "MOZ"
+    },
+    "NA": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "NAM"
+    },
+    "NG": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "NGA"
+    },
+    "NL": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "NLD"
+    },
+    "OM": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "OMN"
+    },
+    "PE": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "PER"
+    },
+    "PH": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "PHL"
+    },
+    "PK": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "PAK"
+    },
+    "PL": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "POL"
+    },
+    "PS": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "PSE"
+    },
+    "PT": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "PRT"
+    },
+    "QA": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "QAT"
+    },
+    "RU": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "RUS"
+    },
+    "RW": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "low",
+      "wbIncomeZh": "低收入",
+      "wbIncomeEn": "Low income",
+      "iso3": "RWA"
+    },
+    "SA": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "SAU"
+    },
+    "SD": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "low",
+      "wbIncomeZh": "低收入",
+      "wbIncomeEn": "Low income",
+      "iso3": "SDN"
+    },
+    "SE": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "SWE"
+    },
+    "SG": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "SGP"
+    },
+    "SN": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "SEN"
+    },
+    "TH": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "THA"
+    },
+    "TJ": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "TJK"
+    },
+    "TM": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "TKM"
+    },
+    "TN": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "TUN"
+    },
+    "TR": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "TUR"
+    },
+    "TW": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "TWN"
+    },
+    "TZ": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "TZA"
+    },
+    "UG": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "low",
+      "wbIncomeZh": "低收入",
+      "wbIncomeEn": "Low income",
+      "iso3": "UGA"
+    },
+    "US": {
+      "imfDevTag": "advanced",
+      "imfDevTagZh": "发达经济体",
+      "wbIncome": "high",
+      "wbIncomeZh": "高收入",
+      "wbIncomeEn": "High income",
+      "iso3": "USA"
+    },
+    "UZ": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "UZB"
+    },
+    "VN": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "VNM"
+    },
+    "YE": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "low",
+      "wbIncomeZh": "低收入",
+      "wbIncomeEn": "Low income",
+      "iso3": "YEM"
+    },
+    "ZA": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "upper_middle",
+      "wbIncomeZh": "中高收入",
+      "wbIncomeEn": "Upper middle income",
+      "iso3": "ZAF"
+    },
+    "ZM": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "ZMB"
+    },
+    "ZW": {
+      "imfDevTag": "emerging",
+      "imfDevTagZh": "新兴与发展中经济体",
+      "wbIncome": "lower_middle",
+      "wbIncomeZh": "中低收入",
+      "wbIncomeEn": "Lower middle income",
+      "iso3": "ZWE"
+    }
+  }
+}

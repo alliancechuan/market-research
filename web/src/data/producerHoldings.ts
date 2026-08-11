@@ -83,6 +83,12 @@ export const INVESTED_BY_CODE: Record<string, InvestedCountry> = Object.fromEntr
   PRODUCER_HOLDINGS.countries.map((c) => [c.country_code, c]),
 );
 
+/** 各国热力在贷之和（生产商账面在贷；缺数国用基金投资额近似） */
+export const TOTAL_OUTSTANDING_HEAT_USD = PRODUCER_HOLDINGS.countries.reduce(
+  (s, c) => s + (c.outstanding_usd_for_heat || 0),
+  0,
+);
+
 export function formatUsdCompact(n: number | null | undefined): string {
   if (n == null || Number.isNaN(n)) return "—";
   if (n >= 1_000_000_000) return `USD ${(n / 1_000_000_000).toFixed(2)} bn`;

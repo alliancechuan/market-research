@@ -1,0 +1,2033 @@
+{
+  "asOf": "2026-08-12",
+  "note": "情报库分两轨。一是专题研报/上市披露，如点点、墨腾、Grab/Nu/乐信 20-F；二是监管与信源包，如 BSP/OJK/RBI/SEC。不要把监管文件标成研报。正文出处编号可点进信源目录。",
+  "refresh": {
+    "cadence": "季度主更 + 粘贴即入库",
+    "nextDue": "2026-10-15",
+    "lastIngestAt": "2026-08-12",
+    "sources": [
+      {
+        "id": "diandian",
+        "nameZh": "点点数据",
+        "kind": "traffic_research",
+        "priority": 1,
+        "cadence": "H1/H2 海外现金贷专题",
+        "note": "商店下载/MAU/上下架；与监管出清交叉"
+      },
+      {
+        "id": "moteng",
+        "nameZh": "墨腾创投",
+        "kind": "platform_research",
+        "priority": 2,
+        "cadence": "专题不定期",
+        "note": "场景平台份额/GMV；见 MOTENG_LEARNED"
+      },
+      {
+        "id": "listed_ir",
+        "nameZh": "上市披露 KPI",
+        "kind": "broker",
+        "priority": 3,
+        "cadence": "季报窗",
+        "note": "与 listed-player-disclosure 交叉，不作流量榜替代"
+      },
+      {
+        "id": "ojk_stats",
+        "nameZh": "OJK月度RDKB余额",
+        "kind": "regulator_pack",
+        "priority": 1,
+        "cadence": "月度",
+        "note": "P2P/BNPL outstanding媒体转述+官网交叉"
+      },
+      {
+        "id": "rm_bnpl",
+        "nameZh": "Research and Markets BNPL摘要",
+        "kind": "traffic_research",
+        "priority": 4,
+        "cadence": "不定期媒体稿",
+        "note": "只落媒体可核验美元规模；置信中"
+      },
+      {
+        "id": "bsp_payments",
+        "nameZh": "BSP数字支付年报",
+        "kind": "regulator_pack",
+        "priority": 2,
+        "cadence": "年报",
+        "note": "菲律宾零售支付数字化占比"
+      },
+      {
+        "id": "grab_ir",
+        "nameZh": "Grab 20-F/IR",
+        "kind": "broker",
+        "priority": 2,
+        "cadence": "年报/季报",
+        "note": "支付与数字银行竞争段"
+      },
+      {
+        "id": "nu_ir",
+        "nameZh": "Nu Holdings 20-F",
+        "kind": "broker",
+        "priority": 2,
+        "cadence": "年报",
+        "note": "拉美数字银行/信贷"
+      },
+      {
+        "id": "rbi_dl",
+        "nameZh": "RBI Digital Lending",
+        "kind": "regulator_pack",
+        "priority": 1,
+        "cadence": "通告",
+        "note": "印度线上信贷硬约束"
+      },
+      {
+        "id": "sec_ph_olp",
+        "nameZh": "SEC PH OLP",
+        "kind": "regulator_pack",
+        "priority": 1,
+        "cadence": "通告",
+        "note": "菲线上放贷平台"
+      },
+      {
+        "id": "lexin_ir",
+        "nameZh": "乐信 Lexin 上市披露",
+        "kind": "broker",
+        "priority": 4,
+        "cadence": "年报",
+        "note": "中资消金对照"
+      },
+      {
+        "id": "rbi_digital",
+        "nameZh": "RBI 数字放贷/DLG",
+        "kind": "regulator_pack",
+        "priority": 1,
+        "cadence": "通告",
+        "note": "印度展业硬约束"
+      }
+    ],
+    "queue": {
+      "pending": [
+        "diandian-2026h2-overseas-cashloan",
+        "sea-20f-fy2025-fintech",
+        "hkma-virtual-bank-pack",
+        "bot-personal-loan-pack",
+        "cnbv-fintech-pack"
+      ],
+      "done": [
+        "diandian-2026h1-overseas-cashloan",
+        "id-ph-bnpl-p2p-source-pack-2026",
+        "bsp-digital-payments-2025",
+        "ojk-monthly-p2p-bnpl-next",
+        "cross-check-rbi-dla-secp-whitelist-2026h2",
+        "ph-sec-olp-roster-refresh",
+        "moteng-sea-next-special",
+        "bsp-2024-e-payments-measurement",
+        "rbi-digital-lending-dlg-pack-2022-2023",
+        "grab-20f-fy2025-fintech",
+        "nu-20f-fy2025-latam-bank",
+        "moteng-sea-food-delivery-6-2025",
+        "ojk-p2p-mar2026-iru-update",
+        "ph-sec-olp-mc20-2026-pack",
+        "lexin-20f-fy2025-consumer-finance"
+      ]
+    }
+  },
+  "reports": [
+    {
+      "id": "diandian-2026h1-overseas-cashloan",
+      "title": "2026海外现金贷市场研究报告 H1",
+      "publisher": "点点数据 DianDian",
+      "period": "2026H1",
+      "asOf": "2026-08-11",
+      "confidence": "中",
+      "sourceType": "third_party_research",
+      "localPath": "reports/2026-h1-overseas-cashloan-diandian.pdf",
+      "pages": 27,
+      "regions": [
+        "latam",
+        "se-asia",
+        "south-asia",
+        "africa",
+        "west"
+      ],
+      "thesis": "海外现金贷正在从拼下载、拼投放，转向在监管框架里持续经营信用。下载有所修复，但活跃在收缩；需求更多走到钱包、分期和场景入口。合规出清抬高门槛，头部持牌和场景平台更受益。",
+      "growthFormula": "靠场景入口、合规壁垒和用户留存增长，而不是只靠多放款。",
+      "macroBullets": [
+        "国际货币基金组织：全球经济增速 2025 年约 3.4%，2026 年预期约 3.0%；新兴市场约 4%。",
+        "二十国集团通胀 2025 年约 3.4%，2026 年可能翘尾至约 4.0%，资金成本易上难下。",
+        "区域上，东南亚仍在扩张，拉美在修复，非洲潜力高但要先风控，欧洲偏慢，中东承压。"
+      ],
+      "policyBullets": [
+        "印尼：监管与专案组在 2026 年 1 至 4 月关停约 951 家非法网贷；财务类应用上架在增，但现金贷新上架存活率约 8.78%。",
+        "菲律宾：证监会备忘录将重开线上借贷平台注册路径，同时抬高门槛。",
+        "多国都在把无牌清理与持牌经营绑在一起，流量不能再替代牌照。"
+      ],
+      "industryMetrics": {
+        "globalDownloads_2025Q1": "2.84亿",
+        "globalDownloads_2025Q3_peak": "3.37亿",
+        "globalDownloads_2026Q2": "3.18亿（较峰值约-5.5%）",
+        "globalMAU_2025Q3": "2.89亿",
+        "globalMAU_2026Q2": "2.58亿（活跃持续回落，与下载背离）",
+        "id_online_lending_balance_202605": "Rp103.73T，同比+25.6%（OJK）",
+        "sea_monee_loan_principal_2026Q1": "US$9.9B，同比+71.3%，90天+不良1.1%（Sea/Monee）",
+        "grab_glp_2026Q2": "US$2.318B，同比+197%；当季放款US$1.2B，同比+72%"
+      },
+      "marketNotes": [
+        {
+          "region": "latam",
+          "summary": "墨西哥月均下载居首但环比-8.5%进入存量竞争；巴西/阿根廷/秘鲁放量。平台银行化（Plata获批银行牌照、Mercado Pago申请近批、TikTok申EMI/SCD）。DiDi Finanzas 拉美活跃断层领先。"
+        },
+        {
+          "region": "se-asia",
+          "summary": "印尼下载体量最大但环比承压；菲下载环比-22.6%。Kredivo MAU稳居千万级；平台信贷（Sea/Monee、Grab）高增且质量可控；非法网贷出清并行。"
+        },
+        {
+          "region": "south-asia",
+          "summary": "印度下载体量主导但环比-5.4%；巴基斯坦环比+16.9%。分发侧白名单/DLA抬高门槛。JazzCash 为南亚榜唯一非印度席位且断层领先巴基斯坦现金贷。"
+        },
+        {
+          "region": "africa",
+          "summary": "尼日持牌清理+肯尼亚DCP扩容+加纳无牌点名。FairMoney/OKash/Newcredit 前列；部分App商店下架后转H5/APK。FairMoney 延伸 FairMoto 资产融资。"
+        }
+      ],
+      "rankings": {
+        "globalDownloadsH1Top10": [
+          {
+            "rank": 1,
+            "name": "ID",
+            "nameZh": "印度尼西亚",
+            "value": "8856",
+            "unit": "万下载",
+            "mom": "+0.22%"
+          },
+          {
+            "rank": 2,
+            "name": "MX",
+            "nameZh": "墨西哥",
+            "value": "4682",
+            "unit": "万下载",
+            "mom": "+8.15%"
+          },
+          {
+            "rank": 3,
+            "name": "PH",
+            "nameZh": "菲律宾",
+            "value": "3116",
+            "unit": "万下载",
+            "mom": "+13.63%"
+          },
+          {
+            "rank": 4,
+            "name": "PK",
+            "nameZh": "巴基斯坦",
+            "value": "3060",
+            "unit": "万下载",
+            "mom": "+1.61%"
+          },
+          {
+            "rank": 5,
+            "name": "NG",
+            "nameZh": "尼日利亚",
+            "value": "3041",
+            "unit": "万下载",
+            "mom": "+3.12%"
+          },
+          {
+            "rank": 6,
+            "name": "KE",
+            "nameZh": "肯尼亚",
+            "value": "2135",
+            "unit": "万下载",
+            "mom": "-3.71%"
+          },
+          {
+            "rank": 7,
+            "name": "BR",
+            "nameZh": "巴西",
+            "value": "1789",
+            "unit": "万下载",
+            "mom": "+16.87%"
+          },
+          {
+            "rank": 8,
+            "name": "US",
+            "nameZh": "美国",
+            "value": "1706",
+            "unit": "万下载",
+            "mom": "-24.18%"
+          },
+          {
+            "rank": 9,
+            "name": "TH",
+            "nameZh": "泰国",
+            "value": "1662",
+            "unit": "万下载",
+            "mom": "-8.89%"
+          },
+          {
+            "rank": 10,
+            "name": "VN",
+            "nameZh": "越南",
+            "value": "1500",
+            "unit": "万下载",
+            "mom": "-8.91%"
+          }
+        ],
+        "latamMauTop10": [
+          {
+            "rank": 1,
+            "name": "DiDi Finanzas",
+            "value": "390.06",
+            "unit": "万MAU均值",
+            "mom": "+10.62%",
+            "groupKeys": [
+              "DiDi Finanzas/DiDi（滴滴·MX）"
+            ]
+          },
+          {
+            "rank": 2,
+            "name": "Aplazo",
+            "value": "185.97",
+            "unit": "万MAU均值",
+            "mom": "+9.57%",
+            "groupKeys": [
+              "Aplazo（Aplazo·MX）"
+            ]
+          },
+          {
+            "rank": 3,
+            "name": "Habitação Caixa",
+            "value": "152.22",
+            "unit": "万MAU均值",
+            "mom": "+3.82%"
+          },
+          {
+            "rank": 4,
+            "name": "Jeitto",
+            "value": "133.57",
+            "unit": "万MAU均值",
+            "mom": "+25.51%",
+            "rankChange": "↑2",
+            "groupKeys": [
+              "Jeitto（·BR）"
+            ]
+          },
+          {
+            "rank": 5,
+            "name": "meutudo",
+            "value": "123.58",
+            "unit": "万MAU均值",
+            "mom": "+2.29%",
+            "groupKeys": [
+              "meutudo（·BR）"
+            ]
+          },
+          {
+            "rank": 6,
+            "name": "Stori",
+            "value": "104.33",
+            "unit": "万MAU均值",
+            "mom": "+0.48%",
+            "rankChange": "↑1",
+            "groupKeys": [
+              "Stori（Stori·MX）"
+            ]
+          },
+          {
+            "rank": 7,
+            "name": "Credmex",
+            "value": "96.58",
+            "unit": "万MAU均值",
+            "mom": "-3.72%",
+            "rankChange": "↑1",
+            "groupKeys": [
+              "Fintopia/瓴岳/洋钱罐（洋钱罐·CN）",
+              "Credmex/Fintopia（洋钱罐·MX）"
+            ]
+          },
+          {
+            "rank": 8,
+            "name": "MexiCash",
+            "value": "93.93",
+            "unit": "万MAU均值",
+            "mom": "+30.89%",
+            "rankChange": "↑3",
+            "groupKeys": [
+              "快牛｜KN｜MexiCash（快牛·出海）"
+            ]
+          },
+          {
+            "rank": 9,
+            "name": "MexDin",
+            "value": "91.87",
+            "unit": "万MAU均值",
+            "mom": "+15.30%",
+            "rankChange": "↑1",
+            "groupKeys": [
+              "MexDin（微财·MX）"
+            ]
+          },
+          {
+            "rank": 10,
+            "name": "Tala",
+            "value": "70.67",
+            "unit": "万MAU均值",
+            "mom": "-23.19%",
+            "rankChange": "↓1",
+            "groupKeys": [
+              "Tala（Tala·MULTI）"
+            ],
+            "note": "iOS 2026-05-15下架+冒名欺诈冲击"
+          }
+        ],
+        "seaMauTop10": [
+          {
+            "rank": 1,
+            "name": "Kredivo",
+            "value": "1068.06",
+            "unit": "万MAU均值",
+            "mom": "+5.21%",
+            "groupKeys": [
+              "Kredivo/FinAccel（Kredivo·ID）"
+            ]
+          },
+          {
+            "rank": 2,
+            "name": "Adapundi",
+            "value": "284.07",
+            "unit": "万MAU均值",
+            "mom": "+14.29%",
+            "groupKeys": [
+              "Adapundi｜Adapundi｜Adapundi（Adapundi·ID）"
+            ]
+          },
+          {
+            "rank": 3,
+            "name": "Easycash",
+            "value": "144.84",
+            "unit": "万MAU均值",
+            "mom": "-24.39%",
+            "groupKeys": [
+              "Easycash｜Easycash｜Easycash（Easycash·ID）",
+              "洋钱罐｜Fintopia｜Easycash/Credmex（洋钱罐·出海）"
+            ]
+          },
+          {
+            "rank": 4,
+            "name": "Home Credit Philippines",
+            "value": "137.02",
+            "unit": "万MAU均值",
+            "mom": "-7.05%",
+            "rankChange": "↑1",
+            "groupKeys": [
+              "Home Credit SEA（·SEA）"
+            ]
+          },
+          {
+            "rank": 5,
+            "name": "Finplus",
+            "value": "130.22",
+            "unit": "万MAU均值",
+            "mom": "-16.26%",
+            "rankChange": "↓1",
+            "groupKeys": [
+              "Finplus（·ID）"
+            ]
+          },
+          {
+            "rank": 6,
+            "name": "FE ONLINE 2.0",
+            "value": "109.08",
+            "unit": "万MAU均值",
+            "mom": "+20.47%",
+            "rankChange": "↑8",
+            "groupKeys": [
+              "FE ONLINE（·ID）"
+            ]
+          },
+          {
+            "rank": 7,
+            "name": "RupiahCepat",
+            "value": "106.47",
+            "unit": "万MAU均值",
+            "mom": "-5.23%",
+            "rankChange": "↑1",
+            "groupKeys": [
+              "RupiahCepat（·ID）"
+            ]
+          },
+          {
+            "rank": 8,
+            "name": "AdaKami",
+            "value": "101.45",
+            "unit": "万MAU均值",
+            "mom": "-23.56%",
+            "rankChange": "↓1",
+            "groupKeys": [
+              "AdaKami｜AdaKami｜AdaKami（AdaKami·ID）",
+              "AdaKami/FinVolution（信也·ID）"
+            ]
+          },
+          {
+            "rank": 9,
+            "name": "Kredit Pintar",
+            "value": "96.45",
+            "unit": "万MAU均值",
+            "mom": "-31.95%",
+            "rankChange": "↓3",
+            "groupKeys": [
+              "Kredit Pintar｜Kredit Pintar｜KreditPintar（KreditPintar·ID）"
+            ]
+          },
+          {
+            "rank": 10,
+            "name": "Artha Niaga",
+            "value": "93.58",
+            "unit": "万MAU均值",
+            "mom": "+15.71%",
+            "rankChange": "↑7",
+            "groupKeys": [
+              "Artha Niaga（·ID）"
+            ]
+          }
+        ],
+        "southAsiaMauTop10": [
+          {
+            "rank": 1,
+            "name": "Bajaj Finance",
+            "value": "1578.06",
+            "unit": "万MAU均值",
+            "mom": "-1.21%",
+            "groupKeys": [
+              "Bajaj Finance（·IN）"
+            ]
+          },
+          {
+            "rank": 2,
+            "name": "JazzCash",
+            "value": "1003.37",
+            "unit": "万MAU均值",
+            "mom": "+2.22%",
+            "groupKeys": [
+              "JazzCash/JazzCash Lending（JazzCash·PK）",
+              "JazzCash Digital Lending（PK·SECP）"
+            ]
+          },
+          {
+            "rank": 3,
+            "name": "KreditBee",
+            "value": "792.14",
+            "unit": "万MAU均值",
+            "mom": "+0.91%",
+            "groupKeys": [
+              "KreditBee（KreditBee·IN）"
+            ]
+          },
+          {
+            "rank": 4,
+            "name": "SBI Card",
+            "value": "552.19",
+            "unit": "万MAU均值",
+            "mom": "-7.93%"
+          },
+          {
+            "rank": 5,
+            "name": "Navi",
+            "value": "519.72",
+            "unit": "万MAU均值",
+            "mom": "+1.33%",
+            "groupKeys": [
+              "Navi（·IN）"
+            ]
+          },
+          {
+            "rank": 6,
+            "name": "PayWithRing",
+            "value": "432.47",
+            "unit": "万MAU均值",
+            "mom": "+2.43%",
+            "groupKeys": [
+              "PayWithRing（·IN）"
+            ]
+          },
+          {
+            "rank": 7,
+            "name": "Moneyview",
+            "value": "317.77",
+            "unit": "万MAU均值",
+            "mom": "-5.68%",
+            "groupKeys": [
+              "Moneyview（·IN）"
+            ]
+          },
+          {
+            "rank": 8,
+            "name": "mPokket",
+            "value": "235.94",
+            "unit": "万MAU均值",
+            "mom": "-15.71%",
+            "groupKeys": [
+              "mPokket（·IN）"
+            ]
+          },
+          {
+            "rank": 9,
+            "name": "True Balance",
+            "value": "222.42",
+            "unit": "万MAU均值",
+            "mom": "+0.70%",
+            "rankChange": "↑1",
+            "groupKeys": [
+              "True Balance（·IN）"
+            ]
+          },
+          {
+            "rank": 10,
+            "name": "SmartQarza",
+            "value": "184.44",
+            "unit": "万MAU均值",
+            "mom": "+4.15%",
+            "rankChange": "↑2",
+            "groupKeys": [
+              "SmartQarza（·PK）"
+            ]
+          }
+        ],
+        "africaMauTop10": [
+          {
+            "rank": 1,
+            "name": "FairMoney",
+            "value": "167.69",
+            "unit": "万MAU均值",
+            "mom": "+0.03%",
+            "rankChange": "↑1",
+            "groupKeys": [
+              "FairMoney（·非洲）"
+            ]
+          },
+          {
+            "rank": 2,
+            "name": "OKash",
+            "value": "164.31",
+            "unit": "万MAU均值",
+            "mom": "-6.23%",
+            "rankChange": "↓1",
+            "groupKeys": [
+              "OKash（·NG）"
+            ]
+          },
+          {
+            "rank": 3,
+            "name": "Newcredit",
+            "value": "103.71",
+            "unit": "万MAU均值",
+            "mom": "+2.99%",
+            "groupKeys": [
+              "Newcredit（·NG）"
+            ]
+          },
+          {
+            "rank": 4,
+            "name": "FairKash+",
+            "value": "91.27",
+            "unit": "万MAU均值",
+            "mom": "+2.41%",
+            "rankChange": "↑1",
+            "groupKeys": [
+              "FairKash+（·非洲）"
+            ]
+          },
+          {
+            "rank": 5,
+            "name": "Branch",
+            "value": "85.48",
+            "unit": "万MAU均值",
+            "mom": "-4.23%",
+            "rankChange": "↓1",
+            "groupKeys": [
+              "Branch（Branch·MULTI）",
+              "Branch（Branch·NG）"
+            ]
+          },
+          {
+            "rank": 6,
+            "name": "Halan",
+            "value": "82.43",
+            "unit": "万MAU均值",
+            "mom": "-1.51%",
+            "groupKeys": [
+              "Halan（·MENA）",
+              "Halan（·EG）"
+            ]
+          },
+          {
+            "rank": 7,
+            "name": "KeCredit",
+            "value": "58.66",
+            "unit": "万MAU均值",
+            "mom": "-7.85%",
+            "note": "报告标注下架",
+            "groupKeys": [
+              "KeCredit（·非洲）"
+            ]
+          },
+          {
+            "rank": 8,
+            "name": "TiFi Slice",
+            "value": "58.29",
+            "unit": "万MAU均值",
+            "mom": "-17.31%",
+            "note": "报告标注下架",
+            "groupKeys": [
+              "TiFi Slice（·非洲）"
+            ]
+          },
+          {
+            "rank": 9,
+            "name": "Tloan",
+            "value": "57.80",
+            "unit": "万MAU均值",
+            "mom": "+7.40%",
+            "rankChange": "↑1",
+            "groupKeys": [
+              "Tloan（·非洲）"
+            ]
+          },
+          {
+            "rank": 10,
+            "name": "Xcrosscash",
+            "value": "50.64",
+            "unit": "万MAU均值",
+            "mom": "+0.08%",
+            "rankChange": "↑2",
+            "groupKeys": [
+              "Xcrosscash（·非洲）"
+            ]
+          }
+        ]
+      },
+      "quadBuckets": {
+        "star": [
+          "巴基斯坦",
+          "尼日利亚",
+          "巴西",
+          "美国",
+          "泰国",
+          "越南"
+        ],
+        "pressure": [
+          "印度尼西亚",
+          "墨西哥",
+          "菲律宾",
+          "肯尼亚"
+        ],
+        "potential": [
+          "哥伦比亚",
+          "坦桑尼亚",
+          "乌拉圭"
+        ],
+        "longTail": [
+          "阿富汗",
+          "立陶宛",
+          "马耳他"
+        ],
+        "insight": "压力盘约占全球下载规模51.1%但仅约9.9%国家数——大体量负增长国需重点监测大盘风险"
+      },
+      "playerUpdates": [
+        {
+          "nameZh": "DiDi Finanzas",
+          "groupKeys": [
+            "DiDi Finanzas/DiDi（滴滴·MX）"
+          ],
+          "region": "latam",
+          "countries": [
+            "MX"
+          ],
+          "metric": "拉美现金贷活跃第1：2026上半年月活均值约390万，环比升约10.6%，约为第2名 Aplazo 的2.1倍。",
+          "actions": "Q2发版12次；5/25–6/2 DiDi Card Hot Sale 10%返现；6/23 服务升级覆盖信贷/卡/支付",
+          "cashLoanHint": "场景入口+卡促转化；拉美断层龙头，对标时勿用独立现金贷App均值直接比",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Aplazo",
+          "groupKeys": [
+            "Aplazo（Aplazo·MX）"
+          ],
+          "region": "latam",
+          "countries": [
+            "MX"
+          ],
+          "metric": "拉美活跃第2：月活均值约186万，环比升约9.6%。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "MexiCash/快牛",
+          "groupKeys": [
+            "快牛｜KN｜MexiCash（快牛·出海）"
+          ],
+          "region": "latam",
+          "countries": [
+            "MX"
+          ],
+          "metric": "拉美活跃第8：月活均值约94万，环比升约30.9%，名次上升3位。",
+          "cashLoanHint": "H1活跃环比高增；仍属流量侧，资产质量待监管/债项交叉",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Credmex",
+          "groupKeys": [
+            "Fintopia/瓴岳/洋钱罐（洋钱罐·CN）",
+            "Credmex/Fintopia（洋钱罐·MX）"
+          ],
+          "region": "latam",
+          "countries": [
+            "MX"
+          ],
+          "metric": "拉美活跃第7：月活均值约97万，环比降约3.7%。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Tala",
+          "groupKeys": [
+            "Tala（Tala·MULTI）",
+            "Tala（Tala·MX）"
+          ],
+          "region": "latam",
+          "countries": [
+            "MX"
+          ],
+          "metric": "拉美活跃第10：月活均值约71万，环比降约23.2%，名次下降1位。",
+          "actions": "iOS于2026-05-15下架；报告称冒名欺诈冲击活跃与下载",
+          "cashLoanHint": "压力样本：商店下架+欺诈叙事下活跃收缩",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Stori",
+          "groupKeys": [
+            "Stori（Stori·MX）"
+          ],
+          "region": "latam",
+          "countries": [
+            "MX"
+          ],
+          "metric": "拉美活跃第6：月活均值约104万，环比升约0.5%。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Plata",
+          "groupKeys": [
+            "Plata（Plata·MX）"
+          ],
+          "region": "latam",
+          "countries": [
+            "MX"
+          ],
+          "metric": "2026年初获批银行牌照，报告将其作为平台银行化主线。",
+          "cashLoanHint": "数字银行牌照落地→现金贷流量从独立App外溢至银行/支付入口",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Mercado Pago",
+          "groupKeys": [
+            "Mercado Libre/Mercado Libre（美卡多·LATAM）"
+          ],
+          "region": "latam",
+          "countries": [
+            "BR",
+            "MX"
+          ],
+          "metric": "银行牌照申请接近获批，出自点点2026上半年报告叙述。",
+          "cashLoanHint": "支付/电商入口银行化；与独立现金贷App分流",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Kredivo",
+          "groupKeys": [
+            "Kredivo/FinAccel（Kredivo·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID",
+            "VN"
+          ],
+          "metric": "东南亚活跃第1：月活均值约1068万，环比升约5.2%，稳居千万级。",
+          "actions": "DBS Indonesia channeling 提至Rp3万亿；2026-05收购越南数字银行Timo，越南Kredivo更名Timo Credit",
+          "cashLoanHint": "BNPL+现金贷场景龙头；区域扩张看越南Timo Credit生态",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Adapundi",
+          "groupKeys": [
+            "Adapundi｜Adapundi｜Adapundi（Adapundi·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "东南亚活跃第2：月活均值约284万，环比升约14.3%。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Easycash",
+          "groupKeys": [
+            "Easycash｜Easycash｜Easycash（Easycash·ID）",
+            "Fintopia/瓴岳/洋钱罐（洋钱罐·CN）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "东南亚活跃第3：月活均值约145万，环比降约24.4%。",
+          "cashLoanHint": "体量仍前三但H1活跃明显收缩，需与印尼出清/风控收紧交叉",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "AdaKami",
+          "groupKeys": [
+            "AdaKami｜AdaKami｜AdaKami（AdaKami·ID）",
+            "AdaKami/FinVolution（信也·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "东南亚活跃第8：月活均值约101万，环比降约23.6%。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Kredit Pintar",
+          "groupKeys": [
+            "Kredit Pintar｜Kredit Pintar｜KreditPintar（KreditPintar·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "东南亚活跃第9：月活均值约96万，环比降约32%，名次下降3位，是前十名中跌幅最大之一。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Sea/Monee",
+          "groupKeys": [
+            "Sea Limited/Shopee（Sea·SEA）",
+            "Shopee Pinjam/Sea（Shopee·SEA）",
+            "SPayLater/Shopee/Sea（Shopee·SEA）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID",
+            "VN",
+            "TH",
+            "MY",
+            "PH",
+            "SG"
+          ],
+          "metric": "截至2026年一季度，消费与中小企业贷款本金余额约99亿美元，同比升约71%；逾期90天以上不良率约1.1%。",
+          "cashLoanHint": "场景平台信贷主尺用本金余额/不良，勿用独立现金贷App下载榜替代",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Grab",
+          "groupKeys": [
+            "Grab Holdings/Grab（Grab·SEA）",
+            "Grab PayLater/Grab（Grab·SEA）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "SG",
+            "ID",
+            "MY",
+            "TH",
+            "PH",
+            "VN"
+          ],
+          "metric": "截至2026年二季度，贷款本金余额约23.2亿美元，同比升约197%；当季放款约12亿美元，同比升约72%。",
+          "cashLoanHint": "出行/外卖入口信贷高增；质量与资金结构待IR交叉",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "JazzCash",
+          "groupKeys": [
+            "JazzCash/JazzCash Lending（JazzCash·PK）",
+            "JazzCash Digital Lending（PK·SECP）"
+          ],
+          "region": "south-asia",
+          "countries": [
+            "PK"
+          ],
+          "metric": "南亚活跃第2：月活均值约1003万，环比升约2.2%；在巴基斯坦现金贷断层领先，其后长尾分散。",
+          "cashLoanHint": "电信钱包入口+即时贷/BNPL；对标easypaisa钱包生态",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Bajaj Finance",
+          "groupKeys": [
+            "Bajaj Finance（·IN）"
+          ],
+          "region": "south-asia",
+          "countries": [
+            "IN"
+          ],
+          "metric": "南亚活跃第1：月活均值约1578万，环比降约1.2%。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "KreditBee",
+          "groupKeys": [
+            "KreditBee（KreditBee·IN）"
+          ],
+          "region": "south-asia",
+          "countries": [
+            "IN"
+          ],
+          "metric": "南亚活跃第3：月活均值约792万，环比升约0.9%。",
+          "cashLoanHint": "须在RBI DLA目录/持牌NBFC通道内展业",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "FairMoney",
+          "groupKeys": [
+            "FairMoney（·非洲）"
+          ],
+          "region": "africa",
+          "countries": [
+            "NG"
+          ],
+          "metric": "非洲活跃第1：月活均值约168万，环比基本持平；并推出 FairMoto 车辆资产融资。",
+          "actions": "贷款链路升级；FairMoto最高约90%车辆融资、24–36个月分期",
+          "cashLoanHint": "由现金贷延伸资产金融；尼日DEON持牌清理下合规经营权重上升",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "OKash",
+          "groupKeys": [
+            "OKash（·NG）"
+          ],
+          "region": "africa",
+          "countries": [
+            "NG"
+          ],
+          "metric": "非洲活跃第2：月活均值约164万，环比降约6.2%。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Branch",
+          "groupKeys": [
+            "Branch（Branch·MULTI）",
+            "Branch（Branch·NG）"
+          ],
+          "region": "africa",
+          "countries": [
+            "NG",
+            "KE"
+          ],
+          "metric": "非洲活跃第5：月活均值约85万，环比降约4.2%。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "M-KOPA",
+          "groupKeys": [
+            "M-KOPA（M-KOPA·KE）"
+          ],
+          "region": "africa",
+          "countries": [
+            "KE",
+            "NG"
+          ],
+          "metric": "2026年2月披露尼日利亚客户超过100万、信贷超过2300亿奈拉；7月集团客户约1000万，并延伸到贷款与保险。",
+          "cashLoanHint": "设备分期沉淀信用数据→延伸贷款/保险",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Halan",
+          "groupKeys": [
+            "Halan（·MENA）",
+            "Halan（·EG）"
+          ],
+          "region": "mena",
+          "countries": [
+            "EG"
+          ],
+          "metric": "非洲活跃榜第6：月活均值约82万，按报告非洲前十口径。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "2026 上半年海外现金贷：下载在修，活跃在缩；格局上无牌出清、持牌和场景入口更集中。增长要靠场景、合规和留存。展业国里，印尼、墨西哥、菲律宾是压力盘；巴基斯坦、巴西等明星盘更适合看增量。",
+        "bullets": [
+          "流量榜看下载和活跃，信贷主尺看发放、在贷、不良和资金；场景平台另看贷款本金。",
+          "优先跟踪：DiDi Finanzas、Kredivo、JazzCash、FairMoney、Sea 旗下信贷、Grab 贷款本金、Plata 银行化。",
+          "压力样本：Tala 下架与欺诈问题，以及印尼 Easycash、AdaKami、Kredit Pintar 活跃下滑。",
+          "不要用下载修复直接推导资产已好转；先核对牌照和留存。"
+        ]
+      },
+      "docKind": "research_report",
+      "docKindLabel": "研报"
+    },
+    {
+      "id": "id-ph-bnpl-p2p-source-pack-2026",
+      "title": "印尼·菲律宾 BNPL/P2P 监管与市场信源包",
+      "publisher": "多源汇编（OJK/BSP/SEC 官方 + 媒体转述 + R&M媒体摘要）",
+      "period": "2024–2026",
+      "asOf": "2026-08-11",
+      "confidence": "中",
+      "sourceType": "regulator_and_official_pack",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "印尼要把网贷余额口径和分期主体资格分开看：网贷看现行监管办法与监管余额，分期看新规把银行和融资公司纳入后的资格。菲律宾第三方分期规模只能作量级参考，真正硬约束是证监会线上借贷平台规则和央行利率上限。",
+      "macroBullets": [
+        "印尼BNPL（Research and Markets媒体摘要·BusinessWire 2025-02）：2025约US$8.59B，2024约US$7.57B，2025–2030 CAGR约9.6%至约US$13.59B；Akulaku/Kredivo点名",
+        "印尼BNPL（R&M Q1/Q2 2026媒体摘要，口径演进见〔7〕）：2025约US$9.12B；2026约US$10.64B–11.15B；2031约US$19.38B–23.55B",
+        "菲BNPL（PRNewswire 2024-02·R&M Q1 2024）：2024约US$2.29B（同比约+16.4%）；2023约US$1.97B；2029约US$3.87B；2024–2029 CAGR约11.0%"
+      ],
+      "policyBullets": [
+        "印尼网贷：以现行监管办法为主框架，余额用监管口径交叉。",
+        "印尼分期：新规明确银行与融资公司主体资格，调整期约 6 个月。",
+        "菲律宾：证监会线上借贷平台与央行利率上限是硬约束，第三方规模摘要不能替代牌照核验。"
+      ],
+      "industryMetrics": {
+        "id_p2p_outstanding_202504": "Rp80.94T · YoY +29.01% · TWP90 2.93%（OJK口径·Kontan/Bisnis等2025-06转述）",
+        "id_bnpl_multifinance_202504": "Rp8.24T · YoY +47.11% · NPF gross 3.78%（Bisnis.com 2025-06-02转述OJK）",
+        "id_p2p_outstanding_202601": "Rp98.54T · YoY +25.52% · TWP90 4.38%（Detik Finance / Bisnis 2026-03转述OJK）",
+        "id_bnpl_multifinance_202601": "Rp12.18T · YoY +71.13% · NPF gross 2.77%（ANTARA转述OJK）",
+        "id_bnpl_bank_202601": "Rp27.1T · YoY +20.15% · 账户约3123万（Bisnis.com 2026-03-03）",
+        "id_bnpl_rm_2025": "约US$8.59B（BusinessWire/R&M 2025-02媒体摘要；与OJK余额口径不同，见〔7〕〔4〕）",
+        "ph_bnpl_rm_2024": "约US$2.29B（PRNewswire 2024-02）；2029约US$3.87B",
+        "ph_digital_payments_2024_vol": "57.4% of retail volume（BSP 2024报告）",
+        "ph_digital_payments_2024_val": "59.0% of retail value · 月均约US$136B（BSP）"
+      },
+      "marketNotes": [
+        {
+          "region": "se-asia",
+          "summary": "印尼须把「第三方BNPL美元规模」与「OJK P2P余额 / 融资公司BNPL / 银行BNPL」分轨引用；POJK 32/2025后BNPL主体收窄为银行+融资公司。"
+        },
+        {
+          "region": "se-asia",
+          "summary": "菲律宾BNPL规模主要依赖第三方摘要；硬约束是SEC OLP登记/下架+BSP 1133利率上限；数字支付渗透已过半。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "rm-id-bnpl-bw-202502",
+          "type": "third_party_research_press",
+          "title": "Indonesia BNPL Report 2025（R&M via BusinessWire）",
+          "url": "https://www.businesswire.com/news/home/20250221857016/en/Indonesia-Buy-Now-Pay-Later-Business-and-Investment-Report-2025-Akulaku-and-Kredivo-Lead-the-%248.59-Billion-Market-by-Offering-Tailored-BNPL-Solutions---Forecast-to-2030---ResearchAndMarkets.com",
+          "asOf": "2025-02",
+          "confidence": "中",
+          "bullets": [
+            "2025约US$8.59B",
+            "2030约US$13.59B ， CAGR约9.6%",
+            "点名Akulaku、Kredivo"
+          ]
+        },
+        {
+          "id": "bisnis-id-bnpl-mf-202504",
+          "type": "regulator_media_relay",
+          "title": "Bisnis.com：OJK融资公司BNPL（至2025-04）",
+          "url": "https://finansial.bisnis.com/read/20250602/89/1881753/kredit-leasing-melambat-per-april-2025-jadi-rp50418-triliun-npl-gross-paylater-naik-jadi-378",
+          "asOf": "2025-04",
+          "confidence": "中",
+          "bullets": [
+            "BNPL MF Rp8.24T ， +47.11% YoY",
+            "NPF gross 3.78%"
+          ]
+        },
+        {
+          "id": "kontan-id-p2p-202504",
+          "type": "regulator_media_relay",
+          "title": "Kontan：OJK P2P outstanding（至2025-04）",
+          "url": "https://keuangan.kontan.co.id/news/outstanding-pembiayaan-fintech-p2p-lending-capai-rp-8094-triliun-per-april-2025",
+          "asOf": "2025-04",
+          "confidence": "中",
+          "bullets": [
+            "P2P Rp80.94T ， +29.01% YoY",
+            "TWP90 2.93%"
+          ]
+        },
+        {
+          "id": "detik-id-p2p-202601",
+          "type": "regulator_media_relay",
+          "title": "Detik Finance：OJK P2P（至2026-01）",
+          "url": "https://finance.detik.com/berita-ekonomi-bisnis/d-8382242/utang-pinjol-warga-ri-nyaris-rp-100-triliun",
+          "asOf": "2026-01",
+          "confidence": "中",
+          "bullets": [
+            "P2P Rp98.54T ， +25.52% YoY",
+            "交叉银行BNPL Rp27.1T、MF BNPL Rp12.18T"
+          ]
+        },
+        {
+          "id": "ojk-pojk-40-2024",
+          "type": "regulator_official",
+          "title": "POJK 40/2024 ， LPBBTI官方",
+          "url": "https://ojk.go.id/id/regulasi/Pages/POJK-40-Tahun-2024-Layanan-Pendanaan-Bersama-Berbasis-Teknologi-Informasi.aspx",
+          "asOf": "2024-12-27",
+          "confidence": "高",
+          "bullets": [
+            "取代POJK 10、2022",
+            "PDF见OJK监管页",
+            "单户上限、禁跨境、最低股权"
+          ]
+        },
+        {
+          "id": "voi-pojk-32-2025",
+          "type": "regulator_media_relay",
+          "title": "VOI：POJK 32/2025 BNPL（引OJK）",
+          "url": "https://voi.id/en/economy/546752",
+          "asOf": "2025-12",
+          "confidence": "中",
+          "bullets": [
+            "仅银行+融资公司",
+            "融资公司须OJK事先批准",
+            "官方页可交叉POJK 32、2025"
+          ]
+        },
+        {
+          "id": "ojk-pojk-32-2025-official",
+          "type": "regulator_official",
+          "title": "POJK 32/2025 ， BNPL官方页",
+          "url": "https://ojk.go.id/id/regulasi/Pages/POJK-32-Tahun-2025-Penyelenggaraan-Beli-Sekarang-Bayar-Nanti-BNPL.aspx",
+          "asOf": "2025-12-15",
+          "confidence": "高",
+          "bullets": [
+            "2025-12-15生效",
+            "既有主体最长6个月调整",
+            "银行、融资公司分轨"
+          ]
+        },
+        {
+          "id": "rm-ph-bnpl-prn-202402",
+          "type": "third_party_research_press",
+          "title": "Philippines BNPL 2024（R&M via PRNewswire）",
+          "url": "https://www.prnewswire.com/news-releases/philippines-buy-now-pay-later-business-report-2024-rising-adoption-of-flexible-payment-solutions-at-checkout-and-point-of-sale-to-drive-bnpl-sales---forecasts-to-2029-302075734.html",
+          "asOf": "2024-02-29",
+          "confidence": "中",
+          "bullets": [
+            "2024约US$2.29B",
+            "2029约US$3.87B ， CAGR约11%"
+          ]
+        },
+        {
+          "id": "bsp-digital-payments-2024",
+          "type": "regulator_official",
+          "title": "BSP 2024 Status of Digital Payments",
+          "url": "https://www.bsp.gov.ph/PaymentAndSettlement/2024_Report_on_E-payments_Measurement.pdf",
+          "asOf": "2024",
+          "confidence": "高",
+          "bullets": [
+            "笔数57.4%、金额59.0%",
+            "超PDP目标52–54%"
+          ]
+        },
+        {
+          "id": "abscbn-sec-olp-202302",
+          "type": "news_enforcement",
+          "title": "ABS-CBN：SEC下架33未注册OLP",
+          "url": "https://www.abs-cbn.com/business/02/09/23/33-unregistered-lending-apps-removed-by-google-sec",
+          "asOf": "2023-02-09",
+          "confidence": "中",
+          "bullets": [
+            "Google Play移除33 App",
+            "关联MC 10、MC 19"
+          ]
+        },
+        {
+          "id": "bsp-circular-1133",
+          "type": "regulator_official",
+          "title": "BSP Circular 1133",
+          "url": "https://www.bsp.gov.ph/Regulations/Issuances/2021/1133.pdf",
+          "asOf": "2021",
+          "confidence": "高",
+          "bullets": [
+            "名义≤6%、月 ， EIR≤15%、月",
+            "逾期≤5%、月 ， 总成本≤本金100%",
+            "SEC MC 3、2022落地"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "Kredivo",
+          "groupKeys": [
+            "Kredivo/FinAccel（Kredivo·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "第三方市场摘要点名其为印尼分期头部；展业须满足 2025 年分期新规，包括融资公司事先批准、披露与催收要求。",
+          "cashLoanHint": "BNPL主尺用持牌余额/资产质量；勿与P2P余额或第三方GMV混用",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Akulaku",
+          "groupKeys": [
+            "Akulaku/Akulaku（阿卡拉克·SEA）",
+            "Akulaku Cicilan/Akulaku（阿卡拉克·ID）",
+            "Akulaku Finance/Akulaku（阿卡拉克·SEA）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "2025年第三方媒体摘要将其与 Kredivo 并列点名印尼分期头部，并引用约85.9亿美元市场叙事。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Home Credit Philippines",
+          "groupKeys": [
+            "Home Credit SEA（·SEA）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "PH"
+          ],
+          "metric": "在菲律宾展业须持有证监会放贷或融资牌照及线上借贷平台资格；利率受央行通告覆盖产品约束；数字支付渗透率约超过57%。",
+          "cashLoanHint": "未注册OLP面临商店下架；定价勿突破1133产品带",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "印尼网贷看现行办法与监管余额；分期看新规主体资格，并区分融资公司和银行。菲律宾先核证监会线上借贷平台资格，再核央行利率上限，第三方分期规模只作量级。",
+        "bullets": [
+          "第三方分期的美元规模，不能直接等同于印尼监管卢比余额，引用时要标明来源。",
+          "印尼分期新规生效后大约有 6 个月调整期。",
+          "菲律宾：先核证监会许可，再核利率上限，再用央行数字支付材料看场景渗透。"
+        ]
+      },
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管/信源包"
+    },
+    {
+      "id": "bsp-2024-e-payments-measurement",
+      "title": "BSP 2024 菲律宾数字支付现状报告（E-Payments Measurement）",
+      "publisher": "Bangko Sentral ng Pilipinas（BSP）",
+      "period": "2024",
+      "asOf": "2026-08-12",
+      "confidence": "高",
+      "sourceType": "regulator_official",
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管专题",
+      "localPath": "reports/bsp-2024-e-payments-measurement.pdf",
+      "pages": 17,
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "菲律宾零售支付数字化已过半：2024年月度数字支付笔数占比约57.4%、金额占比约59.0%，月均数字支付金额约1360亿美元，继续高于 PDP 2023–2028 当年目标。",
+      "policyBullets": [
+        "官方年报复核数字支付渗透，是菲律宾钱包/线上信贷场景基建的硬读数。",
+        "与 SEC OLP 规则分轨：支付渗透≠线上放贷牌照出清。"
+      ],
+      "industryMetrics": {
+        "ph_digital_payments_2024_vol": "57.4% of retail volume（BSP 2024）",
+        "ph_digital_payments_2024_val": "59.0% of retail value · 月均约 US$136B（BSP）",
+        "ph_digital_payments_2023_vol": "52.8%（对照年）"
+      },
+      "marketNotes": [
+        {
+          "region": "se-asia",
+          "summary": "菲展业看支付基建渗透时优先引本报告；现金贷仍须回 SEC OLP / Circular 利率上限。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "bsp-epay-2024-pdf",
+          "type": "regulator_official",
+          "title": "2024 Report on E-Payments Measurement（PDF）",
+          "url": "https://www.bsp.gov.ph/PaymentAndSettlement/2024_Report_on_E-payments_Measurement.pdf",
+          "asOf": "2024",
+          "confidence": "高",
+          "bullets": [
+            "笔数 57.4%",
+            "金额 59.0%",
+            "月均约 US$136B"
+          ]
+        },
+        {
+          "id": "bsp-epay-portal",
+          "type": "regulator_official",
+          "title": "BSP E-Payments Measurement 发布页",
+          "url": "https://www.bsp.gov.ph/SitePages/MediaAndResearch/ReportonE-PaymentsMeasurement.aspx",
+          "asOf": "2024",
+          "confidence": "高"
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "GCash",
+          "groupKeys": [
+            "GCash/Mynt（GCash·PH）",
+            "GCash"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "PH"
+          ],
+          "metric": "处于 BSP 数字支付渗透过半的国民级钱包赛道；本报告不披露单钱包份额。",
+          "cashLoanHint": "支付渗透抬升有利钱包场景贷，但仍受 SEC OLP/利率上限约束。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Maya",
+          "groupKeys": [
+            "Maya/PayMaya（Maya·PH）",
+            "Maya"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "PH"
+          ],
+          "metric": "同属菲数字支付基建参与方；份额须另找公开材料。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "菲零售支付已现金减量过半，场景入口侧的钱包/银行 App 基建成熟；现金贷展业仍应把 SEC OLP 与利率上限当作硬约束，勿用支付渗透替代牌照核验。",
+        "bullets": [
+          "2024 数字支付笔数占比 57.4%，同比约 +4.6pct",
+          "金额占比 59.0%，月均约 US$136B",
+          "超过 PDP 2023–2028 对 2024 年 52–54% 的目标区间"
+        ]
+      }
+    },
+    {
+      "id": "rbi-digital-lending-dlg-pack-2022-2023",
+      "title": "印度 RBI 数字放贷与违约损失担保（DLG）监管包",
+      "publisher": "Reserve Bank of India（RBI）",
+      "period": "2022–2023",
+      "asOf": "2026-08-12",
+      "confidence": "高",
+      "sourceType": "regulator_official",
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管专题",
+      "localPath": "reports/rbi-digital-lending-20220902.pdf",
+      "pages": 12,
+      "regions": [
+        "south-asia"
+      ],
+      "thesis": "印度线上现金贷的硬约束是：放贷必须落在受监管实体（RE），LSP/DLA 不得截流资金；须披露全口径 APR/KFS，并保留冷静期。DLG 安排另有专门上限与拨备规则。",
+      "policyBullets": [
+        "Guidelines on Digital Lending（2022-09-02）：资金须 RE↔借款人直达，禁资金池。",
+        "须提供 Key Fact Statement，APR 全口径披露，并设冷却/反悔期。",
+        "Guidelines on Default Loss Guarantee in Digital Lending（2023-06-08）：损失分担安排须符合 RE 拨备与资本规则。",
+        "RE 对 LSP/DLA 外包不减损自身合规义务。"
+      ],
+      "industryMetrics": {},
+      "marketNotes": [
+        {
+          "region": "south-asia",
+          "summary": "印度展业先核 NBFC/银行 RE 与 DLA 报备，再谈流量合作；DLG 不可当无限兜底。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "rbi-dl-20220902",
+          "type": "regulator_official",
+          "title": "RBI Guidelines on Digital Lending（2022-09-02）",
+          "url": "https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12382&Mode=0",
+          "asOf": "2022-09-02",
+          "confidence": "高",
+          "bullets": [
+            "RE 直达放款",
+            "KFS/APR",
+            "冷却期"
+          ]
+        },
+        {
+          "id": "rbi-dlg-20230608",
+          "type": "regulator_official",
+          "title": "RBI Guidelines on DLG in Digital Lending（2023-06-08）",
+          "url": "https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12514&Mode=0",
+          "asOf": "2023-06-08",
+          "confidence": "高",
+          "bullets": [
+            "违约损失担保规则",
+            "RE 拨备/资本"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "印度 NBFC/数字放贷入口",
+          "groupKeys": [],
+          "region": "south-asia",
+          "countries": [
+            "IN"
+          ],
+          "metric": "凡 App 获客的消费贷须挂靠持牌 RE；LSP 仅可做获客/催收等外包，不可过账。",
+          "cashLoanHint": "建档时先填 RE 牌照与 DLA 名录，再挂流量伙伴。",
+          "confidence": "高",
+          "applyToCrm": false
+        }
+      ],
+      "analysis": {
+        "verdict": "印度现金贷合规主轴是 RE+直达资金+KFS/APR+DLG 受限；流量叙事不能替代牌照核验。",
+        "bullets": [
+          "外包 LSP 不减损 RE 责任。",
+          "冷静期与全口径 APR 为强制披露。",
+          "与 NBFC 名录交叉后才能谈上量。"
+        ]
+      }
+    },
+    {
+      "id": "grab-20f-fy2025-fintech",
+      "title": "Grab 20-F FY2025：金融科技竞争与分部披露",
+      "publisher": "Grab Holdings（SEC 20-F）",
+      "period": "FY2025",
+      "asOf": "2026-03-06",
+      "confidence": "高",
+      "sourceType": "listed_disclosure",
+      "docKind": "research_report",
+      "docKindLabel": "上市披露",
+      "localPath": "reports/grab-20f-fy2025.htm",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "Grab 把交付、出行与数字金融服务并列为超级应用三块；金融服务收入 2025 年约 US$347M。支付侧点名与 ShopeePay、Google Pay、Dana、GoPay、Touch ’n Go、MAE 竞争；数字银行侧通过 GXS（新加坡）与 GXBank（马来西亚）对阵在位行与新数字银行。",
+      "macroBullets": [
+        "收入地理：马来西亚约 US$1.04B、新加坡约 US$727M、印尼约 US$715M、菲律宾约 US$316M、泰国约 US$288M、越南约 US$255M（FY2025）。"
+      ],
+      "policyBullets": [
+        "数字银行以合资/持牌银行主体展业（GXS Bank / GXBank）。",
+        "数字放贷定义为纯线上、无当面交互的放贷通道。"
+      ],
+      "industryMetrics": {
+        "grab_fs_revenue_2025": "US$347M（Financial services）",
+        "grab_fs_revenue_2024": "US$253M",
+        "grab_fs_adj_ebitda_2025": "约 −US$110M（分部 Adjusted EBITDA）"
+      },
+      "marketNotes": [
+        {
+          "region": "se-asia",
+          "summary": "场景入口（出行/外卖）与钱包/数字银行分层引用；竞争名单可回填玩家竞品 peer/scene 层。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "grab-20f-2025-sec",
+          "type": "listed_20f",
+          "title": "Grab Holdings Form 20-F FY2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1855612/000185561226000020/ck0001855612-20251231.htm",
+          "asOf": "2026-03-06",
+          "confidence": "高",
+          "bullets": [
+            "FS 收入 US$347M",
+            "点名 ShopeePay/GoPay/Dana 等",
+            "GXS/GXBank"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "Grab",
+          "groupKeys": [
+            "Grab"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "SG",
+            "MY",
+            "ID",
+            "PH",
+            "TH",
+            "VN"
+          ],
+          "metric": "FY2025 金融服务收入约 US$347M；数字银行主体含 GXS（SG）、GXBank（MY）。",
+          "cashLoanHint": "信贷读数用分部与银行牌照口径，勿用外卖 GMV 替代。",
+          "confidence": "高",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "ShopeePay / SeaMoney",
+          "groupKeys": [
+            "Shopee/Sea（Shopee·SEA）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID",
+            "MY",
+            "TH",
+            "PH",
+            "VN",
+            "SG"
+          ],
+          "metric": "Grab 20-F 将 ShopeePay 列为区域数字支付主要竞品之一。",
+          "confidence": "高",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "GoPay",
+          "groupKeys": [
+            "GoTo/Gojek（GoPay·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "Grab 20-F 点名印尼单市场钱包竞品 GoPay。",
+          "confidence": "高",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Dana",
+          "groupKeys": [
+            "Dana（Dana·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "Grab 20-F 点名印尼单市场钱包竞品 Dana。",
+          "confidence": "高",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "上市 20-F 把 Grab 金融科技竞争图谱写清楚了：钱包四国/六国玩家 + 数字银行双持牌；可直接喂竞品四层。",
+        "bullets": [
+          "FS 收入同比由 253→347（百万美元）。",
+          "支付竞品含电商系钱包，存在闭环倾斜风险。",
+          "数字银行与在位行/新锐数字银行同场。"
+        ]
+      }
+    },
+    {
+      "id": "nu-20f-fy2025-latam-bank",
+      "title": "Nu Holdings 20-F FY2025：拉美数字银行与信贷扩张",
+      "publisher": "Nu Holdings（SEC 20-F）",
+      "period": "FY2025",
+      "asOf": "2026-04-08",
+      "confidence": "高",
+      "sourceType": "listed_disclosure",
+      "docKind": "research_report",
+      "docKindLabel": "上市披露",
+      "localPath": "reports/nu-20f-fy2025.htm",
+      "regions": [
+        "latam"
+      ],
+      "thesis": "Nu 以高集中度拉美银行为对照叙事：巴西/墨西哥/哥伦比亚 HHI 显著高于美欧，强调用数字化与体验抢份额。2025 年收入约 US$15.8B、净利润约 US$2.9B；生息资产组合继续扩张，墨西哥是展业六国外的拉美对照样本。",
+      "macroBullets": [
+        "引用 BCB/CNBV/SFC 与欧央行数据：巴西/墨西哥/哥伦比亚银行业 HHI 高于美/德/法。"
+      ],
+      "policyBullets": [
+        "强调拉美监管推动开放与竞争，利于数字银行进入。",
+        "信贷损失用 PD×LGD×EAD 与宏观情景（GDP/通胀/失业/利率）。"
+      ],
+      "industryMetrics": {
+        "nu_revenue_2025": "约 US$15.8B（+37% YoY）",
+        "nu_net_income_2025": "约 US$2.9B（+45% YoY）",
+        "nu_activity_rate_2025": "月活率约 83%（截至 2025-12-31）"
+      },
+      "marketNotes": [
+        {
+          "region": "latam",
+          "summary": "墨西哥现金贷对照可读 Nu 的数字银行获客与信用卡/贷款组合，但不直接等于墨西哥非银现金贷监管。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "nu-20f-2025-sec",
+          "type": "listed_20f",
+          "title": "Nu Holdings Form 20-F FY2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1691493/000129281426002166/nuform20f_2025.htm",
+          "asOf": "2026-04-08",
+          "confidence": "高",
+          "bullets": [
+            "收入 US$15.8B",
+            "净利 US$2.9B",
+            "HHI 集中度叙事"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "Nubank",
+          "groupKeys": [
+            "Nubank"
+          ],
+          "region": "latam",
+          "countries": [
+            "BR",
+            "MX",
+            "CO"
+          ],
+          "metric": "FY2025 收入约 US$15.8B、净利约 US$2.9B；以信用卡与贷款组合扩张，月活率约 83%。",
+          "cashLoanHint": "墨西哥对照看数字银行获客与资产质量，勿把巴西组合直接外推。",
+          "confidence": "高",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "Nu 的 20-F 是拉美数字银行样本：高集中度市场 + 数字化获客 + 可核验收入/利润；适合墨西哥展业对照而非东南亚主尺。",
+        "bullets": [
+          "收入与净利双位数增长已披露。",
+          "竞争叙事锚定在位大行服务差与费率高。",
+          "宏观变量进入 ECL 模型。"
+        ]
+      }
+    },
+    {
+      "id": "moteng-sea-food-delivery-6-2025",
+      "title": "墨腾《东南亚外卖平台报告 6.0》公开摘要",
+      "publisher": "墨腾创投 Momentum Works",
+      "period": "2025 / 报告 6.0",
+      "asOf": "2026-08-12",
+      "confidence": "中",
+      "sourceType": "platform_research",
+      "docKind": "research_report",
+      "docKindLabel": "研报",
+      "localPath": "reports/moteng-sea-food-delivery-6-summary.html",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "东南亚外卖 2025 年平台 GMV 约 US$22.7B，同比约 +18%。Grab 区域份额约 55%；ShopeeFood 在 GMV 口径上超过 Foodpanda。场景入口仍会影响支付与信贷交叉销售，但份额不可直接当现金贷主尺。",
+      "macroBullets": [
+        "六国均录得双位数增长；泰国增速居前（约 +22% YoY，公开摘要）。"
+      ],
+      "industryMetrics": {
+        "sea_food_gmv_2025": "约 US$22.7B（+18% YoY）",
+        "grab_food_share_2025": "约 55% 区域份额（墨腾公开摘要）"
+      },
+      "marketNotes": [
+        {
+          "region": "se-asia",
+          "summary": "外卖份额服务场景/支付交叉分析；完整报告收费，库内只落公开可核验摘要。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "moteng-lowdown-food-6",
+          "type": "platform_research_press",
+          "title": "Momentum Works Low Down：SEA food delivery GMV 2025",
+          "url": "https://thelowdown.momentum.asia/new-report-southeast-asia-food-delivery-gmv-grew-18-to-hit-us22-7b-in-2025/",
+          "asOf": "2025",
+          "confidence": "中",
+          "bullets": [
+            "GMV US$22.7B",
+            "+18%",
+            "Grab ~55%",
+            "ShopeeFood 超 Foodpanda"
+          ]
+        },
+        {
+          "id": "moteng-report-food-6-cn",
+          "type": "platform_research",
+          "title": "东南亚外卖平台 6.0（产品页）",
+          "url": "https://momentum.asia/insights/detail/food-delivery-platforms-in-southeast-asia-6-cn",
+          "asOf": "2026",
+          "confidence": "中",
+          "bullets": [
+            "第六版年度报告",
+            "覆盖 ID/TH/MY/PH/VN/SG"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "Grab",
+          "groupKeys": [
+            "Grab"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID",
+            "TH",
+            "MY",
+            "PH",
+            "VN",
+            "SG"
+          ],
+          "metric": "墨腾公开摘要：2025 外卖区域份额约 55%，巩固领先。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "ShopeeFood",
+          "groupKeys": [
+            "Shopee/Sea（Shopee·SEA）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID",
+            "TH",
+            "MY",
+            "PH",
+            "VN",
+            "SG"
+          ],
+          "metric": "公开摘要称 ShopeeFood 在 GMV 口径超过 Foodpanda，印尼单量亦追上 Gojek 叙事需与完整报告交叉。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "外卖格局服务场景入口判断；Grab 仍强、ShopeeFood 上升。信贷含义是交叉销售潜力，不是放贷余额。",
+        "bullets": [
+          "区域 GMV 约 227 亿美元、+18%。",
+          "Grab 份额约 55%。",
+          "完整付费报告未整页入库，只留公开摘要。"
+        ]
+      }
+    },
+    {
+      "id": "lexin-20f-fy2025-consumer-finance",
+      "title": "乐信 Lexin 20-F FY2025：消费信贷平台披露",
+      "publisher": "乐信 LexinFintech（SEC 20-F）",
+      "period": "FY2025",
+      "asOf": "2026-08-12",
+      "confidence": "高",
+      "sourceType": "listed_disclosure",
+      "docKind": "research_report",
+      "docKindLabel": "上市披露",
+      "localPath": "reports/lexin-20f-fy2025.htm",
+      "regions": [
+        "east-asia"
+      ],
+      "thesis": "乐信作为中国消费信贷科技上市样本，20-F 强调与融资担保/合作机构及行业竞争相关的风险；表内贷款余额增长驱动资产端变化。可用于对照中资玩家出海前的合规与合作模式，不作东南亚余额主尺。",
+      "policyBullets": [
+        "风险因素点名第三方担保公司与业务伙伴、行业竞争、中国及其他地区监管政策。"
+      ],
+      "industryMetrics": {},
+      "marketNotes": [
+        {
+          "region": "east-asia",
+          "summary": "中国消金科技上市披露，供中资出海对照；国别展业仍以当地牌照为准。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "lexin-20f-2025-sec",
+          "type": "listed_20f",
+          "title": "LexinFintech Form 20-F FY2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1708259/000119312526189256/lx-20251231.htm",
+          "asOf": "2025-12-31",
+          "confidence": "高",
+          "bullets": [
+            "消费信贷科技平台",
+            "表内贷款余额变动",
+            "合作机构/担保风险披露"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "乐信",
+          "groupKeys": [
+            "乐信 Lexin"
+          ],
+          "region": "east-asia",
+          "countries": [
+            "CN"
+          ],
+          "metric": "FY2025 20-F 披露消费信贷科技模式与合作机构/担保相关风险；表内贷款余额增长影响拨备。",
+          "cashLoanHint": "出海对照其助贷/担保结构，勿直接套用中国余额到展业国。",
+          "confidence": "高",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "乐信 20-F 补齐中资消金上市样本，方便和东南亚展业玩家做结构对照。",
+        "bullets": [
+          "风险章强调担保与伙伴依赖。",
+          "表内余额变动影响拨备叙事。",
+          "与展业国监管包分轨使用。"
+        ]
+      }
+    },
+    {
+      "id": "ph-sec-olp-mc20-2026-pack",
+      "title": "菲律宾 SEC MC 20（2026）：线上放贷平台解禁与新规包",
+      "publisher": "SEC Philippines + 财经媒体交叉",
+      "period": "2026-07/08",
+      "asOf": "2026-08-12",
+      "confidence": "中",
+      "sourceType": "regulator_and_media_pack",
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管专题",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "SEC 以 Memorandum Circular No. 20, Series of 2026 解除近五年 OLP 新设禁令（约 2026-08-01 起），并提高融资公司/放贷公司数字平台实缴资本阶梯、单主体最多 5 个 OLP、强化披露与市场行为要求。官网 PDF 检索不稳定，库内先落可核验媒体要点并标「待官文 PDF 交叉」。",
+      "policyBullets": [
+        "解除 MC 10 s.2021 新设 OLP 禁令，改以 MC 20 s.2026 框架管理。",
+        "融资公司：1 个 OLP 约 ₱20M 实缴，最高 5 个约 ₱100M（媒体口径，待官文）。",
+        "放贷公司：1 个 OLP 约 ₱10M，最高 5 个约 ₱50M（媒体口径，待官文）。",
+        "单主体不得超过 5 个 OLP；既有经营者约 12 个月过渡期。",
+        "强化贷前披露（总额、到手、利率/EIR、费用、期数）与 CIC 登记要求。"
+      ],
+      "industryMetrics": {},
+      "marketNotes": [
+        {
+          "region": "se-asia",
+          "summary": "菲律宾线上现金贷窗口重开但资本与披露门槛上移；展业先核 CA/OLP 名录再放量。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "inq-sec-olp-202607",
+          "type": "regulator_media_relay",
+          "title": "Inquirer：SEC lifts moratorium on online lending firms",
+          "url": "https://business.inquirer.net/599350/sec-lifts-moratorium-on-online-lending-firms",
+          "asOf": "2026-07",
+          "confidence": "中",
+          "bullets": [
+            "MC 20 s.2026",
+            "资本阶梯",
+            "最多 5 个 OLP"
+          ]
+        },
+        {
+          "id": "fintechnews-sec-olp-2026",
+          "type": "regulator_media_relay",
+          "title": "Fintech News PH：SEC lifts 5-year OLP moratorium",
+          "url": "https://fintechnews.ph/72397/lending/sec-online-lending-platforms-moratorium-lifted/",
+          "asOf": "2026-07",
+          "confidence": "中",
+          "bullets": [
+            "生效约 2026-08-01",
+            "披露与市场行为强化"
+          ]
+        },
+        {
+          "id": "sec-ph-portal",
+          "type": "regulator_official",
+          "title": "SEC Philippines 官网（待挂 MC 20 PDF）",
+          "url": "https://www.sec.gov.ph/",
+          "asOf": "2026-08",
+          "confidence": "高",
+          "bullets": [
+            "官文 PDF 待交叉"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "菲律宾 OLP 持牌放贷",
+          "groupKeys": [],
+          "region": "se-asia",
+          "countries": [
+            "PH"
+          ],
+          "metric": "新规提高数字平台资本与披露门槛，并限制单主体 OLP 数量；存量需过渡达标。",
+          "cashLoanHint": "展业先核 Certificate of Authority 与 OLP 登记，再谈投放。",
+          "confidence": "中",
+          "applyToCrm": false
+        }
+      ],
+      "analysis": {
+        "verdict": "菲律宾 OLP 从禁令转入高门槛准入；机会与合规成本同时上升，须回挂官文 PDF。",
+        "bullets": [
+          "解禁不等于放松。",
+          "资本阶梯与 5 平台上限是硬约束。",
+          "媒体口径标中置信，待 SEC 原文。"
+        ]
+      }
+    },
+    {
+      "id": "ojk-p2p-mar2026-iru-update",
+      "title": "OJK IRU：印尼 P2P/融资机构 2026-03 行业更新",
+      "publisher": "OJK Investor Relations Unit",
+      "period": "2026-03",
+      "asOf": "2026-05-13",
+      "confidence": "高",
+      "sourceType": "regulator_official",
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管专题",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "截至 2026-03，印尼 P2P（LPBBTI）在贷约 IDR101.03T，同比 +26.25%，TWP90 约 4.52%（仍低于 5% 监管阈值）。融资机构在贷约 IDR514.09T，毛 NPF 约 2.83%。用于更新印尼网贷余额主尺。",
+      "policyBullets": [
+        "P2P 统计自 2026-01 起改走 OJK Data Portal，历史 PDF/Excel 仍可回查。"
+      ],
+      "industryMetrics": {
+        "id_p2p_outstanding_202603": "IDR101.03T · YoY +26.25% · TWP90 4.52%（OJK IRU）",
+        "id_financing_outstanding_202603": "IDR514.09T · YoY +0.61% · NPF gross 2.83%",
+        "id_pawn_financing_202603": "IDR153.49T · YoY +60.27%"
+      },
+      "marketNotes": [
+        {
+          "region": "se-asia",
+          "summary": "P2P 余额继续扩张但 TWP90 抬升至 4.5% 附近，接近阈值，需盯资产质量。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "ojk-iru-mar2026",
+          "type": "regulator_official",
+          "title": "OJK IRU：Financing / P2P / Microfinance Update March 2026",
+          "url": "https://iru.ojk.go.id/iru/Website/ArticleList/View/1010_Financing_Institutions,_Venture_Capital,_Fintech_P2P_Lending_and_Micro_Finance_Industry_Update_March_2026",
+          "asOf": "2026-03",
+          "confidence": "高",
+          "bullets": [
+            "P2P IDR101.03T",
+            "TWP90 4.52%",
+            "融资机构 NPF 2.83%"
+          ]
+        },
+        {
+          "id": "ojk-stats-portal-note",
+          "type": "regulator_official",
+          "title": "OJK：LPBBTI 统计改走 Data Portal 公告",
+          "url": "https://ojk.go.id/id/kanal/iknb/data-dan-statistik/fintech/Pages/PENGUMUMAN-Peralihan-Publikasi-Statistik-LPBBTI-Fintech.aspx",
+          "asOf": "2026-05-04",
+          "confidence": "高",
+          "bullets": [
+            "2026-01 起改门户发布"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "印尼 P2P/BNPL 持牌主体",
+          "groupKeys": [
+            "Kredivo/FinAccel（Kredivo·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "行业在贷升至约 IDR101T 量级，TWP90 升至约 4.5%；个券仍须看持牌主体与 BNPL 分轨。",
+          "cashLoanHint": "主尺用 OJK 余额/TWP90；第三方美元 BNPL 规模只作辅证。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "印尼网贷仍在扩表，但逾期指标靠近阈值，展业要更盯资产质量而非只看余额增速。",
+        "bullets": [
+          "P2P 在贷约 101 万亿盾。",
+          "TWP90 4.52% < 5% 但已抬升。",
+          "统计渠道切换到 Data Portal。"
+        ]
+      }
+    }
+  ]
+}

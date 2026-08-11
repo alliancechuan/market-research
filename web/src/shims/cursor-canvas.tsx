@@ -182,6 +182,8 @@ export function useCanvasState<T>(key: string, defaultValue: T): [T, SetCanvasSt
       const next = typeof action === "function" ? (action as (p: T) => T)(prev) : action;
       memoryStore[key] = next;
       writeStore();
+      // 先更新本组件，再通知同 key 订阅者，避免仅依赖 notify 时偶发不同步
+      setValue(next);
       notifyStore(key);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -459,7 +461,7 @@ export function Card({
       style={mergeStyle(
         {
           border: `1px solid ${t.stroke.tertiary}`,
-          borderRadius: 8,
+          borderRadius: 10,
           background: t.bg.elevated,
           overflow: "hidden",
         },
@@ -600,6 +602,7 @@ export function Button({
       border: "none",
     },
   };
+  const compact = size === "sm";
   return (
     <button
       type="button"
@@ -608,11 +611,15 @@ export function Button({
       style={mergeStyle(
         {
           ...styles[variant],
-          height: 28,
-          padding: "0 10px",
-          borderRadius: 6,
-          fontSize: 13,
+          height: compact ? "auto" : 28,
+          minHeight: compact ? undefined : 28,
+          padding: compact ? "0.32em 0.7em" : "0 10px",
+          borderRadius: 8,
+          fontSize: compact ? "clamp(11px, 0.75vw + 0.4rem, 12.5px)" : 12,
           fontWeight: 500,
+          lineHeight: 1.25,
+          whiteSpace: "nowrap",
+          flexShrink: 0,
           cursor: disabled ? "not-allowed" : "pointer",
           opacity: disabled ? 0.5 : 1,
         },
@@ -653,7 +660,7 @@ export function IconButton({
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: 6,
+          borderRadius: 8,
           border: "none",
           background: "transparent",
           color: t.text.secondary,
@@ -726,7 +733,7 @@ export function Callout({
       style={mergeStyle(
         {
           padding: 12,
-          borderRadius: 8,
+          borderRadius: 10,
           background: t.fill.tertiary,
           border: `1px solid ${t.stroke.tertiary}`,
           color: t.text.secondary,
@@ -852,11 +859,11 @@ export function TextInput({
         {
           height: 28,
           padding: "0 8px",
-          borderRadius: 6,
+          borderRadius: 8,
           border: `1px solid ${t.stroke.secondary}`,
           background: t.bg.editor,
           color: t.text.primary,
-          fontSize: 13,
+          fontSize: 12,
           outline: "none",
           width: "100%",
           boxSizing: "border-box",
@@ -893,11 +900,11 @@ export function TextArea({
       style={mergeStyle(
         {
           padding: 8,
-          borderRadius: 6,
+          borderRadius: 8,
           border: `1px solid ${t.stroke.secondary}`,
           background: t.bg.editor,
           color: t.text.primary,
-          fontSize: 13,
+          fontSize: 12,
           outline: "none",
           width: "100%",
           boxSizing: "border-box",
@@ -933,11 +940,11 @@ export function Select({
         {
           height: 28,
           padding: "0 8px",
-          borderRadius: 6,
+          borderRadius: 8,
           border: `1px solid ${t.stroke.secondary}`,
           background: t.bg.editor,
           color: t.text.primary,
-          fontSize: 13,
+          fontSize: 12,
           outline: "none",
           width: "100%",
         },
@@ -1018,7 +1025,7 @@ export function Table({
         {
           overflow: "auto",
           border: `1px solid ${t.stroke.tertiary}`,
-          borderRadius: 8,
+          borderRadius: 10,
         },
         style,
       )}

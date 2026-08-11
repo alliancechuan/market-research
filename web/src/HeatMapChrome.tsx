@@ -1,12 +1,15 @@
 /**
  * 大屏与 CRM 共用的 Cursor 扁平 UI 零件（无阴影 / 无渐变 / 主题 token）。
+ * 大屏另含指挥台分段控件（ScreenSeg*），强调操作反馈与指标可读性。
  */
 import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useHostTheme, Text, Button, Link, Stack, Row, mergeStyle } from "./shims/cursor-canvas";
 import {
   heatStopsAdded,
   heatStopsRemoved,
   heatStopsWarm,
+  heatStopsGreen,
   mapChrome,
   heatColorAdded,
   heatColorRemoved,
@@ -16,9 +19,237 @@ import {
   getCountryMacro,
   synthesizeCashLoanBrief,
   buildCashLoanMacroGroups,
+  collectCountryMacroCiteNos,
 } from "./data/countryMacro";
 import { formatCountryLanguageLine, getCountryLanguage } from "./data/countryLanguage";
 import { resolveFxSeries } from "./data/fxHistory";
+import { MapMacroKV, MacroSourcesBlock, CitedText } from "./SourceCite";
+import { citeMark } from "./data/sourceCitations";
+
+/** 宽屏 Natural Earth 画幅；窄屏改矮胖比，避免 SVG height:auto 被压成一条 */
+export const MAP_ASPECT_WIDE = 2.05;
+
+/** 视口驱动的地图画幅：小屏更高、详情卡更窄，给底图让位 */
+export function useMapViewport(fill?: boolean) {
+  const [vw, setVw] = useState(1200);
+  const [vh, setVh] = useState(800);
+  useEffect(() => {
+    const sync = () => {
+      if (typeof window === "undefined") return;
+      setVw(window.innerWidth);
+      setVh(window.innerHeight);
+    };
+    sync();
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
+  }, []);
+  const narrow = vw < 720;
+  const compact = vw < 1100;
+  /** 全屏铺容器仍用宽画幅；嵌入小屏用更「竖」的 viewBox，同宽下更高 */
+  const aspect = fill ? MAP_ASPECT_WIDE : narrow ? 1.2 : compact ? 1.4 : MAP_ASPECT_WIDE;
+  /** 国别聚焦时右侧留给详情的比例（越小地图越大） */
+  const focusRightFrac = fill
+    ? narrow
+      ? 0.36
+      : compact
+        ? 0.4
+        : 0.46
+    : narrow
+      ? 0.32
+      : compact
+        ? 0.36
+        : 0.46;
+  const focusMapMinFrac = narrow ? 0.62 : compact ? 0.56 : 0.48;
+  return { vw, vh, narrow, compact, aspect, focusRightFrac, focusMapMinFrac };
+}
+
+export function mapFrameWidth(height: number, aspect: number = MAP_ASPECT_WIDE): number {
+  return Math.round(height * aspect);
+}
+
+/** 大屏分段轨道：图层/因子共用，弱化糖果胶囊感 */
+export function ScreenSegTrack({
+  children,
+  style,
+}: {
+  children?: ReactNode;
+  style?: CSSProperties;
+}) {
+  const theme = useHostTheme();
+  return (
+    <div
+      style={mergeStyle(
+        {
+          display: "inline-flex",
+          flexWrap: "wrap",
+          alignItems: "stretch",
+          border: `1px solid ${theme.stroke.secondary}`,
+          borderRadius: 4,
+          overflow: "hidden",
+          background: theme.bg.editor,
+        },
+        style,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** 大屏分段钮：矩形、底边高亮、等宽数字 */
+export function ScreenSegChip({
+  label,
+  active,
+  clearable,
+  onClick,
+  title,
+}: {
+  label: string;
+  active?: boolean;
+  clearable?: boolean;
+  onClick: () => void;
+  title?: string;
+}) {
+  const theme = useHostTheme();
+  const accent = theme.accent.primary;
+  return (
+    <button
+      type="button"
+      title={title ?? (active && clearable ? "点击清除" : undefined)}
+      onClick={onClick}
+      style={{
+        margin: 0,
+        height: 30,
+        padding: "0 12px",
+        border: "none",
+        borderRight: `1px solid ${theme.stroke.tertiary}`,
+        borderBottom: active ? `2px solid ${accent}` : "2px solid transparent",
+        borderRadius: 0,
+        background: active ? theme.fill.tertiary : "transparent",
+        color: active ? theme.text.primary : theme.text.tertiary,
+        fontSize: 12,
+        fontWeight: active ? 600 : 500,
+        letterSpacing: "0.03em",
+        fontVariantNumeric: "tabular-nums",
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+        transition: "background 120ms ease, color 120ms ease, border-color 120ms ease",
+      }}
+      onMouseEnter={(e) => {
+        if (active) return;
+        e.currentTarget.style.background = theme.fill.quaternary;
+        e.currentTarget.style.color = theme.text.secondary;
+      }}
+      onMouseLeave={(e) => {
+        if (active) return;
+        e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.color = theme.text.tertiary;
+      }}
+    >
+      {label}
+      {active && clearable ? (
+        <span style={{ marginLeft: 6, opacity: 0.55, fontWeight: 500 }}>×</span>
+      ) : null}
+    </button>
+  );
+}
+
+/** 大屏状态微标：MODE · LIVE */
+export function ScreenStatusPills({
+  items,
+}: {
+  items: { label: string; tone?: "neutral" | "live" | "accent" }[];
+}) {
+  const theme = useHostTheme();
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+      {items.map((it) => {
+        const live = it.tone === "live";
+        const acc = it.tone === "accent";
+        return (
+          <span
+            key={it.label}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              height: 20,
+              padding: "0 8px",
+              borderRadius: 3,
+              border: `1px solid ${theme.stroke.tertiary}`,
+              background: acc ? theme.fill.tertiary : theme.bg.elevated,
+              color: acc ? theme.text.primary : theme.text.tertiary,
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {live ? (
+              <span
+                aria-hidden
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 999,
+                  background: theme.accent.primary,
+                  flexShrink: 0,
+                }}
+              />
+            ) : null}
+            {it.label}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+/** 地图指标条：小标签 + 等宽主数 */
+export function MapMetricBlock({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  const theme = useHostTheme();
+  const c = mapChrome(theme);
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: c.textTertiary,
+          lineHeight: 1.2,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: "clamp(18px, 1.25vw + 0.55rem, 26px)",
+          fontWeight: 700,
+          color: accent ? c.accent : c.text,
+          lineHeight: 1.12,
+          marginTop: 2,
+          fontVariantNumeric: "tabular-nums",
+          fontFamily: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
 
 export function MapSection({
   title,
@@ -95,24 +326,31 @@ export function MapDetailShell({
 }) {
   const theme = useHostTheme();
   const c = mapChrome(theme);
+  const { narrow, compact } = useMapViewport(overlay);
   return (
     <div
+      data-no-drag
       style={
         overlay
           ? {
               position: "absolute",
-              top: 56,
-              right: 12,
-              bottom: 12,
-              width: "min(760px, max(50vw, 420px))",
-              maxWidth: "56vw",
+              top: narrow ? 48 : 56,
+              right: narrow ? 8 : 12,
+              bottom: narrow ? 8 : 12,
+              // 小屏收窄详情卡，给地图留出主体；不再强制 max(50vw, 420)
+              width: narrow
+                ? "min(300px, 42vw)"
+                : compact
+                  ? "min(360px, 34vw)"
+                  : "min(480px, 34vw)",
+              maxWidth: narrow ? "44vw" : compact ? "36vw" : "40vw",
               zIndex: 4,
               overflow: "auto",
               border: `1px solid ${c.panelBorder}`,
               borderRadius: 8,
               background: c.panelBg,
-              padding: 20,
-              fontSize: 15,
+              padding: narrow ? 10 : "clamp(12px, 1.4vw, 20px)",
+              fontSize: "clamp(13px, 0.9vw + 0.35rem, 15px)",
               lineHeight: 1.55,
             }
           : {
@@ -128,13 +366,21 @@ export function MapDetailShell({
             }
       }
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 12, alignItems: "flex-start" }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: overlay ? 20 : 15, fontWeight: 600, color: c.text }}>{title}</div>
+          <div
+            style={{
+              fontSize: overlay ? "clamp(16px, 1.2vw + 0.45rem, 20px)" : 15,
+              fontWeight: 600,
+              color: c.text,
+            }}
+          >
+            {title}
+          </div>
           {subtitle ? (
             <div
               style={{
-                fontSize: overlay ? 13 : 11,
+                fontSize: overlay ? "clamp(11px, 0.7vw + 0.35rem, 13px)" : 11,
                 color: c.textTertiary,
                 marginTop: 4,
                 lineHeight: 1.45,
@@ -144,7 +390,7 @@ export function MapDetailShell({
             </div>
           ) : null}
         </div>
-        <Button variant="secondary" onClick={onClose}>
+        <Button variant="secondary" size="sm" onClick={onClose}>
           {closeLabel}
         </Button>
       </div>
@@ -181,12 +427,14 @@ export function MapChip({ children }: { children: ReactNode }) {
   return (
     <span
       style={{
-        fontSize: 12,
+        fontSize: "clamp(11px, 0.75vw + 0.4rem, 12.5px)",
+        lineHeight: 1.25,
         color: c.text,
         background: c.panelBg,
         borderRadius: 6,
-        padding: "6px 10px",
+        padding: "0.32em 0.7em",
         border: `1px solid ${c.panelBorder}`,
+        whiteSpace: "nowrap",
       }}
     >
       {children}
@@ -276,43 +524,69 @@ export function SteppedLegend({
   label,
   kind,
   compact = false,
+  low,
+  high,
 }: {
   label: string;
-  kind: "removed" | "added" | "gray" | "accent" | "warm";
+  kind: "removed" | "added" | "gray" | "accent" | "warm" | "green";
   /** 底部/融入图例时更扁 */
   compact?: boolean;
+  /** 色阶左端（低） */
+  low?: string;
+  /** 色阶右端（高） */
+  high?: string;
 }) {
   const theme = useHostTheme();
   const c = mapChrome(theme);
   const stops =
     kind === "warm"
       ? heatStopsWarm()
-      : kind === "added" || kind === "accent"
-        ? heatStopsAdded(theme)
-        : heatStopsRemoved(theme);
+      : kind === "green"
+        ? heatStopsGreen()
+        : kind === "added" || kind === "accent"
+          ? heatStopsAdded(theme)
+          : heatStopsRemoved(theme);
   return (
     <div
       style={{
         marginBottom: compact ? 0 : 12,
-        flex: compact ? "1 1 160px" : undefined,
-        minWidth: compact ? 140 : undefined,
+        flex: compact ? "1 1 200px" : undefined,
+        minWidth: compact ? 160 : undefined,
+        maxWidth: compact ? 320 : undefined,
       }}
     >
-      <div style={{ fontSize: 11, color: c.textTertiary, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: c.textTertiary, marginBottom: 4 }}>
+        {label}
+      </div>
       <div
         style={{
           display: "flex",
-          height: compact ? 8 : 10,
+          height: compact ? 7 : 9,
           borderRadius: 2,
           overflow: "hidden",
           border: `1px solid ${c.panelBorder}`,
-          maxWidth: compact ? 220 : undefined,
         }}
       >
         {stops.map((color, i) => (
           <div key={i} style={{ flex: 1, background: color }} />
         ))}
       </div>
+      {low != null || high != null ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 8,
+            marginTop: 4,
+            fontSize: 11,
+            color: c.textSecondary,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          <span>{low ?? ""}</span>
+          <span>{high ?? ""}</span>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -323,45 +597,69 @@ export function MapSideLegend({
   title,
   children,
   placement = "side",
+  overlay = false,
 }: {
-  title: string;
+  title?: string;
   children: ReactNode;
   /** side=右侧栏；bottom=地图框外下方横栏（不叠底图） */
   placement?: MapLegendPlacement;
+  /** 大屏：叠在地图底边，不挤占画幅高度 */
+  overlay?: boolean;
 }) {
   const theme = useHostTheme();
   const c = mapChrome(theme);
   if (placement === "bottom") {
     return (
       <div
-        style={{
-          flex: "0 0 auto",
-          width: "100%",
-          background: c.panelBg,
-          border: `1px solid ${c.panelBorder}`,
-          borderRadius: 8,
-          padding: "12px 14px",
-          maxHeight: 380,
-          overflow: "auto",
-        }}
+        data-no-drag
+        style={
+          overlay
+            ? {
+                position: "absolute",
+                left: 12,
+                right: 12,
+                bottom: 10,
+                zIndex: 3,
+                background: c.panelBg,
+                border: `1px solid ${c.panelBorder}`,
+                borderRadius: 4,
+                padding: "8px 12px",
+                pointerEvents: "auto",
+                backdropFilter: "none",
+              }
+            : {
+                flex: "0 0 auto",
+                width: "100%",
+                background: c.panelBg,
+                border: `1px solid ${c.panelBorder}`,
+                borderRadius: 4,
+                padding: "12px 14px",
+                maxHeight: 280,
+                overflow: "auto",
+              }
+        }
       >
-        <div
-          style={{
-            fontSize: 12,
-            fontWeight: 600,
-            marginBottom: 8,
-            color: c.textSecondary,
-          }}
-        >
-          {title}
-        </div>
+        {title ? (
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              marginBottom: overlay ? 4 : 8,
+              color: c.textSecondary,
+            }}
+          >
+            {title}
+          </div>
+        ) : null}
         {children}
       </div>
     );
   }
   return (
     <div style={{ flex: "1 1 220px", minWidth: 200, alignSelf: "flex-start" }}>
-      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: c.textSecondary }}>{title}</div>
+      {title ? (
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: c.textSecondary }}>{title}</div>
+      ) : null}
       {children}
     </div>
   );
@@ -526,14 +824,14 @@ export function MapExtLink({ href, children }: { href: string; children: ReactNo
 }
 
 /** 国别详情：按现金贷决策序分组（与 CRM 宏观卡同逻辑） */
-export function MapCountryMacroBrief({ code }: { code: string }) {
+export function MapCountryMacroBrief({ code, dense = false }: { code: string; dense?: boolean }) {
   const snap = getCountryMacro(code);
   const theme = useHostTheme();
   const c = mapChrome(theme);
   if (!snap) {
     return (
-      <MapSection title="宏观因子">
-        <MapMuted>该国暂无宏观快照；可在 CRM「宏观」页续写。</MapMuted>
+      <MapSection title="宏观因子" dense={dense}>
+        <MapMuted>暂无宏观快照</MapMuted>
       </MapSection>
     );
   }
@@ -544,8 +842,9 @@ export function MapCountryMacroBrief({ code }: { code: string }) {
     fxVolInYear: snap.fxVolInYear,
   });
   const groups = buildCashLoanMacroGroups(snap);
-  const brief = synthesizeCashLoanBrief(snap);
+  const brief = dense ? "" : synthesizeCashLoanBrief(snap);
   const note = displayCreditNote(snap);
+  const citeNos = collectCountryMacroCiteNos(snap);
 
   let spark: ReactNode = null;
   if (fx?.points?.length) {
@@ -572,18 +871,41 @@ export function MapCountryMacroBrief({ code }: { code: string }) {
     const stroke = flat ? c.accent : up ? FX_UP : FX_DOWN;
     const arrow = flat ? "–" : up ? "▲" : "▼";
     const word = flat ? "持平" : up ? "本币升" : "本币贬";
+    const d0 = pts[0]?.d?.slice(0, 7);
+    const d1 = pts[pts.length - 1]?.d?.slice(0, 7);
+    const y0 = pts[0]?.d?.slice(0, 4);
+    const y1 = pts[pts.length - 1]?.d?.slice(0, 4);
+    const spanHint =
+      d0 && d1 && d0 !== d1 ? `${d0}→${d1}` : y0 && y1 && y0 !== y1 ? `${y0}–${y1}` : y0 ? `${y0}起` : "区间";
+    const fxCite = fx.synthetic ? "" : citeMark(13);
     spark = (
       <div style={{ marginBottom: 10 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: c.textTertiary, marginBottom: 4 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 11, color: c.textTertiary, marginBottom: 4 }}>
           <span>
             汇率走势 · {fx.pair}
             {fx.synthetic ? "（示意）" : ""}
+            {fxCite ? <CitedText text={` ${fxCite}`} size="small" dense /> : null}
           </span>
-          <span style={{ color: stroke, fontWeight: 600, display: "inline-flex", alignItems: "baseline", gap: 3 }}>
-            <span aria-hidden>{arrow}</span>
-            {flat ? "" : up ? "+" : ""}
-            {Math.abs(strengthChg).toFixed(1)}%
-            <span style={{ fontWeight: 400 }}>{word}</span>
+          <span
+            style={{
+              color: stroke,
+              fontWeight: 600,
+              display: "inline-flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              lineHeight: 1.25,
+              textAlign: "right",
+            }}
+          >
+            <span style={{ display: "inline-flex", alignItems: "baseline", gap: 3 }}>
+              <span aria-hidden>{arrow}</span>
+              {flat ? "" : up ? "+" : ""}
+              {Math.abs(strengthChg).toFixed(1)}%
+              <span style={{ fontWeight: 400 }}>{word}</span>
+            </span>
+            <span style={{ fontWeight: 500, color: c.textTertiary, fontSize: 10 }}>
+              {spanHint}累计（≠年内波幅）
+            </span>
           </span>
         </div>
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={40} preserveAspectRatio="none" aria-hidden>
@@ -594,24 +916,40 @@ export function MapCountryMacroBrief({ code }: { code: string }) {
   }
 
   return (
-    <MapSection title="现金贷宏观">
+    <MapSection title="现金贷宏观" dense={dense}>
       {spark}
-      <MapKV k="对照时点" v={snap.asOf || "—"} />
-      {formatCountryLanguageLine(code) ? <MapKV k="语言区" v={formatCountryLanguageLine(code)!} /> : null}
-      {lang?.productHint ? <MapKV k="产品常用语" v={lang.productHint} /> : null}
-      <div style={{ margin: "8px 0", fontSize: 12, lineHeight: 1.5, color: c.textSecondary }}>{brief}</div>
+      <MapMacroKV k="对照时点" v={snap.asOf || "—"} dense={dense} />
+      {!dense && formatCountryLanguageLine(code) ? (
+        <MapMacroKV k="语言区" v={formatCountryLanguageLine(code)!} dense={dense} />
+      ) : null}
+      {!dense && lang?.productHint ? <MapMacroKV k="产品常用语" v={lang.productHint} dense={dense} /> : null}
+      {brief ? (
+        <div style={{ margin: "8px 0", fontSize: 12, lineHeight: 1.5, color: c.textSecondary }}>
+          <CitedText text={brief} size="small" dense={dense} />
+        </div>
+      ) : null}
       {groups.map((g) => (
-        <div key={g.id} style={{ marginBottom: 10 }}>
+        <div key={g.id} style={{ marginBottom: dense ? 6 : 10 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: c.textSecondary, marginBottom: 2 }}>
             {g.step} {g.title}
           </div>
-          <div style={{ fontSize: 11, color: c.textTertiary, marginBottom: 4, lineHeight: 1.4 }}>{g.soWhat}</div>
+          {!dense ? (
+            <div style={{ fontSize: 11, color: c.textTertiary, marginBottom: 4, lineHeight: 1.4 }}>{g.soWhat}</div>
+          ) : null}
           {g.metrics.map((m) => (
-            <MapKV key={`${g.id}-${m.label}`} k={m.label} v={m.value} />
+            <MapMacroKV
+              key={`${g.id}-${m.label}`}
+              k={m.label}
+              v={m.value}
+              asOf={m.asOf}
+              asOfFromSnap={m.asOfFromSnap}
+              dense={dense}
+            />
           ))}
         </div>
       ))}
-      {note ? <MapKV k="补充" v={note} /> : null}
+      {!dense && note ? <MapMacroKV k="补充" v={note} dense={dense} /> : null}
+      <MacroSourcesBlock citeNos={citeNos} dense={dense} />
     </MapSection>
   );
 }

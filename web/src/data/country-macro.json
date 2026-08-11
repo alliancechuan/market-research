@@ -48,8 +48,8 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约94.3%（2024）·家庭债务/GDP·CEIC转述",
     "fxVolInYear": "±4.0%·年内高低相对均价粗算·currency-api·USD/TWD周抽样高低/均价·2025–2026",
-    "gdpPerCapitaUsd": "约36000美元（2025级）·二级·待双端",
-    "debtToGdp": "政府债务/GDP约25%–30%（近年）·二级·待双端"
+    "gdpPerCapitaUsd": "约36000美元（2025级）·二级〔10〕",
+    "debtToGdp": "政府债务/GDP约25%–30%（近年）·二级〔10〕"
   },
   "HK": {
     "asOf": "2026-08对照·TE中国香港",
@@ -152,11 +152,11 @@
     "cashLoanVerdict": "通胀破12%。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约28.9%（2025-12）·家庭债务/GDP·CEIC转述",
     "fxVolInYear": "±6.0%·年内高低相对均价粗算·USD/MNT·currency-api抽样校正·2025–2026",
-    "privCreditOrConsumer": "国内私营信贷约45% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约45% GDP（近年）·二级〔10〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "ID": {
-    "asOf": "2026-08对照·TE印尼",
+    "asOf": "2026-08对照·TE印尼+OJK/R&M信源包",
     "gdpYoY": "5.29%（2026-06）",
     "gdpUsdBn": "约1.45万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4555美元（2025-12）",
@@ -178,8 +178,8 @@
     "debtToGdp": "政府债务/GDP约41%（2025-12）",
     "householdDebtToGdp": "约15.5%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
     "consumerConfidence": "约118（2026-06）",
-    "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "creditNote": "OJK口径（媒体转述〔11〕〔12〕〔4〕）：P2P outstanding 2025-04约Rp80.94T（+29%YoY，TWP90约2.93%）；2026-01约Rp98.54T（+25.5%YoY，TWP90约4.38%）。融资公司BNPL 2025-04约Rp8.24T（+47%YoY，NPF gross约3.78%）→2026-01约Rp12.18T（+71%YoY）；银行BNPL 2026-01约Rp27.1T（+20%YoY）。第三方BNPL（R&M媒体摘要）2025约US$8.59B，与OJK余额分轨〔7〕〔4〕。监管：POJK 40/2024（P2P/LPBBTI）〔4〕；POJK 32/2025（BNPL仅银行+融资公司，融资公司须事先批准）〔4〕。",
+    "cashLoanVerdict": "印尼现金贷/BNPL：先核POJK 40/2024（P2P）或POJK 32/2025（BNPL主体资格），再用OJK余额读行业水位；勿用第三方美元GMV替代监管余额。"
   },
   "VN": {
     "asOf": "2026-08对照·TE越南",
@@ -204,7 +204,7 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约24.9%（2024）·家庭债务/GDP·IIF Global Debt Monitor",
     "fxVolInYear": "±0.9%·年内高低相对均价粗算·currency-api·USD/VND周抽样高低/均价·2025–2026",
-    "privCreditOrConsumer": "国内私营信贷约125% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约125% GDP（近年）·二级〔10〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "MY": {
@@ -260,7 +260,7 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
   },
   "PH": {
-    "asOf": "2026-08对照·TE菲律宾",
+    "asOf": "2026-08对照·TE菲律宾+BSP/SEC/R&M信源包",
     "gdpYoY": "2.8%（2026-03）",
     "gdpUsdBn": "约4870亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4066美元（2025-12）",
@@ -282,8 +282,8 @@
     "debtToGdp": "政府债务/GDP约63.2%（2025-12）",
     "householdDebtToGdp": "约13.6%（2025-12）·家庭债务/GDP·CEIC转述",
     "consumerConfidence": "约-42（2026-06）",
-    "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "creditNote": "第三方BNPL（PRNewswire/R&M 2024-02）：2024约US$2.29B，2029约US$3.87B（CAGR约11%）〔7〕。BSP 2024数字支付：零售笔数数字化57.4%、金额59.0%（超PDP目标52–54%）〔5〕。线上放贷：SEC 2023-02协同下架33未注册OLP〔6〕；BSP Circular 1133+SEC MC3〔5〕〔6〕 — ≤₱1万且≤4个月无担保贷名义≤6%/月、EIR≤15%/月、逾期≤5%/月、总成本≤本金100%。",
+    "cashLoanVerdict": "菲律宾：先核SEC Lending/Financing+OLP登记与BSP 1133定价带，再用BSP数字支付读场景渗透；第三方BNPL规模仅作量级。"
   },
   "IN": {
     "asOf": "2026-08对照·TE印度",
@@ -438,7 +438,7 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±3.2%·年内高低相对均价粗算·currency-api·USD/UZS周抽样高低/均价·2025–2026",
     "householdDebtToGdp": "约12.2%（2024）·家庭债务/GDP·央行个人贷款/GDP·Kun.uz转述",
-    "privCreditOrConsumer": "国内私营信贷约40% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约40% GDP（近年）·二级〔10〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "KG": {
@@ -463,9 +463,9 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约12.6%（2026-Q2）·家庭债务/GDP·CEIC转述",
-    "privCreditOrConsumer": "国内私营信贷约25% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约25% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±8.0%·年内高低相对均价粗算·USD/KGS·公开汇价抽样校正·2025–2026",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录"
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录"
   },
   "TJ": {
     "asOf": "2026-08对照·TE塔吉克斯坦",
@@ -488,9 +488,9 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约8%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约15% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约15% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.3%·年内高低相对均价粗算·currency-api·USD/TJS周抽样高低/均价·2025–2026",
-    "fxReserves": "约38.1亿美元（2025）·IMF/FRED央行总储备·待双端",
+    "fxReserves": "约38.1亿美元（2025）·IMF/FRED央行总储备〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "TM": {
@@ -512,11 +512,11 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约3%（2023）·家庭债务/GDP·官方数据不透明·银行个人信贷粗算",
-    "policyRate": "—·马纳特强管理汇率/利率不透明·待双端",
+    "policyRate": "—·马纳特强管理汇率/利率不透明〔1〕",
     "fxVolInYear": "±3%内·官方马纳特管理低波·汇率不透明",
-    "privCreditOrConsumer": "正规零售信贷深度低·二级·待双端",
-    "fxReserves": "外储与汇率不透明·官方马纳特管理·勿假装有官方外储数字·待双端",
-    "sectorMix": "油气主导·三产占比待官方续拆·待双端·2026-08补录",
+    "privCreditOrConsumer": "正规零售信贷深度低·二级〔10〕",
+    "fxReserves": "外储与汇率不透明·官方马纳特管理·勿假装有官方外储数字〔1〕",
+    "sectorMix": "油气主导·三产占比待官方续拆〔1〕·2026-08补录",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "MX": {
@@ -621,7 +621,7 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP过成熟阈值；通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±6.0%·年内高低相对均价粗算·currency-api·USD/ARS周抽样高低/均价·2025–2026",
-    "privCreditOrConsumer": "国内私营信贷约14% GDP（近年）·二级·待双端"
+    "privCreditOrConsumer": "国内私营信贷约14% GDP（近年）·二级〔10〕"
   },
   "PE": {
     "asOf": "2026-08对照·TE秘鲁",
@@ -725,7 +725,7 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±2.2%·年内高低相对均价粗算·currency-api·USD/MAD周抽样高低/均价·2025–2026",
     "householdDebtToGdp": "约21.2%（2025）·家庭债务/GDP·CEIC转述",
-    "privCreditOrConsumer": "国内私营信贷约65% GDP（近年）·二级·待双端"
+    "privCreditOrConsumer": "国内私营信贷约65% GDP（近年）·二级〔10〕"
   },
   "DZ": {
     "asOf": "2026-08对照·TE阿尔及利亚",
@@ -749,8 +749,8 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±1.9%·年内高低相对均价粗算·currency-api·USD/DZD周抽样高低/均价·2025–2026",
     "householdDebtToGdp": "约8%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约18.5% GDP（近年）·二级·待双端",
-    "fxReserves": "约645.7亿美元（2024-Q1）·TE外汇储备·阿尔及利亚央行·待双端",
+    "privCreditOrConsumer": "国内私营信贷约18.5% GDP（近年）·二级〔10〕",
+    "fxReserves": "约645.7亿美元（2024-Q1）·TE外汇储备·阿尔及利亚央行〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "TN": {
@@ -776,7 +776,7 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±1.8%·年内高低相对均价粗算·currency-api·USD/TND周抽样高低/均价·2025–2026",
     "householdDebtToGdp": "约18.5%（2024）·家庭债务/GDP·BCT银行对个人贷款/GDP",
-    "privCreditOrConsumer": "国内私营信贷约60.6% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约60.6% GDP（近年）·二级〔10〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "LY": {
@@ -798,11 +798,11 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "通胀破12%。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约3%（2023）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约15% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约15% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±8.6%·年内高低相对均价粗算·currency-api·USD/LYD周抽样高低/均价·2025–2026",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    "debtToGdp": "政府债务/GDP口径战时不规则·待双端",
-    "fxReserves": "约104.7亿美元（2025）·世行总储备(含黄金)·待双端",
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    "debtToGdp": "政府债务/GDP口径战时不规则〔1〕",
+    "fxReserves": "约104.7亿美元（2025）·世行总储备(含黄金)〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "SD": {
@@ -824,11 +824,11 @@
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约2%（2023）·家庭债务/GDP·冲突期数据稀缺·银行个人信贷粗算",
     "inflation": "68.15%（2025-12）·苏丹央行CPI同比·TheGlobalEconomy转述",
-    "policyRate": "—·冲突期非常规/多重汇率·无稳定公开政策利率·待双端",
+    "policyRate": "—·冲突期非常规/多重汇率·无稳定公开政策利率〔1〕",
     "fxVolInYear": "±30%·冲突/多轨汇率波·公开市场示意·2025–2026",
-    "privCreditOrConsumer": "正规消费贷渗透极低·冲突扰动·二级·待双端",
-    "fxReserves": "冲突期外储数据稀缺·勿假装有官方外储数字·待双端",
-    "sectorMix": "农业与采掘主导、服务业受冲突冲击·三产占比待续拆·待双端·2026-08补录",
+    "privCreditOrConsumer": "正规消费贷渗透极低·冲突扰动·二级〔10〕",
+    "fxReserves": "冲突期外储数据稀缺·勿假装有官方外储数字〔1〕",
+    "sectorMix": "农业与采掘主导、服务业受冲突冲击·三产占比待续拆〔1〕·2026-08补录",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "SA": {
@@ -958,7 +958,7 @@
     "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±0.8%·年内高低相对均价粗算·currency-api·USD/KWD周抽样高低/均价·2025–2026",
     "householdDebtToGdp": "约1.0%（2025-09）·家庭债务/GDP·CEIC转述（CBK贷款口径）",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "OM": {
@@ -1035,8 +1035,8 @@
     "cashLoanVerdict": "通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约15%（2023）·家庭债务/GDP·危机后序列中断·银行个人信贷粗算",
     "fxVolInYear": "±1.8%·年内高低相对均价粗算·currency-api·USD/LBP周抽样高低/均价·2025–2026",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    "fxReserves": "黄金储备约287吨（2025-03·TE）·官方外储口径战时不规则·勿假装有独立外储数字·待双端",
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    "fxReserves": "黄金储备约287吨（2025-03·TE）·官方外储口径战时不规则·勿假装有独立外储数字〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "IQ": {
@@ -1061,8 +1061,8 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±0.5%内·管理浮动/钉住窄幅·年内高低相对均价粗算·USD/IQD·2025–2026",
     "householdDebtToGdp": "约7.2%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
-    "privCreditOrConsumer": "国内私营信贷约15% GDP（近年）·二级·待双端",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
+    "privCreditOrConsumer": "国内私营信贷约15% GDP（近年）·二级〔10〕",
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "IL": {
@@ -1097,7 +1097,7 @@
     "gdpUsdBn": "约172亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4272美元（2025-12）",
     "incomePerCapita": "约4625美元（2025）·世行GNI/人PPP·OWID转载·非住户可支配收入",
-    "inflation": "-40.04%（2026-06）·TE·战争冲击致价格/基期异常·待双端·2026-08补录",
+    "inflation": "-40.04%（2026-06）·TE·战争冲击致价格/基期异常〔1〕·2026-08补录",
     "unemployment": "29.5%（2026-03）；青年失业约40.3%（2026-03）·破20%阈值",
     "population": "约551万（2025-12）",
     "employedToPop": "0.011/0.053·就业亿人/人口亿人·世行就业人口比34.0%(2022)×15+人口",
@@ -1109,12 +1109,12 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约12%（2023）·家庭债务/GDP·无独立标准序列·银行个人信贷粗算",
-    "policyRate": "—·无独立央行政策利率·流通ILS/JOD·待双端",
-    "fxTrend": "流通以色列新谢克尔/约旦第纳尔·无单一本币对美元官方牌价·待双端",
-    "fxHint": "ILS/JOD流通（无单一本币）·待双端",
+    "policyRate": "—·无独立央行政策利率·流通ILS/JOD〔1〕",
+    "fxTrend": "流通以色列新谢克尔/约旦第纳尔·无单一本币对美元官方牌价〔1〕",
+    "fxHint": "ILS/JOD流通（无单一本币）〔1〕",
     "fxVolInYear": "±9.8%·年内高低相对均价粗算·currency-api·USD/ILS周抽样高低/均价·2025–2026",
-    "privCreditOrConsumer": "正规消费贷深度有限·冲突扰动·二级·待双端",
-    "fxReserves": "无独立外储统计·流通ILS/JOD·勿假装有官方外储数字·待双端",
+    "privCreditOrConsumer": "正规消费贷深度有限·冲突扰动·二级〔10〕",
+    "fxReserves": "无独立外储统计·流通ILS/JOD·勿假装有官方外储数字〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "TR": {
@@ -1161,12 +1161,12 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约2%（2023）·家庭债务/GDP·冲突期数据稀缺·银行个人信贷粗算",
-    "inflation": "约20.4%（2025-12）·IMF年率·二级·待双端·2026-08补录",
-    "policyRate": "—·战时双轨/非常规货币政策·无单一政策利率·待双端",
-    "sectorMix": "油气依赖高、农业与服务业碎片化·三产占比待官方续拆·待双端·2026-08补录",
-    "fxReserves": "约12.5亿美元（2022）·世行总储备(含黄金)·待双端",
+    "inflation": "约20.4%（2025-12）·IMF年率·二级〔10〕·2026-08补录",
+    "policyRate": "—·战时双轨/非常规货币政策·无单一政策利率〔1〕",
+    "sectorMix": "油气依赖高、农业与服务业碎片化·三产占比待官方续拆〔1〕·2026-08补录",
+    "fxReserves": "约12.5亿美元（2022）·世行总储备(含黄金)〔1〕",
     "fxVolInYear": "±25%·冲突/多轨汇率波·公开市场示意·2025–2026",
-    "privCreditOrConsumer": "正规消费贷渗透极低·二级·待双端",
+    "privCreditOrConsumer": "正规消费贷渗透极低·二级〔10〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "IR": {
@@ -1190,9 +1190,9 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约10%（2023）·家庭债务/GDP·制裁下口径不规则·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约50% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约50% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±87.6%·年内高低相对均价粗算·currency-api·USD/IRR周抽样高低/均价·2025–2026",
-    "fxReserves": "制裁下外储口径不规则·勿假装有官方外储数字·待双端",
+    "fxReserves": "制裁下外储口径不规则·勿假装有官方外储数字〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "NG": {
@@ -1244,7 +1244,7 @@
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约10.4%（2025）·家庭债务/GDP·IIF Global Debt Monitor",
     "fxVolInYear": "±0.6%·年内高低相对均价粗算·currency-api·USD/KES周抽样高低/均价·2025–2026",
-    "privCreditOrConsumer": "国内私营信贷约30% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约30% GDP（近年）·二级〔10〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "GH": {
@@ -1270,7 +1270,7 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约1.8%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
     "fxVolInYear": "±9.2%·年内高低相对均价粗算·currency-api·USD/GHS周抽样高低/均价·2025–2026",
-    "privCreditOrConsumer": "国内私营信贷约12% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约12% GDP（近年）·二级〔10〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "ZA": {
@@ -1322,7 +1322,7 @@
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约5%（2024）·家庭债务/GDP·无BIS家庭分项·银行个人信贷粗算",
     "fxVolInYear": "±4.0%·年内高低相对均价粗算·currency-api·USD/TZS周抽样高低/均价·2025–2026",
-    "fxReserves": "约61.7亿美元（2025-10）·BoT月报转述外储存量·约4.7个月进口覆盖·待双端",
+    "fxReserves": "约61.7亿美元（2025-10）·BoT月报转述外储存量·约4.7个月进口覆盖〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "UG": {
@@ -1374,7 +1374,7 @@
     "cashLoanVerdict": "人均GDP＜2000阈值；通胀破12%。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约6%（2024）·家庭债务/GDP·无BIS家庭分项·银行个人信贷粗算",
     "fxVolInYear": "±1.2%·年内高低相对均价粗算·currency-api·USD/RWF周抽样高低/均价·2025–2026",
-    "fxReserves": "约23.2亿美元（2025-06）·NBR年报外储·约4.8个月进口覆盖·待双端",
+    "fxReserves": "约23.2亿美元（2025-06）·NBR年报外储·约4.8个月进口覆盖〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "ET": {
@@ -1398,9 +1398,9 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值；通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约3%（2023）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约17.7% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约17.7% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±7.4%·年内高低相对均价粗算·currency-api·USD/ETB周抽样高低/均价·2025–2026",
-    "fxReserves": "约37.8亿美元（2024）·世行总储备(含黄金)·待双端",
+    "fxReserves": "约37.8亿美元（2024）·世行总储备(含黄金)〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "CI": {
@@ -1423,10 +1423,10 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约7%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约25% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约25% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "SN": {
@@ -1450,9 +1450,9 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约8%（2024）·家庭债务/GDP·无BIS家庭分项·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约29.2% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约29.2% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
-    "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "CM": {
@@ -1476,9 +1476,9 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约2.7%（2020）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP·序列偏旧",
-    "privCreditOrConsumer": "国内私营信贷约14.1% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约14.1% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XAF抽样高低/均价·currency-api·2025–2026",
-    "fxReserves": "约50.6亿美元（2024）·世行总储备(含黄金)·待双端",
+    "fxReserves": "约50.6亿美元（2024）·世行总储备(含黄金)〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "AO": {
@@ -1528,9 +1528,9 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约5%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约17.6% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约17.6% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±8.0%·年内高低相对均价粗算·USD/MZN·公开汇价抽样校正·2025–2026",
-    "unemployment": "约3.5%（近年）·二级·ILO/公开转述·待双端·2026-08补录",
+    "unemployment": "约3.5%（近年）·二级·ILO/公开转述〔1〕·2026-08补录",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "ZM": {
@@ -1555,7 +1555,7 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约2.1%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
-    "privCreditOrConsumer": "国内私营信贷约12% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约12% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±15.4%·年内高低相对均价粗算·currency-api·USD/ZMW周抽样高低/均价·2025–2026",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
@@ -1579,10 +1579,10 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约2%（2023）·家庭债务/GDP·多币种口径不规则·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约8% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约8% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±57.6%·年内高低相对均价粗算·currency-api·USD/ZWL周抽样高低/均价·2025–2026",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    "fxReserves": "多币种流通·官方外储口径不规则·勿假装有官方外储数字·待双端",
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    "fxReserves": "多币种流通·官方外储口径不规则·勿假装有官方外储数字〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "BW": {
@@ -1633,7 +1633,7 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约30.7%（2024）·家庭债务/GDP·BoN金融稳定报告",
-    "privCreditOrConsumer": "国内私营信贷约55% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约55% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±5.2%·年内高低相对均价粗算·currency-api·USD/NAD周抽样高低/均价·2025–2026",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
@@ -1659,7 +1659,7 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约31.5%（2022）·家庭债务/GDP·IMF FAS家庭贷款/GDP",
-    "privCreditOrConsumer": "国内私营信贷约70% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约70% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.6%·年内高低相对均价粗算·currency-api·USD/MUR周抽样高低/均价·2025–2026",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
@@ -1683,10 +1683,10 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约4%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约16.6% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约16.6% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±5.2%·年内高低相对均价粗算·currency-api·USD/MGA周抽样高低/均价·2025–2026",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    "fxReserves": "约27.8亿美元（2024）·世行总储备(含黄金)·待双端",
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    "fxReserves": "约27.8亿美元（2024）·世行总储备(含黄金)〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "BJ": {
@@ -1710,9 +1710,9 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约4%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约20% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约20% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
-    "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "BF": {
@@ -1736,9 +1736,9 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约3%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约25% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约25% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
-    "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "ML": {
@@ -1760,11 +1760,11 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约3%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约22% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约22% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    "debtToGdp": "政府债务/GDP约53%级（近年）·二级·待双端",
-    "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核·待双端",
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    "debtToGdp": "政府债务/GDP约53%级（近年）·二级〔10〕",
+    "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "CD": {
@@ -1788,9 +1788,9 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约1.5%（2023）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约8% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约8% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±16.5%·年内高低相对均价粗算·currency-api·USD/CDF周抽样高低/均价·2025–2026",
-    "unemployment": "约4.5%（近年）·二级·ILO/公开转述·非正式就业高·待双端·2026-08补录",
+    "unemployment": "约4.5%（近年）·二级·ILO/公开转述·非正式就业高〔1〕·2026-08补录",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "GA": {
@@ -1813,10 +1813,10 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约5%（2023）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
-    "privCreditOrConsumer": "国内私营信贷约12% GDP（近年）·二级·待双端",
+    "privCreditOrConsumer": "国内私营信贷约12% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XAF抽样高低/均价·currency-api·2025–2026",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值·待双端·2026-08补录",
-    "fxReserves": "中非经货共同体(BEAC)共同外储池·联盟外汇约6377亿XAF/约97亿欧元（2025末·BEAC转述）·国别拆分待续核·待双端",
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    "fxReserves": "中非经货共同体(BEAC)共同外储池·联盟外汇约6377亿XAF/约97亿欧元（2025末·BEAC转述）·国别拆分待续核〔1〕",
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "US": {

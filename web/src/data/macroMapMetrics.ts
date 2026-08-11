@@ -24,15 +24,15 @@ export const MACRO_MAP_FACTORS: {
     unit: "% GDP",
     sense: "high_risk",
     field: "householdDebtToGdp",
-    blurb: "家庭债务/GDP · 信贷过热组",
+    blurb: "家庭债务/GDP · 信贷过热组 · 信源侧重 IMF FAS / BIS",
   },
   {
     id: "fxVol",
-    label: "汇率波动",
-    unit: "±%",
+    label: "年内汇率波幅",
+    unit: "",
     sense: "high_risk",
     field: "fxVolInYear",
-    blurb: "年内高低相对均价 · 外汇跨境组",
+    blurb: "约一年内高低相对均价（波幅，非累计贬值）· 外汇跨境组 · Frankfurter 等市价序列",
   },
   {
     id: "gdpPc",
@@ -40,7 +40,7 @@ export const MACRO_MAP_FACTORS: {
     unit: "USD",
     sense: "high_capacity",
     field: "gdpPerCapitaUsd",
-    blurb: "现价人均GDP · 基本面组",
+    blurb: "现价人均GDP · 基本面组 · 信源侧重世行 / IMF",
   },
   {
     id: "inflation",
@@ -48,7 +48,7 @@ export const MACRO_MAP_FACTORS: {
     unit: "%",
     sense: "high_risk",
     field: "inflation",
-    blurb: "最新通胀读数 · 基本面组",
+    blurb: "最新通胀读数 · 基本面组 · TE / 统计局对照",
   },
   {
     id: "policyRate",
@@ -56,7 +56,7 @@ export const MACRO_MAP_FACTORS: {
     unit: "%",
     sense: "high_risk",
     field: "policyRate",
-    blurb: "政策利率 · 外汇/定价组",
+    blurb: "政策利率 · 外汇/定价组 · 央行 / TE",
   },
   {
     id: "unemployment",
@@ -64,7 +64,7 @@ export const MACRO_MAP_FACTORS: {
     unit: "%",
     sense: "high_risk",
     field: "unemployment",
-    blurb: "官方失业率（取首个%）· 人口就业组",
+    blurb: "官方失业率（取首个%）· 人口就业组 · 信源侧重世行 / ILO",
   },
 ];
 

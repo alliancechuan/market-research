@@ -101,15 +101,43 @@
         "priority": 1,
         "cadence": "通告",
         "note": "印度展业硬约束"
+      },
+      {
+        "id": "bot",
+        "nameZh": "泰国央行 BOT",
+        "kind": "regulator_pack",
+        "priority": 1,
+        "cadence": "通告",
+        "note": "个人贷/Nano 利率上限"
+      },
+      {
+        "id": "hkma",
+        "nameZh": "香港金管局",
+        "kind": "regulator_pack",
+        "priority": 1,
+        "cadence": "指引/年报",
+        "note": "数字银行授权"
+      },
+      {
+        "id": "cnbv",
+        "nameZh": "墨西哥 CNBV",
+        "kind": "regulator_pack",
+        "priority": 1,
+        "cadence": "法律/规范",
+        "note": "Fintech ITF"
+      },
+      {
+        "id": "sea_ir",
+        "nameZh": "Sea 20-F/IR",
+        "kind": "broker",
+        "priority": 2,
+        "cadence": "年报/季报",
+        "note": "Monee 信贷余额"
       }
     ],
     "queue": {
       "pending": [
-        "diandian-2026h2-overseas-cashloan",
-        "sea-20f-fy2025-fintech",
-        "hkma-virtual-bank-pack",
-        "bot-personal-loan-pack",
-        "cnbv-fintech-pack"
+        "diandian-2026h2-overseas-cashloan"
       ],
       "done": [
         "diandian-2026h1-overseas-cashloan",
@@ -126,7 +154,15 @@
         "moteng-sea-food-delivery-6-2025",
         "ojk-p2p-mar2026-iru-update",
         "ph-sec-olp-mc20-2026-pack",
-        "lexin-20f-fy2025-consumer-finance"
+        "lexin-20f-fy2025-consumer-finance",
+        "bot-personal-loan-nano-pack",
+        "hkma-digital-bank-pack-2024",
+        "sea-20f-fy2025-monee",
+        "mx-cnbv-fintech-itf-pack",
+        "sea-20f-fy2025-fintech",
+        "hkma-virtual-bank-pack",
+        "bot-personal-loan-pack",
+        "cnbv-fintech-pack"
       ]
     }
   },
@@ -2026,6 +2062,340 @@
           "P2P 在贷约 101 万亿盾。",
           "TWP90 4.52% < 5% 但已抬升。",
           "统计渠道切换到 Data Portal。"
+        ]
+      }
+    },
+    {
+      "id": "bot-personal-loan-nano-pack",
+      "title": "泰国央行 BOT：个人贷 / Nano Finance 利率上限与监管通告包",
+      "publisher": "Bank of Thailand（BOT）",
+      "period": "2017–2020 通告 + 利率表",
+      "asOf": "2026-08-12",
+      "confidence": "高",
+      "sourceType": "regulator_official",
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管专题",
+      "localPath": "reports/bot-interest-caps.pdf",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "泰国个人贷（P-Loan）与 Nano Finance 均有有效利率上限：公开利率表显示 P-Loan 约 25%/年（有车证担保约 24%）、Nano 约 33%/年、信用卡约 16%/年；另有英文版 Nano/个人贷监管通告约束非银与银行同一标准。",
+      "policyBullets": [
+        "P-Loan / Nano / 信用卡有效利率上限见 BOT 公开利率表。",
+        "Nano Finance 通告（如 สนส. 13/2563）将合计息费上限压至约 33% effective rate。",
+        "个人贷通告强调按收入核定额度，抑制过度负债；紧急临额另册。"
+      ],
+      "industryMetrics": {
+        "th_ploan_cap": "约 25% effective（无车证担保；有车证约 24%）",
+        "th_nano_cap": "约 33% effective",
+        "th_cc_cap": "约 16% effective"
+      },
+      "marketNotes": [
+        {
+          "region": "se-asia",
+          "summary": "泰展业定价与退出费空间受 BOT 上限约束；与快讯「禁止提前还款费」交叉。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "bot-interest-pdf",
+          "type": "regulator_official",
+          "title": "BOT 利率上限公开表（PDF）",
+          "url": "https://www.bot.or.th/content/dam/bot/documents/th/our-services/bot-license-check/interest.pdf",
+          "asOf": "2020+",
+          "confidence": "高",
+          "bullets": [
+            "P-Loan 25%/24%",
+            "Nano 33%",
+            "信用卡 16%"
+          ]
+        },
+        {
+          "id": "bot-nano-25630185",
+          "type": "regulator_official",
+          "title": "BOT Nano Finance Notification EngPDF 25630185",
+          "url": "https://www.bot.or.th/content/dam/bot/fipcs/documents/FPG/2563/EngPDF/25630185.pdf",
+          "asOf": "2020",
+          "confidence": "高",
+          "localPath": "reports/bot-nano-finance-25630185.pdf"
+        },
+        {
+          "id": "bot-ploan-25600206",
+          "type": "regulator_official",
+          "title": "BOT Personal Loan under Supervision EngPDF 25600206",
+          "url": "https://www.bot.or.th/content/dam/bot/fipcs/documents/FPG/2560/EngPDF/25600206.pdf",
+          "asOf": "2017",
+          "confidence": "高",
+          "localPath": "reports/bot-personal-loan-25600206.pdf"
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "泰国个人贷/Nano 持牌非银",
+          "groupKeys": [],
+          "region": "se-asia",
+          "countries": [
+            "TH"
+          ],
+          "metric": "须满足 BOT 利率/费用合计上限与授信额度规则；禁止类提前还款费见近期通告交叉。",
+          "cashLoanHint": "泰定价主尺看 BOT 上限，勿用区域均值替代。",
+          "confidence": "高",
+          "applyToCrm": false
+        }
+      ],
+      "analysis": {
+        "verdict": "泰国现金贷展业硬约束清晰：利率/费用合计封顶 + 收入挂钩额度；监管包已落本地 PDF。",
+        "bullets": [
+          "P-Loan≈25%、Nano≈33%、信用卡≈16%",
+          "英文 Nano/个人贷通告已下载",
+          "与禁止提前还款费快讯对照"
+        ]
+      }
+    },
+    {
+      "id": "hkma-digital-bank-pack-2024",
+      "title": "香港金管局：数字银行授权指引与牌照政策包",
+      "publisher": "Hong Kong Monetary Authority（HKMA）",
+      "period": "2018 指引 / 2024 更名 Digital Bank",
+      "asOf": "2026-08-12",
+      "confidence": "高",
+      "sourceType": "regulator_official",
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管专题",
+      "localPath": "reports/hkma-authorization-virtual-banks.pdf",
+      "regions": [
+        "east-asia"
+      ],
+      "thesis": "金管局以《虚拟银行/数字银行授权指引》框定本地数字银行牌照；2024 年将 Virtual Bank 更名为 Digital Bank，并评估认为现有牌照数量合适、暂不强推新增。银行对放债人条例利率限制有豁免但仍受银行守则/高息合理性约束。",
+      "policyBullets": [
+        "授权标准与传统银行同一审慎门槛（第七附表）。",
+        "2024 年报章节：数字银行发展达致促进创新与普惠等政策目标，现有牌照数量视为合适。",
+        "银行 APR 超过放债人条例推定过高水平（约 36%）须能自证合理，通常不应超法定上限（约 48%）。"
+      ],
+      "industryMetrics": {
+        "hk_digital_bank_rename": "2024-10 Virtual Bank → Digital Bank",
+        "hk_new_licence_stance": "现有数量合适、暂不强推新增（年报叙述）"
+      },
+      "sources": [
+        {
+          "id": "hkma-vb-guideline",
+          "type": "regulator_official",
+          "title": "Guideline on Authorization of Virtual Banks（PDF）",
+          "url": "https://www.hkma.gov.hk/media/eng/doc/key-information/guidelines-and-circular/guideline/g_Authorization_of_Virtual_Banks.pdf",
+          "asOf": "2018/修订见官网",
+          "confidence": "高"
+        },
+        {
+          "id": "hkma-digital-banks-page",
+          "type": "regulator_official",
+          "title": "HKMA Digital Banks 专题页",
+          "url": "https://www.hkma.gov.hk/eng/key-functions/banking/banking-regulatory-and-supervisory-regime/digital-banks/",
+          "asOf": "2024",
+          "confidence": "高",
+          "localPath": "reports/hkma-digital-banks-page.html"
+        },
+        {
+          "id": "hkma-ar2024-stability",
+          "type": "regulator_official",
+          "title": "HKMA Annual Report 2024 · Banking Stability（章节 PDF）",
+          "url": "https://www.hkma.gov.hk/media/eng/publication-and-research/annual-report/2024/15_Banking_Stability.pdf",
+          "asOf": "2024",
+          "confidence": "高"
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "香港数字银行",
+          "groupKeys": [],
+          "region": "east-asia",
+          "countries": [
+            "HK"
+          ],
+          "metric": "牌照窗口收紧叙事；新进入须对照授权指引与现有持牌名单。",
+          "cashLoanHint": "吸储数字银行与放债人牌照分轨；现金贷勿混用。",
+          "confidence": "高",
+          "applyToCrm": false
+        }
+      ],
+      "analysis": {
+        "verdict": "香港数字银行由「试点开闸」进入「存量优化」；展业侧更应盯现有持牌行与放债人分轨。",
+        "bullets": [
+          "授权指引已落本地 PDF",
+          "2024 更名 Digital Bank",
+          "暂不新发叙事见年报章节"
+        ]
+      }
+    },
+    {
+      "id": "sea-20f-fy2025-monee",
+      "title": "Sea Limited 20-F / FY2025：Monee 数字金融与信贷规模",
+      "publisher": "Sea Limited（NYSE: SE）· SEC 20-F / Earnings",
+      "period": "FY2025",
+      "asOf": "2026-04-17",
+      "confidence": "高",
+      "sourceType": "listed_disclosure",
+      "docKind": "research_report",
+      "docKindLabel": "上市披露",
+      "localPath": "reports/sea-20f-fy2025.htm",
+      "regions": [
+        "se-asia",
+        "latam"
+      ],
+      "thesis": "Sea 将 SeaMoney 品牌演进为 Monee；FY2025 集团收入约 229 亿美元量级（20-F：2023 的 131 亿增至 2025 的 229 亿）。业绩稿披露截至 2025-12-31 消费与 SME 贷款本金余额约 92 亿美元（同比约 +80.4%），Monee 年内新增逾 2000 万首次借款人。",
+      "macroBullets": [
+        "Group revenue US$13.1B (2023) → US$22.9B (2025), CAGR ~32.5%（20-F）",
+        "Consumer+SME loans principal outstanding US$9.2B as of 2025-12-31（+80.4% YoY，业绩稿）",
+        "Monee：>20M unique first-time borrowers（2025，业绩稿）"
+      ],
+      "policyBullets": [
+        "20-F 强调数字金融面临监管与信用风险；竞争来自线上线下消费/SME 金融产品。",
+        "信贷主尺用贷款本金余额与资产质量，勿与 Shopee GMV 混用。"
+      ],
+      "industryMetrics": {
+        "sea_rev_2025": "约 US$22.9B（20-F）",
+        "sea_loan_principal_202512": "约 US$9.2B（业绩稿）",
+        "monee_first_time_borrowers_2025": ">20M"
+      },
+      "sources": [
+        {
+          "id": "sea-20f-edgar",
+          "type": "listed_20f",
+          "title": "Sea Limited Form 20-F FY2025（EDGAR）",
+          "url": "https://www.sec.gov/Archives/edgar/data/1703399/000114036126015366/ef20067274_20f.htm",
+          "asOf": "2026-04-17",
+          "confidence": "高"
+        },
+        {
+          "id": "sea-fy2025-ex991",
+          "type": "listed_earnings",
+          "title": "Sea FY2025 Results Exhibit 99.1",
+          "url": "https://www.sec.gov/Archives/edgar/data/1703399/000119312526088151/d106475dex991.htm",
+          "asOf": "2026-03-03",
+          "confidence": "高",
+          "localPath": "reports/sea-fy2025-earnings-ex991.htm",
+          "bullets": [
+            "贷款本金 US$9.2B",
+            "Monee 首借 >20M"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "Shopee / Monee",
+          "groupKeys": [
+            "Shopee/Sea（Shopee·SEA）",
+            "Shopee",
+            "Sea"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID",
+            "MY",
+            "PH",
+            "TH",
+            "VN",
+            "SG",
+            "BR"
+          ],
+          "metric": "FY2025 贷款本金余额约 US$9.2B；Monee 首借用户 >20M。",
+          "cashLoanHint": "电商场景贷主尺看贷款本金/逾期，勿用 GMV 替代。",
+          "confidence": "高",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Grab",
+          "groupKeys": [
+            "Grab"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "SG",
+            "MY",
+            "ID",
+            "PH",
+            "TH",
+            "VN"
+          ],
+          "metric": "同属东南亚超级 App 金融化对照样本（见 Grab 20-F 条目）。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "Sea/Monee 证明电商流量可规模化转化信贷余额；与 Grab 金融分部并列作为东南亚场景金融上市对照。",
+        "bullets": [
+          "贷款本金约 US$9.2B（+80%）",
+          "集团收入扩至约 US$22.9B",
+          "竞争与监管风险在 20-F 单列"
+        ]
+      }
+    },
+    {
+      "id": "mx-cnbv-fintech-itf-pack",
+      "title": "墨西哥 CNBV / 众议院：Fintech 法（ITF）监管包",
+      "publisher": "CNBV + 众议院法律库（Ley Fintech）",
+      "period": "2018 起",
+      "asOf": "2026-08-12",
+      "confidence": "高",
+      "sourceType": "regulator_official",
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管专题",
+      "localPath": "reports/mx-cnbv-fintech-pack-summary.html",
+      "regions": [
+        "latam"
+      ],
+      "thesis": "墨西哥《金融科技机构法》定义 ITF（集体融资 / 电子支付机构），须获 CNBV 授权；ITF/钱包牌照不等于可直接放贷，信贷多走银行或 SOFOM 等持牌通道，并与 Condusef 消费者保护分轨。",
+      "policyBullets": [
+        "ITF 须 CNBV 授权并在名称中标明机构类型。",
+        "非授权主体不得使用 ITF/电子支付机构等易混淆称谓。",
+        "展业现金贷须核放贷主体牌照，勿把钱包 ITF 当成放贷牌照。"
+      ],
+      "sources": [
+        {
+          "id": "mx-lritf-pdf",
+          "type": "regulator_official",
+          "title": "Ley para Regular las Instituciones de Tecnología Financiera（PDF）",
+          "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LRITF.pdf",
+          "asOf": "2018+",
+          "confidence": "高"
+        },
+        {
+          "id": "cnbv-fintech-norm",
+          "type": "regulator_official",
+          "title": "CNBV NORMATIVIDAD FINTECH",
+          "url": "https://www.cnbv.gob.mx/SECTORES-SUPERVISADOS/Fintech/Paginas/NORMATIVIDAD-FINTECH.aspx",
+          "asOf": "持续",
+          "confidence": "高"
+        },
+        {
+          "id": "dof-fintech-20180309",
+          "type": "regulator_official",
+          "title": "DOF 颁布文本 2018-03-09",
+          "url": "https://www.dof.gob.mx/nota_detalle.php?codigo=5515623&fecha=09/03/2018",
+          "asOf": "2018-03-09",
+          "confidence": "高"
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "墨西哥 Fintech/SOFOM 通道",
+          "groupKeys": [],
+          "region": "latam",
+          "countries": [
+            "MX"
+          ],
+          "metric": "钱包/ITF 与放贷主体分轨；对照 Condusef 可核验要求。",
+          "cashLoanHint": "墨西哥现金贷优先核 SOFOM/银行牌照，ITF 仅作支付入口。",
+          "confidence": "高",
+          "applyToCrm": false
+        }
+      ],
+      "analysis": {
+        "verdict": "墨西哥金融科技有清晰 ITF 立法，但现金贷展业仍取决于放贷牌照而非钱包牌照。",
+        "bullets": [
+          "Ley Fintech 官方出处已挂链",
+          "CNBV 规范页可核验",
+          "本机 PDF 因网络重置未落盘，摘要页可回链"
         ]
       }
     }

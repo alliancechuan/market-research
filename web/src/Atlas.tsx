@@ -6619,6 +6619,71 @@ const sceneCrmSeedTuples: [Exclude<Region, "all">, string, string, string][] = [
   ["west", "Western Union/Western Union（西联·US）", "支付钱包/跨境支付汇款", "派生：全球跨境汇款网络"],
   ["west", "MoneyGram/MoneyGram（速汇金·US）", "支付钱包/跨境支付汇款", "派生：全球跨境汇款网络"],
   ["west", "WorldRemit/WorldRemit（WorldRemit·US）", "支付钱包/跨境支付汇款", "派生：数字跨境汇款"],
+  // 优先名册缺口补种（2026-08-11）：支付/数字银行场景入口，待双端核验
+  ["se-asia", "LinkAja（LinkAja·ID）", "支付钱包", "派生：信贷/分期合作待核实"],
+  ["east-asia", "AlipayHK（支付宝HK·HK）", "支付钱包/跨境支付汇款", "派生：储值支付工具；信贷导流待核实"],
+  ["east-asia", "WeChat Pay HK（微信支付HK·HK）", "支付钱包/跨境支付汇款", "派生：储值支付工具；信贷导流待核实"],
+  ["se-asia", "Touch'n Go eWallet（TnG·MY）", "支付钱包", "派生：信贷/分期合作待核实"],
+  ["se-asia", "Boost（Boost·MY）", "支付钱包", "派生：电子货币；信贷合作待核实"],
+  ["se-asia", "MAE/Maybank（MAE·MY）", "支付钱包+银行", "派生：Maybank 数字化入口"],
+  ["se-asia", "GXBank（GXBank·MY）", "支付钱包+数字银行", "派生：Grab 系数字银行"],
+  ["se-asia", "Rabbit LINE Pay（Rabbit LINE Pay·TH）", "支付钱包", "派生：LINE 生态；信贷合作待核实"],
+  ["south-asia", "Easypaisa（Easypaisa·PK）", "支付钱包+微金融", "派生：钱包信贷"],
+  ["south-asia", "SadaPay（SadaPay·PK）", "支付钱包+数字银行化", "派生：电子货币机构"],
+  ["south-asia", "bKash（bKash·BD）", "支付钱包", "派生：移动货币；小额贷待核实"],
+  ["south-asia", "Nagad（Nagad·BD）", "支付钱包", "派生：移动货币"],
+  ["south-asia", "Rocket/DBBL（Rocket·BD）", "支付钱包", "派生：银行代理移动货币"],
+  ["south-asia", "Razorpay（Razorpay·IN）", "支付收单", "派生：商户贷/RazorpayX"],
+  ["africa", "Moniepoint（Moniepoint·NG）", "支付+代理银行", "派生：商户收单/信贷"],
+  ["africa", "Chipper Cash（Chipper·非洲）", "支付钱包/跨境支付汇款", "派生：跨境汇款；信贷待核实"],
+  ["africa", "Flutterwave（Flutterwave·非洲）", "支付收单", "派生：商户支付基建"],
+  ["africa", "Capitec（Capitec·ZA）", "支付钱包+零售银行", "派生：消费信贷"],
+  ["africa", "Discovery Bank（Discovery·ZA）", "支付钱包+数字银行", "派生：保险生态银行"],
+  ["africa", "Equity Bank（Equity·KE）", "支付钱包+银行", "派生：Equitel/移动信贷"],
+  ["latam", "C6 Bank（C6·BR）", "支付钱包+数字银行", "派生：消费信贷/发卡"],
+  ["latam", "Neon（Neon·BR）", "支付钱包+数字银行", "派生：消费信贷"],
+  ["latam", "Bradesco（Bradesco·BR）", "支付钱包+银行", "派生：next/消费信贷"],
+  ["latam", "Itaú Unibanco（Itaú·BR）", "支付钱包+银行", "派生：消费信贷/发卡"],
+  ["latam", "Tenpo（Tenpo·CL）", "支付钱包+数字金融", "派生：账户/信贷"],
+  ["latam", "MACH/Bci（MACH·CL）", "支付钱包", "派生：P2P/银行入口"],
+  ["latam", "Plin（Plin·PE）", "支付钱包", "派生：银行间 P2P"],
+  ["latam", "Lulo Bank（Lulo·CO）", "支付钱包+数字银行", "派生：吸储/信贷"],
+  ["latam", "MOVii（MOVii·CO）", "支付钱包", "派生：电子存款"],
+  ["latam", "MODO（MODO·AR）", "支付钱包", "派生：银行联盟支付"],
+  ["latam", "Brubank（Brubank·AR）", "支付钱包+数字银行", "派生：吸储/信贷"],
+  ["latam", "Plata（Plata·MX）", "支付钱包+数字银行化", "派生：账户/信贷待核实"],
+  ["se-asia", "Cake by VPBank（Cake·VN）", "支付钱包+数字银行", "派生：VPBank 数字臂"],
+  ["se-asia", "Timo（Timo·VN）", "支付钱包+数字银行", "派生：线上银行"],
+  ["se-asia", "Vikki（Vikki·VN）", "支付钱包+数字银行", "派生：HDBank 系"],
+  ["se-asia", "TNEX（TNEX·VN）", "支付钱包+数字银行", "派生：MSB 系"],
+  ["se-asia", "Viettel Money（Viettel Money·VN）", "支付钱包", "派生：电信钱包"],
+  ["se-asia", "VPBank（VPBank·VN）", "支付钱包+银行", "派生：Cake/消费贷"],
+  ["se-asia", "BCA（BCA·ID）", "支付钱包+银行", "派生：blu 数字臂"],
+  ["se-asia", "digibank by DBS ID（digibank·ID）", "支付钱包+数字银行", "派生：DBS 印尼"],
+  ["se-asia", "DBS（DBS·SG）", "支付钱包+银行", "派生：digibank/PayLah"],
+  ["se-asia", "Maybank（Maybank·MY）", "支付钱包+银行", "派生：MAE"],
+  ["mena", "Wio（Wio·AE）", "支付钱包+数字银行", "派生：零售/SME"],
+  ["mena", "Mashreq Neo（Mashreq Neo·AE）", "支付钱包+数字银行", "派生：Mashreq 数字臂"],
+  ["mena", "STC Bank（STC Bank·SA）", "支付钱包+数字银行", "派生：电信系数字银行"],
+  ["east-asia", "KakaoBank（KakaoBank·KR）", "支付钱包+数字银行", "派生：Kakao 生态信贷"],
+  ["east-asia", "Toss Bank（Toss Bank·KR）", "支付钱包+数字银行", "派生：Toss 超级应用"],
+  ["east-asia", "K-Bank（K-Bank·KR）", "支付钱包+数字银行", "派生：互联网银行"],
+  ["east-asia", "Kakao Pay（Kakao Pay·KR）", "支付钱包", "派生：信贷/投资入口"],
+  ["east-asia", "Naver Pay（Naver Pay·KR）", "支付钱包", "派生：电商支付"],
+  ["east-asia", "PayPay（PayPay·JP）", "支付钱包", "派生：软银/雅虎生态"],
+  ["east-asia", "乐天银行（楽天銀行·JP）", "支付钱包+网络银行", "派生：乐天生态信贷"],
+  ["east-asia", "网商银行（网商·CN）", "支付钱包+数字银行", "派生：阿里生态"],
+  ["east-asia", "Fusion Bank（Fusion Bank·HK）", "支付钱包+虚拟银行", "派生：腾讯系虚拟银行"],
+  ["east-asia", "Livi Bank（Livi·HK）", "支付钱包+虚拟银行", "派生：中资虚拟银行"],
+  ["east-asia", "Airstar Bank（Airstar·HK）", "支付钱包+虚拟银行", "派生：京东系虚拟银行"],
+  ["west", "JPMorgan Chase（JPMorgan·US）", "支付钱包+银行", "派生：Chase 消费信贷"],
+  ["west", "Ally（Ally·US）", "支付钱包+数字银行", "派生：线上消费/车贷"],
+  ["west", "Starling Bank（Starling·GB）", "支付钱包+数字银行", "派生：零售/SME"],
+  ["west", "Adyen（Adyen·EU）", "支付收单", "派生：全球收单基建"],
+  ["west", "Up Bank（Up·AU）", "支付钱包+数字银行", "派生：Bendigo 合作数字银行"],
+  ["south-asia", "HDFC Bank（HDFC·IN）", "支付钱包+银行", "派生：消费信贷/信用卡"],
+  ["mena", "Hepsiburada（Hepsiburada·TR）", "电商", "派生：BNPL/分期"],
+  ["mena", "Trendyol（Trendyol·TR）", "电商", "派生：BNPL/金融"],
 ];
 
 const creditCrmSeedTuples: [Exclude<Region, "all">, "cash" | "bnpl" | "lease" | "agent", string][] = [
@@ -6933,6 +6998,12 @@ const creditCrmSeedTuples: [Exclude<Region, "all">, "cash" | "bnpl" | "lease" | 
   ["west", "lease", "Aaron's（·US）"],
   ["west", "lease", "Progressive Leasing（·US）"],
   ["west", "lease", "Acima（·US）"],
+  // 优先名册缺口补种（2026-08-11）：信贷原生待建档
+  ["latam", "cash", "Stori（Stori·MX）"],
+  ["latam", "bnpl", "Aplazo（Aplazo·MX）"],
+  ["latam", "cash", "Kueski（Kueski·MX）"],
+  ["mena", "bnpl", "Hepsiburada Finans/Hepsiburada（Hepsiburada·TR）"],
+  ["mena", "bnpl", "Trendyol Finans/Trendyol（Trendyol·TR）"],
 ];
 
 const sceneCrmSeeds: SceneSeed[] = sceneCrmSeedTuples.map(
@@ -19564,7 +19635,15 @@ function CompetitiveIntelBrief({ group, ticker }: { group: string; ticker?: stri
             {COMPETITIVE_LAYER_LABEL[layer.id] || layer.id}
           </Text>
           <Row gap={6} wrap>
-            {layer.items.map((it) => (
+            {layer.items.map((it) => {
+              const crm = it.crmStatus || (it.groupKey ? "linked" : "pending");
+              const suffix =
+                crm === "rail" || crm === "infra"
+                  ? " ·轨道"
+                  : crm === "pending" || !it.groupKey
+                    ? " ·待建档"
+                    : "";
+              return (
               <span
                 key={`${layer.id}-${it.nameZh}`}
                 title={it.why}
@@ -19574,17 +19653,23 @@ function CompetitiveIntelBrief({ group, ticker }: { group: string; ticker?: stri
                   padding: "4px 8px",
                   borderRadius: 6,
                   border: `1px solid ${theme.stroke.tertiary}`,
-                  color: it.groupKey ? theme.text.primary : theme.text.tertiary,
+                  color: it.groupKey || crm === "rail" ? theme.text.primary : theme.text.tertiary,
                   background: theme.bg.elevated,
                 }}
               >
                 {it.nameZh}
-                {!it.groupKey ? " ·待建档" : ""}
+                {suffix}
               </span>
-            ))}
+              );
+            })}
           </Row>
         </Stack>
       ))}
+      {intel.marketThesis && "feeNote" in (intel.marketThesis || {}) && (intel.marketThesis as { feeNote?: string }).feeNote ? (
+        <Text size="small" tone="secondary">
+          费率：{(intel.marketThesis as { feeNote?: string }).feeNote}
+        </Text>
+      ) : null}
       {intel.cashLoanHint ? (
         <Text size="small" tone="secondary">
           {intel.cashLoanHint}

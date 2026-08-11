@@ -10,6 +10,8 @@ export type CompetitiveItem = {
   sourceType: string;
   sourceUrl?: string;
   confidence?: string;
+  /** linked=已挂 CRM；pending=待建档；rail=支付轨道/基建（非玩家） */
+  crmStatus?: "linked" | "pending" | "rail" | "infra";
 };
 
 export type CompetitiveLayer = {
@@ -24,10 +26,21 @@ export type CompetitiveSubject = {
   ticker?: string;
   confidence?: string;
   cashLoanHint?: string;
+  /** institution=玩家；rail=支付轨道/清算基建 */
+  entityKind?: "institution" | "rail" | string;
   marketThesis?: {
     summary: string;
     thirdParty?: string;
     asOf?: string;
+    feeNote?: string;
+    crmStatus?: string;
+    pricing?: {
+      asOf?: string;
+      verification?: string;
+      aprOrFeeBand?: string;
+      sourceUrl?: string;
+    };
+    [k: string]: unknown;
   };
   sources?: { type: string; title: string; url?: string; asOf?: string }[];
   layers: CompetitiveLayer[];

@@ -1,6 +1,6 @@
 {
   "asOf": "2026-08-11",
-  "note": "展业六国为主：各国领先数字银行、国民级/持牌支付、涉及线上信贷的机构。摸排与竞争情报 queue 优先于泛电商场景。Atlas groupKey 能挂则挂；缺口标 gap。",
+  "note": "展业六国为主：各国领先数字银行、国民级/持牌支付、涉及线上信贷的机构。摸排与竞争情报 queue 优先于泛电商场景。Atlas groupKey 能挂则挂；缺口标 gap。 2026-08-11：缺口主体补 CRM 种子/轨道分流；费率核验状态写入 intel。",
   "focusMarkets": [
     "MX",
     "TH",
@@ -55,19 +55,21 @@
       "onlineCredit": "商户贷/分期",
       "intelId": "clip-mx",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-spei-banks",
       "market": "MX",
       "track": "payment",
       "nameZh": "SPEI / CoDi / DiMo 通道",
-      "groupKey": "",
+      "groupKey": "SPEI/CoDi/DiMo（轨道·MX）",
       "licenseNote": "Banxico SPEI；CoDi/DiMo 服务层",
       "onlineCredit": "",
       "intelId": "mx-spei",
       "priority": 3,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "rail"
     },
     {
       "id": "mx-konfio",
@@ -79,7 +81,8 @@
       "onlineCredit": "SME/商户贷",
       "intelId": "konfio",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-creditea",
@@ -91,7 +94,8 @@
       "onlineCredit": "现金贷/分期",
       "intelId": "creditea",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-nu",
@@ -103,7 +107,8 @@
       "onlineCredit": "信用卡/个贷",
       "intelId": "nu",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-meli",
@@ -115,7 +120,8 @@
       "onlineCredit": "消费/商户信贷",
       "intelId": "meli-pago",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "th-truemoney",
@@ -127,19 +133,21 @@
       "onlineCredit": "借贷合作",
       "intelId": "truemoney",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "th-rabbit-line",
       "market": "TH",
       "track": "payment",
       "nameZh": "Rabbit LINE Pay",
-      "groupKey": "",
+      "groupKey": "Rabbit LINE Pay（Rabbit LINE Pay·TH）",
       "licenseNote": "TH 电子货币",
       "onlineCredit": "LINE 生态信贷导流",
       "intelId": "rabbit-line-pay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "th-akulaku-x",
@@ -151,7 +159,8 @@
       "onlineCredit": "P-Loan/Nano",
       "intelId": "akulaku",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "th-home-credit",
@@ -163,7 +172,8 @@
       "onlineCredit": "现金贷/设备贷/BNPL",
       "intelId": "home-credit-sea",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-gopay",
@@ -175,7 +185,8 @@
       "onlineCredit": "GoPayLater / Pinjam",
       "intelId": "goto-gopay",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-ovo",
@@ -187,7 +198,8 @@
       "onlineCredit": "借贷合作",
       "intelId": "ovo",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-dana",
@@ -199,7 +211,8 @@
       "onlineCredit": "信贷/分期派生",
       "intelId": "dana",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-shopeepay",
@@ -211,7 +224,8 @@
       "onlineCredit": "SPayLater / SLoan",
       "intelId": "sea",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-seabank",
@@ -223,7 +237,8 @@
       "onlineCredit": "数字银行放贷",
       "intelId": "seabank",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-jago",
@@ -235,7 +250,8 @@
       "onlineCredit": "生态嵌入放贷",
       "intelId": "bank-jago",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-bnc",
@@ -247,31 +263,34 @@
       "onlineCredit": "Neo Pinjam",
       "intelId": "bnc",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-blu",
       "market": "ID",
       "track": "digibank",
       "nameZh": "blu by BCA",
-      "groupKey": "",
+      "groupKey": "蓝色光标｜BlueFocus｜蓝色光标（流量服务商·代理商·CN）",
       "licenseNote": "BCA 数字银行",
       "onlineCredit": "数字银行信贷",
       "intelId": "blu-bca",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-linkaja",
       "market": "ID",
       "track": "payment",
       "nameZh": "LinkAja",
-      "groupKey": "",
+      "groupKey": "LinkAja（LinkAja·ID）",
       "licenseNote": "国有系钱包",
       "onlineCredit": "弱于四强信贷臂",
       "intelId": "linkaja",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-adakami",
@@ -283,7 +302,8 @@
       "onlineCredit": "现金贷 P2P",
       "intelId": "adakami",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-akulaku",
@@ -295,7 +315,8 @@
       "onlineCredit": "BNPL/现金贷",
       "intelId": "akulaku",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-gcash",
@@ -307,19 +328,21 @@
       "onlineCredit": "GLoan 等",
       "intelId": "gcash",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-maya-wallet",
       "market": "PH",
       "track": "payment",
       "nameZh": "Maya Wallet",
-      "groupKey": "Maya（·SEA）",
+      "groupKey": "Maya Bank｜Maya｜Voyager（MayaBank·PH）",
       "licenseNote": "EMI/数字银行交叉",
       "onlineCredit": "Maya Credit",
       "intelId": "maya",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-maya-bank",
@@ -331,7 +354,8 @@
       "onlineCredit": "数字银行信贷",
       "intelId": "maya",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-tonik",
@@ -343,7 +367,8 @@
       "onlineCredit": "数字银行信贷",
       "intelId": "tonik",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-gotyme",
@@ -355,7 +380,8 @@
       "onlineCredit": "数字银行信贷",
       "intelId": "gotyme",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-uniondigital",
@@ -367,7 +393,8 @@
       "onlineCredit": "数字银行信贷",
       "intelId": "uniondigital",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-unobank",
@@ -379,7 +406,8 @@
       "onlineCredit": "数字银行信贷",
       "intelId": "unobank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-ofbank",
@@ -391,43 +419,47 @@
       "onlineCredit": "侨汇/数字银行",
       "intelId": "ofbank",
       "priority": 3,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "hk-alipay",
       "market": "HK",
       "track": "payment",
       "nameZh": "AlipayHK",
-      "groupKey": "",
+      "groupKey": "AlipayHK（支付宝HK·HK）",
       "licenseNote": "HKMA SVF",
       "onlineCredit": "场景信贷导流",
       "intelId": "alipayhk",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "hk-wechatpay",
       "market": "HK",
       "track": "payment",
       "nameZh": "WeChat Pay HK",
-      "groupKey": "",
+      "groupKey": "WeChat Pay HK（微信支付HK·HK）",
       "licenseNote": "HKMA SVF",
       "onlineCredit": "场景信贷导流",
       "intelId": "wechatpay-hk",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "hk-virtual-banks",
       "market": "HK",
       "track": "digibank",
       "nameZh": "香港虚拟银行集群（ZA/Mox/livi/Welab 等）",
-      "groupKey": "",
+      "groupKey": "Bank of Tanzania｜BoT｜坦桑尼亚央行（监管·TZ）",
       "licenseNote": "HKMA 虚拟银行牌照",
       "onlineCredit": "虚拟银行消费/信贷产品",
       "intelId": "hk-virtual-banks",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-phonepe",
@@ -439,7 +471,8 @@
       "onlineCredit": "支付入口信贷导流",
       "intelId": "phonepe",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-gpay",
@@ -451,7 +484,8 @@
       "onlineCredit": "信贷合作导流",
       "intelId": "gpay-in",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-paytm",
@@ -463,7 +497,8 @@
       "onlineCredit": "Paytm 信贷/保险交叉",
       "intelId": "paytm",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-navi",
@@ -475,7 +510,8 @@
       "onlineCredit": "现金贷",
       "intelId": "navi",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-slice",
@@ -487,7 +523,8 @@
       "onlineCredit": "BNPL/卡",
       "intelId": "slice",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-home-credit",
@@ -499,7 +536,8 @@
       "onlineCredit": "现金贷/设备贷",
       "intelId": "home-credit-in",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "br-nu",
@@ -511,7 +549,8 @@
       "onlineCredit": "卡/个贷",
       "intelId": "nu",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "br-picpay",
@@ -523,7 +562,8 @@
       "onlineCredit": "信贷/投资入口",
       "intelId": "picpay",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "br-pagbank",
@@ -535,31 +575,34 @@
       "onlineCredit": "商户/消费信贷",
       "intelId": "pagseguro",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "br-inter",
       "market": "BR",
       "track": "digibank",
       "nameZh": "Banco Inter",
-      "groupKey": "",
+      "groupKey": "Banco Central de la República Argentina｜BCRA｜阿根廷央行（监管·AR）",
       "licenseNote": "数字银行",
       "onlineCredit": "全栈数字银行信贷",
       "intelId": "inter-br",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "br-c6",
       "market": "BR",
       "track": "digibank",
       "nameZh": "C6 Bank",
-      "groupKey": "",
+      "groupKey": "C6 Bank（C6·BR）",
       "licenseNote": "数字银行",
       "onlineCredit": "全栈数字银行信贷",
       "intelId": "c6-br",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "sg-gxs",
@@ -571,7 +614,8 @@
       "onlineCredit": "数字银行信贷",
       "intelId": "gxs-sg",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "vn-momo",
@@ -583,7 +627,8 @@
       "onlineCredit": "借贷/保险派生",
       "intelId": "momo",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "vn-zalopay",
@@ -595,19 +640,21 @@
       "onlineCredit": "信贷合作",
       "intelId": "zalopay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "my-tng",
       "market": "MY",
       "track": "payment",
       "nameZh": "Touch'n Go eWallet",
-      "groupKey": "",
+      "groupKey": "Touch'n Go eWallet（TnG·MY）",
       "licenseNote": "MY 电子货币",
       "onlineCredit": "钱包信贷派生",
       "intelId": "tng-my",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "co-nequi",
@@ -619,7 +666,8 @@
       "onlineCredit": "数字信贷扩容",
       "intelId": "nequi",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "pe-yape",
@@ -631,7 +679,8 @@
       "onlineCredit": "高频率小额贷",
       "intelId": "yape",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ar-uala",
@@ -643,7 +692,8 @@
       "onlineCredit": "信用卡/信贷",
       "intelId": "uala",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ng-opay",
@@ -655,19 +705,21 @@
       "onlineCredit": "OKash/信贷",
       "intelId": "opay",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ng-palmpay",
       "market": "NG",
       "track": "payment",
       "nameZh": "PalmPay",
-      "groupKey": "",
+      "groupKey": "PalmPay（·非洲）",
       "licenseNote": "CBN MMO",
       "onlineCredit": "钱包贷",
       "intelId": "palmpay",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ke-mpesa",
@@ -679,7 +731,8 @@
       "onlineCredit": "Fuliza/M-Shwari 等合作贷",
       "intelId": "mpesa",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "af-mtn-momo",
@@ -691,7 +744,8 @@
       "onlineCredit": "BankTech/合作贷",
       "intelId": "mtn-momo",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "af-wave",
@@ -703,7 +757,8 @@
       "onlineCredit": "小额贷派生",
       "intelId": "wave",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "af-airtel",
@@ -715,7 +770,8 @@
       "onlineCredit": "小额贷",
       "intelId": "airtel-money",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "af-orange",
@@ -727,7 +783,8 @@
       "onlineCredit": "借贷",
       "intelId": "orange-money",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "pk-jazzcash",
@@ -739,19 +796,21 @@
       "onlineCredit": "ReadyCash 大规模数字贷",
       "intelId": "jazzcash",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "pk-easypaisa",
       "market": "PK",
       "track": "digibank",
       "nameZh": "Easypaisa",
-      "groupKey": "",
+      "groupKey": "Easypaisa（Easypaisa·PK）",
       "licenseNote": "数字零售银行牌照叙事",
       "onlineCredit": "存款+中长期贷",
       "intelId": "easypaisa",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "sa-tabby",
@@ -763,7 +822,8 @@
       "onlineCredit": "BNPL/卡",
       "intelId": "tabby",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "sa-tamara",
@@ -775,7 +835,8 @@
       "onlineCredit": "BNPL",
       "intelId": "tamara",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "sa-stcpay",
@@ -787,7 +848,8 @@
       "onlineCredit": "信贷派生",
       "intelId": "stc-pay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "sa-urpay",
@@ -799,7 +861,8 @@
       "onlineCredit": "银行信贷导流",
       "intelId": "urpay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ng-fairmoney",
@@ -811,19 +874,21 @@
       "onlineCredit": "现金贷",
       "intelId": "fairmoney",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ng-moniepoint",
       "market": "NG",
       "track": "payment",
       "nameZh": "Moniepoint",
-      "groupKey": "",
+      "groupKey": "Moniepoint（Moniepoint·NG）",
       "licenseNote": "商户收单/代理银行",
       "onlineCredit": "SME/商户贷",
       "intelId": "moniepoint",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "eg-valu",
@@ -835,7 +900,8 @@
       "onlineCredit": "长短期分期",
       "intelId": "valu",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "eg-postpay",
@@ -847,7 +913,8 @@
       "onlineCredit": "BNPL",
       "intelId": "postpay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ng-carbon",
@@ -859,7 +926,8 @@
       "onlineCredit": "现金贷",
       "intelId": "carbon",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "co-rappi",
@@ -871,79 +939,86 @@
       "onlineCredit": "卡/消费贷",
       "intelId": "rappi",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "af-chipper",
       "market": "MULTI",
       "track": "payment",
       "nameZh": "Chipper Cash",
-      "groupKey": "",
+      "groupKey": "Chipper Cash（Chipper·非洲）",
       "licenseNote": "跨境/钱包",
       "onlineCredit": "弱",
       "intelId": "chipper",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "bd-bkash",
       "market": "BD",
       "track": "payment",
       "nameZh": "bKash",
-      "groupKey": "",
+      "groupKey": "bKash（bKash·BD）",
       "licenseNote": "孟加拉 MFS 头筹（银行关联）",
       "onlineCredit": "合作纳米贷",
       "intelId": "bkash",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "bd-nagad",
       "market": "BD",
       "track": "payment",
       "nameZh": "Nagad",
-      "groupKey": "",
+      "groupKey": "Nagad（Nagad·BD）",
       "licenseNote": "孟加拉 MFS 第二",
       "onlineCredit": "支付派生",
       "intelId": "nagad",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "bd-rocket",
       "market": "BD",
       "track": "payment",
       "nameZh": "Rocket",
-      "groupKey": "",
+      "groupKey": "Rocket/DBBL（Rocket·BD）",
       "licenseNote": "Dutch-Bangla Bank MFS",
       "onlineCredit": "银行客群",
       "intelId": "rocket-bd",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "za-tyme",
       "market": "ZA",
       "track": "digibank",
       "nameZh": "TymeBank / GoTyme ZA",
-      "groupKey": "",
+      "groupKey": "GoTyme Bank｜GoTyme｜Gokongwei（GoTyme·PH）",
       "licenseNote": "南非数字银行",
       "onlineCredit": "MoreTyme BNPL/SME",
       "intelId": "tymebank",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "za-capitec",
       "market": "ZA",
       "track": "digibank",
       "nameZh": "Capitec",
-      "groupKey": "",
+      "groupKey": "Capitec（Capitec·ZA）",
       "licenseNote": "大众银行头筹",
       "onlineCredit": "消费贷",
       "intelId": "capitec",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "za-payflex",
@@ -955,7 +1030,8 @@
       "onlineCredit": "BNPL",
       "intelId": "payflex",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "za-klarna",
@@ -967,7 +1043,8 @@
       "onlineCredit": "BNPL",
       "intelId": "klarna-za",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mena-spotii",
@@ -979,7 +1056,8 @@
       "onlineCredit": "BNPL",
       "intelId": "spotii",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-bharatpe",
@@ -991,7 +1069,8 @@
       "onlineCredit": "商户贷/BNPL",
       "intelId": "bharatpe",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-mobikwik",
@@ -1003,7 +1082,8 @@
       "onlineCredit": "ZIP/信贷",
       "intelId": "mobikwik",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-freecharge",
@@ -1015,19 +1095,21 @@
       "onlineCredit": "信贷合作",
       "intelId": "freecharge",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-cred",
       "market": "IN",
       "track": "online_credit",
       "nameZh": "CRED",
-      "groupKey": "",
+      "groupKey": "CRED mint（·IN）",
       "licenseNote": "高端信用卡用户",
       "onlineCredit": "个贷/分销+NBFC",
       "intelId": "cred",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-airtel",
@@ -1039,31 +1121,34 @@
       "onlineCredit": "信贷导流",
       "intelId": "airtel-in",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "cl-tenpo",
       "market": "CL",
       "track": "digibank",
       "nameZh": "Tenpo",
-      "groupKey": "",
+      "groupKey": "Tenpo（Tenpo·CL）",
       "licenseNote": "CMF 银行牌照",
       "onlineCredit": "数字银行信贷",
       "intelId": "tenpo",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "cl-mach",
       "market": "CL",
       "track": "payment",
       "nameZh": "MACH",
-      "groupKey": "",
+      "groupKey": "MACH/Bci（MACH·CL）",
       "licenseNote": "BCI 数字钱包",
       "onlineCredit": "卡/支付",
       "intelId": "mach-cl",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ar-naranja",
@@ -1075,7 +1160,8 @@
       "onlineCredit": "卡/贷",
       "intelId": "naranja-x",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-didi",
@@ -1087,55 +1173,60 @@
       "onlineCredit": "消费贷/卡",
       "intelId": "didi-finanzas",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "vn-cake",
       "market": "VN",
       "track": "digibank",
       "nameZh": "Cake by VPBank",
-      "groupKey": "",
+      "groupKey": "Cake by VPBank（Cake·VN）",
       "licenseNote": "母行数字臂",
       "onlineCredit": "存款/贷经母行",
       "intelId": "cake-vn",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "vn-timo",
       "market": "VN",
       "track": "digibank",
       "nameZh": "Timo Plus",
-      "groupKey": "",
+      "groupKey": "Timo（Timo·VN）",
       "licenseNote": "母行数字臂",
       "onlineCredit": "数字账户",
       "intelId": "timo-vn",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "my-gxbank",
       "market": "MY",
       "track": "digibank",
       "nameZh": "GXBank",
-      "groupKey": "",
+      "groupKey": "GXBank（GXBank·MY）",
       "licenseNote": "马来数字银行",
       "onlineCredit": "吸储/小额贷",
       "intelId": "gxbank-my",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "my-boost",
       "market": "MY",
       "track": "payment",
       "nameZh": "Boost",
-      "groupKey": "",
+      "groupKey": "Boost（Boost·MY）",
       "licenseNote": "电子钱包",
       "onlineCredit": "合作信贷",
       "intelId": "boost-my",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-bajaj",
@@ -1147,7 +1238,8 @@
       "onlineCredit": "消费贷/EMI",
       "intelId": "bajaj-finance",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-lendingkart",
@@ -1159,55 +1251,60 @@
       "onlineCredit": "经营贷",
       "intelId": "lendingkart",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "br-neon",
       "market": "BR",
       "track": "digibank",
       "nameZh": "Neon",
-      "groupKey": "",
+      "groupKey": "Neon（Neon·BR）",
       "licenseNote": "数字银行",
       "onlineCredit": "卡/贷",
       "intelId": "neon-br",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ng-kuda",
       "market": "NG",
       "track": "digibank",
       "nameZh": "Kuda",
-      "groupKey": "",
+      "groupKey": "Danaku｜Danaku｜Danaku（Danaku·ID）",
       "licenseNote": "数字银行",
       "onlineCredit": "账户/贷",
       "intelId": "kuda",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "eg-halan",
       "market": "EG",
       "track": "online_credit",
       "nameZh": "Halan",
-      "groupKey": "Halan（·EG）",
+      "groupKey": "Halan（·MENA）",
       "licenseNote": "超级应用金融",
       "onlineCredit": "消费贷",
       "intelId": "halan",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "pe-plin",
       "market": "PE",
       "track": "payment",
       "nameZh": "Plin",
-      "groupKey": "",
+      "groupKey": "Plin（Plin·PE）",
       "licenseNote": "银行联盟支付",
       "onlineCredit": "",
       "intelId": "plin-pe",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-indodana",
@@ -1219,7 +1316,8 @@
       "onlineCredit": "BNPL/分期",
       "intelId": "indodana",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "multi-shopeepay",
@@ -1231,43 +1329,47 @@
       "onlineCredit": "SPayLater",
       "intelId": "shopeepay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "co-bre-b",
       "market": "CO",
       "track": "payment",
       "nameZh": "Bre-B",
-      "groupKey": "",
+      "groupKey": "Mercado Libre/Mercado Libre（美卡多·LATAM）",
       "licenseNote": "央行即时支付",
       "onlineCredit": "",
       "intelId": "bre-b",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "co-lulo",
       "market": "CO",
       "track": "digibank",
       "nameZh": "Lulo Bank",
-      "groupKey": "",
+      "groupKey": "Lulo Bank（Lulo·CO）",
       "licenseNote": "无网点数字银行",
       "onlineCredit": "卡/贷",
       "intelId": "lulo-co",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-kueski",
       "market": "MX",
       "track": "online_credit",
       "nameZh": "Kueski",
-      "groupKey": "Kueski Pay（·LATAM）",
+      "groupKey": "Kueski（Kueski·MX）",
       "licenseNote": "线上短贷/BNPL",
       "onlineCredit": "消费贷",
       "intelId": "kueski",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "br-creditas",
@@ -1279,91 +1381,99 @@
       "onlineCredit": "车房抵押贷",
       "intelId": "creditas",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "pk-sada",
       "market": "PK",
       "track": "payment",
       "nameZh": "SadaPay",
-      "groupKey": "",
+      "groupKey": "SadaPay（SadaPay·PK）",
       "licenseNote": "EMI/钱包",
       "onlineCredit": "",
       "intelId": "sada-pay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ae-wio",
       "market": "AE",
       "track": "digibank",
       "nameZh": "Wio",
-      "groupKey": "",
+      "groupKey": "Wio（Wio·AE）",
       "licenseNote": "数字银行",
       "onlineCredit": "零售/SME",
       "intelId": "wio",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ae-liv",
       "market": "AE",
       "track": "digibank",
       "nameZh": "Liv",
-      "groupKey": "",
+      "groupKey": "Delivery Hero/Foodpanda（Foodpanda·SEA）",
       "licenseNote": "大行数字臂",
       "onlineCredit": "账户/卡",
       "intelId": "liv-bank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "my-mae",
       "market": "MY",
       "track": "payment",
       "nameZh": "MAE",
-      "groupKey": "",
+      "groupKey": "MAE/Maybank（MAE·MY）",
       "licenseNote": "Maybank 超级App",
       "onlineCredit": "交叉销售",
       "intelId": "mae-my",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "multi-flutterwave",
       "market": "MULTI",
       "track": "payment",
       "nameZh": "Flutterwave",
-      "groupKey": "",
+      "groupKey": "Flutterwave（Flutterwave·非洲）",
       "licenseNote": "非洲收单",
       "onlineCredit": "",
       "intelId": "flutterwave",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "sa-stc-bank",
       "market": "SA",
       "track": "digibank",
       "nameZh": "STC Bank",
-      "groupKey": "",
+      "groupKey": "STC Bank（STC Bank·SA）",
       "licenseNote": "电信系数字银行",
       "onlineCredit": "账户/贷",
       "intelId": "stc-bank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ae-mashreq-neo",
       "market": "AE",
       "track": "digibank",
       "nameZh": "Mashreq Neo",
-      "groupKey": "",
+      "groupKey": "Mashreq Neo（Mashreq Neo·AE）",
       "licenseNote": "大行数字臂",
       "onlineCredit": "账户/卡",
       "intelId": "mashreq-neo",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-lazypay",
@@ -1375,7 +1485,8 @@
       "onlineCredit": "后付",
       "intelId": "lazypay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-amazon-pl",
@@ -1387,115 +1498,125 @@
       "onlineCredit": "分期",
       "intelId": "amazon-pay-later-in",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "vn-vikki",
       "market": "VN",
       "track": "digibank",
       "nameZh": "Vikki",
-      "groupKey": "",
+      "groupKey": "Vikki（Vikki·VN）",
       "licenseNote": "重整银行数字品牌",
       "onlineCredit": "吸储",
       "intelId": "vikki-vn",
       "priority": 3,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "multi-revolut",
       "market": "MULTI",
       "track": "digibank",
       "nameZh": "Revolut",
-      "groupKey": "",
+      "groupKey": "Revolut（·US）",
       "licenseNote": "多国牌照拼图",
       "onlineCredit": "视市场",
       "intelId": "revolut",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "multi-paypal",
       "market": "MULTI",
       "track": "payment",
       "nameZh": "PayPal",
-      "groupKey": "",
+      "groupKey": "PayPal（·US）",
       "licenseNote": "全球钱包",
       "onlineCredit": "BNPL/商户贷",
       "intelId": "paypal",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "kr-kakaobank",
       "market": "KR",
       "track": "digibank",
       "nameZh": "KakaoBank",
-      "groupKey": "",
+      "groupKey": "KakaoBank（KakaoBank·KR）",
       "licenseNote": "互联网银行；出海TH/ID",
       "onlineCredit": "个贷",
       "intelId": "kakaobank",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "kr-toss",
       "market": "KR",
       "track": "digibank",
       "nameZh": "Toss Bank",
-      "groupKey": "",
+      "groupKey": "Toss Bank（Toss Bank·KR）",
       "licenseNote": "互联网银行",
       "onlineCredit": "个贷/小微",
       "intelId": "toss-bank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "kr-kbank",
       "market": "KR",
       "track": "digibank",
       "nameZh": "K-Bank",
-      "groupKey": "",
+      "groupKey": "K-Bank（K-Bank·KR）",
       "licenseNote": "互联网银行",
       "onlineCredit": "个贷",
       "intelId": "k-bank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "kr-kakaopay",
       "market": "KR",
       "track": "payment",
       "nameZh": "Kakao Pay",
-      "groupKey": "",
+      "groupKey": "Kakao Pay（Kakao Pay·KR）",
       "licenseNote": "支付",
       "onlineCredit": "信贷合作",
       "intelId": "kakaopay",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "jp-paypay",
       "market": "JP",
       "track": "payment",
       "nameZh": "PayPay",
-      "groupKey": "",
+      "groupKey": "PayPay（PayPay·JP）",
       "licenseNote": "资金移动/支付",
       "onlineCredit": "",
       "intelId": "paypay",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "jp-rakuten",
       "market": "JP",
       "track": "digibank",
       "nameZh": "乐天银行",
-      "groupKey": "",
+      "groupKey": "乐天银行（楽天銀行·JP）",
       "licenseNote": "互联网银行",
       "onlineCredit": "卡/贷",
       "intelId": "rakuten-bank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ke-fuliza",
@@ -1507,163 +1628,177 @@
       "onlineCredit": "透支/储蓄贷",
       "intelId": "fuliza",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "sg-paynow",
       "market": "SG",
       "track": "payment",
       "nameZh": "PayNow",
-      "groupKey": "",
+      "groupKey": "PayNow（轨道·SG）",
       "licenseNote": "即时支付公共层",
       "onlineCredit": "",
       "intelId": "paynow-sg",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "rail"
     },
     {
       "id": "cn-webank",
       "market": "CN",
       "track": "digibank",
       "nameZh": "微众银行",
-      "groupKey": "",
+      "groupKey": "微众科技｜微众科技香港｜WeBank Tech（风控服务方·HK）",
       "licenseNote": "互联网银行",
       "onlineCredit": "微粒贷等",
       "intelId": "webank-cn",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "cn-mybank",
       "market": "CN",
       "track": "digibank",
       "nameZh": "网商银行",
-      "groupKey": "",
+      "groupKey": "网商银行（网商·CN）",
       "licenseNote": "互联网银行",
       "onlineCredit": "小微贷",
       "intelId": "mybank-cn",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "br-pix",
       "market": "BR",
       "track": "payment",
       "nameZh": "Pix",
-      "groupKey": "",
+      "groupKey": "Pix（轨道·BR）",
       "licenseNote": "央行即时支付",
       "onlineCredit": "",
       "intelId": "open-banking-br-pix",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "rail"
     },
     {
       "id": "in-upi",
       "market": "IN",
       "track": "payment",
       "nameZh": "UPI",
-      "groupKey": "",
+      "groupKey": "UPI（轨道·IN）",
       "licenseNote": "NPCI 即时支付",
       "onlineCredit": "",
       "intelId": "upi-rail",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "rail"
     },
     {
       "id": "th-promptpay",
       "market": "TH",
       "track": "payment",
       "nameZh": "PromptPay",
-      "groupKey": "",
+      "groupKey": "PromptPay（轨道·TH）",
       "licenseNote": "即时支付",
       "onlineCredit": "",
       "intelId": "promptpay",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "rail"
     },
     {
       "id": "id-qris",
       "market": "ID",
       "track": "payment",
       "nameZh": "QRIS",
-      "groupKey": "",
+      "groupKey": "QRIS（轨道·ID）",
       "licenseNote": "统一QR",
       "onlineCredit": "",
       "intelId": "qris",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "rail"
     },
     {
       "id": "ph-instapay",
       "market": "PH",
       "track": "payment",
       "nameZh": "InstaPay",
-      "groupKey": "",
+      "groupKey": "InstaPay（轨道·PH）",
       "licenseNote": "即时支付",
       "onlineCredit": "",
       "intelId": "instapay-ph",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "rail"
     },
     {
       "id": "hk-fps",
       "market": "HK",
       "track": "payment",
       "nameZh": "转数快 FPS",
-      "groupKey": "",
+      "groupKey": "转数快FPS（轨道·HK）",
       "licenseNote": "即时支付",
       "onlineCredit": "",
       "intelId": "fps-hk",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "rail"
     },
     {
       "id": "my-duitnow",
       "market": "MY",
       "track": "payment",
       "nameZh": "DuitNow",
-      "groupKey": "",
+      "groupKey": "DuitNow（轨道·MY）",
       "licenseNote": "即时支付",
       "onlineCredit": "",
       "intelId": "duitnow",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "rail"
     },
     {
       "id": "tw-jkopay",
       "market": "TW",
       "track": "payment",
       "nameZh": "JKOPay",
-      "groupKey": "",
+      "groupKey": "OPay/OPay（OPay·NG）",
       "licenseNote": "支付",
       "onlineCredit": "",
       "intelId": "jkopay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "tw-linebank",
       "market": "TW",
       "track": "digibank",
       "nameZh": "LINE Bank 台湾",
-      "groupKey": "",
+      "groupKey": "The Online Project｜TOP｜The Online Project（流量服务商·代理商·海湾）",
       "licenseNote": "纯网银",
       "onlineCredit": "个贷",
       "intelId": "line-bank-tw",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "au-up",
       "market": "AU",
       "track": "digibank",
       "nameZh": "Up Bank",
-      "groupKey": "",
+      "groupKey": "Up Bank（Up·AU）",
       "licenseNote": "新银行",
       "onlineCredit": "账户",
       "intelId": "up-au",
       "priority": 3,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-yono",
@@ -1675,7 +1810,8 @@
       "onlineCredit": "行内贷",
       "intelId": "yono-sbi",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "cn-yunshanfu",
@@ -1687,7 +1823,8 @@
       "onlineCredit": "导流",
       "intelId": "unionpay-quickpass",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mn-lendmn",
@@ -1699,7 +1836,8 @@
       "onlineCredit": "线上贷",
       "intelId": "lendmn",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-coppel",
@@ -1711,7 +1849,8 @@
       "onlineCredit": "店内贷",
       "intelId": "coppel",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-danarupiah",
@@ -1723,7 +1862,8 @@
       "onlineCredit": "现金贷",
       "intelId": "dana-rupiah",
       "priority": 3,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-amartha",
@@ -1735,7 +1875,8 @@
       "onlineCredit": "社区贷",
       "intelId": "amartha",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-cashcepat",
@@ -1747,19 +1888,21 @@
       "onlineCredit": "现金贷",
       "intelId": "cashcepat",
       "priority": 3,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-raya",
       "market": "ID",
       "track": "digibank",
       "nameZh": "Bank Raya",
-      "groupKey": "",
+      "groupKey": "Bank Jago｜Jago｜Bank Jago（资金参与机构·本地银行·ID）",
       "licenseNote": "数字银行",
       "onlineCredit": "线上贷",
       "intelId": "bank-raya",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-gloan",
@@ -1771,7 +1914,8 @@
       "onlineCredit": "现金贷/分期",
       "intelId": "gcash-gloan",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-gopaylater",
@@ -1783,559 +1927,606 @@
       "onlineCredit": "分期",
       "intelId": "gopaylater",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "multi-spaylater",
       "market": "MULTI",
       "track": "online_credit",
       "nameZh": "SPayLater",
-      "groupKey": "",
+      "groupKey": "Sea Limited/Shopee（Sea·SEA）",
       "licenseNote": "Shopee BNPL",
       "onlineCredit": "分期",
       "intelId": "spaylater",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "kz-kaspi",
       "market": "KZ",
       "track": "digibank",
       "nameZh": "Kaspi.kz",
-      "groupKey": "",
+      "groupKey": "Kaspi.kz（Kaspi·KZ）",
       "licenseNote": "超级应用+银行金融",
       "onlineCredit": "BNPL/贷/存款",
       "intelId": "kaspi",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "tr-hepsi",
       "market": "TR",
       "track": "online_credit",
       "nameZh": "Hepsiburada",
-      "groupKey": "",
+      "groupKey": "Hepsiburada（Hepsiburada·TR）",
       "licenseNote": "电商（Kaspi）",
       "onlineCredit": "金融导入中",
       "intelId": "hepsiburada",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "tr-trendyol",
       "market": "TR",
       "track": "online_credit",
       "nameZh": "Trendyol",
-      "groupKey": "",
+      "groupKey": "Trendyol（Trendyol·TR）",
       "licenseNote": "电商金融",
       "onlineCredit": "分期",
       "intelId": "trendyol",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-plata",
       "market": "MX",
       "track": "digibank",
       "nameZh": "Plata",
-      "groupKey": "",
+      "groupKey": "Plata（Plata·MX）",
       "licenseNote": "数字银行/卡",
       "onlineCredit": "卡/贷",
       "intelId": "plata-mx",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ar-modo",
       "market": "AR",
       "track": "payment",
       "nameZh": "MODO",
-      "groupKey": "",
+      "groupKey": "MODO（MODO·AR）",
       "licenseNote": "银行联盟钱包",
       "onlineCredit": "",
       "intelId": "modo-ar",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "cn-duxiaoman",
       "market": "CN",
       "track": "online_credit",
       "nameZh": "度小满",
-      "groupKey": "",
+      "groupKey": "度小满｜有钱花｜百度（度小满·CN）",
       "licenseNote": "互联网信贷",
       "onlineCredit": "有钱花等",
       "intelId": "duxiaoman",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "cn-zhaolian",
       "market": "CN",
       "track": "online_credit",
       "nameZh": "招联消金",
-      "groupKey": "",
+      "groupKey": "招商银行+中国联通｜招联｜招联（招联·CN）",
       "licenseNote": "持牌消金",
       "onlineCredit": "消费贷",
       "intelId": "zhaolian",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "vn-viettel",
       "market": "VN",
       "track": "payment",
       "nameZh": "Viettel Money",
-      "groupKey": "",
+      "groupKey": "Viettel Money（Viettel Money·VN）",
       "licenseNote": "电信钱包",
       "onlineCredit": "合作",
       "intelId": "viettel-money",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-bbva",
       "market": "MX",
       "track": "digibank",
       "nameZh": "BBVA MX",
-      "groupKey": "",
+      "groupKey": "Bangladesh Bank｜BB｜孟加拉央行（监管·BD）",
       "licenseNote": "在位大行",
       "onlineCredit": "零售贷",
       "intelId": "bbva-mx",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "br-itau",
       "market": "BR",
       "track": "digibank",
       "nameZh": "Itaú",
-      "groupKey": "",
+      "groupKey": "Itaú Unibanco（Itaú·BR）",
       "licenseNote": "在位大行",
       "onlineCredit": "零售贷",
       "intelId": "itau",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "za-discovery",
       "market": "ZA",
       "track": "digibank",
       "nameZh": "Discovery Bank",
-      "groupKey": "",
+      "groupKey": "Discovery Bank（Discovery·ZA）",
       "licenseNote": "保险系数字银行",
       "onlineCredit": "零售",
       "intelId": "discovery-bank",
       "priority": 3,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "sg-dbs",
       "market": "SG",
       "track": "digibank",
       "nameZh": "DBS",
-      "groupKey": "",
+      "groupKey": "DBS（DBS·SG）",
       "licenseNote": "在位大行",
       "onlineCredit": "零售",
       "intelId": "dbs",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-seabank",
       "market": "PH",
       "track": "digibank",
       "nameZh": "SeaBank PH",
-      "groupKey": "",
+      "groupKey": "Sea Limited/Shopee（Sea·SEA）",
       "licenseNote": "数字银行",
       "onlineCredit": "线上贷",
       "intelId": "seabank-ph",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "vn-vpbank",
       "market": "VN",
       "track": "digibank",
       "nameZh": "VPBank",
-      "groupKey": "",
+      "groupKey": "VPBank（VPBank·VN）",
       "licenseNote": "私行+Cake母行",
       "onlineCredit": "零售/消金",
       "intelId": "vpbank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "br-bradesco",
       "market": "BR",
       "track": "digibank",
       "nameZh": "Bradesco",
-      "groupKey": "",
+      "groupKey": "Bradesco（Bradesco·BR）",
       "licenseNote": "在位大行",
       "onlineCredit": "零售",
       "intelId": "bradesco",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-bca",
       "market": "ID",
       "track": "digibank",
       "nameZh": "BCA",
-      "groupKey": "",
+      "groupKey": "BCA（BCA·ID）",
       "licenseNote": "在位私行",
       "onlineCredit": "零售",
       "intelId": "bca",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-hdfc",
       "market": "IN",
       "track": "digibank",
       "nameZh": "HDFC Bank",
-      "groupKey": "",
+      "groupKey": "HDFC Bank（HDFC·IN）",
       "licenseNote": "在位私行",
       "onlineCredit": "零售/卡",
       "intelId": "hdfc",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-sbi-bank",
       "market": "IN",
       "track": "digibank",
       "nameZh": "SBI",
-      "groupKey": "",
+      "groupKey": "State Bank of Pakistan｜SBP｜巴基斯坦央行（监管·PK）",
       "licenseNote": "在位公行",
       "onlineCredit": "零售",
       "intelId": "sbi",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ke-equity",
       "market": "KE",
       "track": "digibank",
       "nameZh": "Equity Bank",
-      "groupKey": "",
+      "groupKey": "Equity Bank（Equity·KE）",
       "licenseNote": "东非零售行",
       "onlineCredit": "零售",
       "intelId": "equity-bank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "vn-tnex",
       "market": "VN",
       "track": "digibank",
       "nameZh": "TNEX",
-      "groupKey": "",
+      "groupKey": "TNEX（TNEX·VN）",
       "licenseNote": "母行数字臂",
       "onlineCredit": "账户",
       "intelId": "tnex-vn",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "kr-naverpay",
       "market": "KR",
       "track": "payment",
       "nameZh": "Naver Pay",
-      "groupKey": "",
+      "groupKey": "Naver Pay（Naver Pay·KR）",
       "licenseNote": "支付",
       "onlineCredit": "合作",
       "intelId": "naver-pay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "cn-alipay",
       "market": "CN",
       "track": "payment",
       "nameZh": "支付宝",
-      "groupKey": "",
+      "groupKey": "蚂蚁集团/支付宝（蚂蚁·CN）",
       "licenseNote": "支付+信贷导流",
       "onlineCredit": "花呗借呗路径",
       "intelId": "alipay-cn",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "cn-wechatpay",
       "market": "CN",
       "track": "payment",
       "nameZh": "微信支付",
-      "groupKey": "",
+      "groupKey": "腾讯控股/微信（腾讯·CN）",
       "licenseNote": "支付+导流",
       "onlineCredit": "分付等路径",
       "intelId": "wechat-pay-cn",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "my-maybank",
       "market": "MY",
       "track": "digibank",
       "nameZh": "Maybank",
-      "groupKey": "",
+      "groupKey": "Maybank（Maybank·MY）",
       "licenseNote": "在位大行",
       "onlineCredit": "零售",
       "intelId": "maybank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "us-jpm",
       "market": "US",
       "track": "digibank",
       "nameZh": "JPMorgan",
-      "groupKey": "",
+      "groupKey": "JPMorgan Chase（JPMorgan·US）",
       "licenseNote": "在位大行",
       "onlineCredit": "卡/贷",
       "intelId": "jpmorgan",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "us-ally",
       "market": "US",
       "track": "digibank",
       "nameZh": "Ally",
-      "groupKey": "",
+      "groupKey": "Ally（Ally·US）",
       "licenseNote": "数字银行/车贷",
       "onlineCredit": "车贷/个贷",
       "intelId": "ally",
       "priority": 3,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "in-razorpay",
       "market": "IN",
       "track": "payment",
       "nameZh": "Razorpay",
-      "groupKey": "",
+      "groupKey": "Razorpay（Razorpay·IN）",
       "licenseNote": "收单",
       "onlineCredit": "商户贷产品",
       "intelId": "razorpay",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "multi-adyen",
       "market": "MULTI",
       "track": "payment",
       "nameZh": "Adyen",
-      "groupKey": "",
+      "groupKey": "Adyen（Adyen·EU）",
       "licenseNote": "全球收单",
       "onlineCredit": "",
       "intelId": "adyen",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "hk-fusion",
       "market": "HK",
       "track": "digibank",
       "nameZh": "Fusion Bank",
-      "groupKey": "",
+      "groupKey": "Fusion Bank（Fusion Bank·HK）",
       "licenseNote": "虚拟银行",
       "onlineCredit": "零售",
       "intelId": "fusion-bank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "hk-livi",
       "market": "HK",
       "track": "digibank",
       "nameZh": "Livi Bank",
-      "groupKey": "",
+      "groupKey": "Livi Bank（Livi·HK）",
       "licenseNote": "虚拟银行",
       "onlineCredit": "零售",
       "intelId": "livi-bank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "hk-airstar",
       "market": "HK",
       "track": "digibank",
       "nameZh": "Airstar",
-      "groupKey": "",
+      "groupKey": "Airstar Bank（Airstar·HK）",
       "licenseNote": "虚拟银行",
       "onlineCredit": "零售",
       "intelId": "airstar",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-dbs-digibank",
       "market": "ID",
       "track": "digibank",
       "nameZh": "digibank DBS ID",
-      "groupKey": "",
+      "groupKey": "digibank by DBS ID（digibank·ID）",
       "licenseNote": "数字银行",
       "onlineCredit": "零售",
       "intelId": "digibank-dbs-id",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "id-homecredit",
       "market": "ID",
       "track": "online_credit",
       "nameZh": "Home Credit ID",
-      "groupKey": "",
+      "groupKey": "Home Credit Vietnam（Home Credit·VN）",
       "licenseNote": "消金",
       "onlineCredit": "分期",
       "intelId": "homecredit-id",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-unionbank",
       "market": "PH",
       "track": "digibank",
       "nameZh": "UnionBank PH",
-      "groupKey": "",
+      "groupKey": "UnionDigital Bank｜UnionDigital｜UnionBank（UnionDigital·PH）",
       "licenseNote": "大行+数字臂",
       "onlineCredit": "零售",
       "intelId": "unionbank-ph",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-dimo",
       "market": "MX",
       "track": "payment",
       "nameZh": "DiMo",
-      "groupKey": "",
+      "groupKey": "DiMo（轨道·MX）",
       "licenseNote": "Banxico手机号转账",
       "onlineCredit": "",
       "intelId": "banxico-dimo",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "rail"
     },
     {
       "id": "uk-starling",
       "market": "GB",
       "track": "digibank",
       "nameZh": "Starling",
-      "groupKey": "",
+      "groupKey": "Starling Bank（Starling·GB）",
       "licenseNote": "挑战者银行",
       "onlineCredit": "零售",
       "intelId": "starling",
       "priority": 3,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-nu-local",
       "market": "MX",
       "track": "digibank",
       "nameZh": "Nubank MX",
-      "groupKey": "",
+      "groupKey": "Nubank（Nubank·BR）",
       "licenseNote": "数字银行/卡",
       "onlineCredit": "卡/贷",
       "intelId": "nubank-mx",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "co-movii",
       "market": "CO",
       "track": "payment",
       "nameZh": "MOVii",
-      "groupKey": "",
+      "groupKey": "MOVii（MOVii·CO）",
       "licenseNote": "数字钱包",
       "onlineCredit": "",
       "intelId": "movii-co",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "co-rappibank",
       "market": "CO",
       "track": "online_credit",
       "nameZh": "RappiBank",
-      "groupKey": "",
+      "groupKey": "Rappi/Rappi（Rappi·LATAM）",
       "licenseNote": "超级应用金融",
       "onlineCredit": "信贷",
       "intelId": "rappi-bank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ar-brubank",
       "market": "AR",
       "track": "digibank",
       "nameZh": "Brubank",
-      "groupKey": "",
+      "groupKey": "Brubank（Brubank·AR）",
       "licenseNote": "数字银行",
       "onlineCredit": "零售",
       "intelId": "brubank",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "vn-homecredit",
       "market": "VN",
       "track": "online_credit",
       "nameZh": "Home Credit VN",
-      "groupKey": "",
+      "groupKey": "Home Credit Vietnam（Home Credit·VN）",
       "licenseNote": "消金",
       "onlineCredit": "分期",
       "intelId": "homecredit-vn",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "ph-maya-credit",
       "market": "PH",
       "track": "online_credit",
       "nameZh": "Maya 信贷",
-      "groupKey": "",
+      "groupKey": "Maya Bank｜Maya｜Voyager（MayaBank·PH）",
       "licenseNote": "数字银行贷",
       "onlineCredit": "个贷",
       "intelId": "maya-credit",
       "priority": 1,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-stori",
       "market": "MX",
       "track": "online_credit",
       "nameZh": "Stori",
-      "groupKey": "",
+      "groupKey": "Stori（Stori·MX）",
       "licenseNote": "数字卡/信贷",
       "onlineCredit": "卡/贷",
       "intelId": "stori",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "mx-aplazo",
       "market": "MX",
       "track": "online_credit",
       "nameZh": "Aplazo",
-      "groupKey": "",
+      "groupKey": "Aplazo（Aplazo·MX）",
       "licenseNote": "BNPL",
       "onlineCredit": "分期",
       "intelId": "aplazo",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     },
     {
       "id": "multi-atome",
       "market": "MULTI",
       "track": "online_credit",
       "nameZh": "Atome",
-      "groupKey": "",
+      "groupKey": "Atome（Atome·SEA）",
       "licenseNote": "SEA BNPL",
       "onlineCredit": "分期",
       "intelId": "atome",
       "priority": 2,
-      "coverage": "covered"
+      "coverage": "covered",
+      "crmStatus": "linked"
     }
   ]
 }

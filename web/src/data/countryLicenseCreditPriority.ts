@@ -13,6 +13,9 @@ export type LicenseCreditEntry = {
   onlineCredit?: string;
   intelId?: string;
   priority?: number;
+  coverage?: string;
+  /** linked=已挂 CRM；rail=支付轨道（非玩家） */
+  crmStatus?: "linked" | "rail" | "pending" | string;
 };
 
 export type LicenseCreditPriorityFile = {

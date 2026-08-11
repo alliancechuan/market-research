@@ -1,0 +1,1020 @@
+{
+  "meta": {
+    "source": "股权投资人候选名录（Sandy preview name-level）",
+    "asOf": "2026-08",
+    "count": 101,
+    "note": "股权投资人候选名录；与 CRM 已有主体重叠者只打标不建重档"
+  },
+  "rows": [
+    {
+      "name": "Apis Partners",
+      "geography": "Singapore/UK",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "Spoke to Bryan Wee in Singapore; they look at more mature stage and write bigger checks (US$40-50mm upwards)",
+      "region": "se-asia",
+      "countries": "新加坡；英国",
+      "locCode": "SG"
+    },
+    {
+      "name": "Nexterra Capital",
+      "geography": "",
+      "investorTypeRaw": "VC",
+      "equityKind": "VC",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "Scene Holding",
+      "geography": "KSA",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "mena",
+      "countries": "沙特",
+      "locCode": "SA"
+    },
+    {
+      "name": "Zelo Finance",
+      "geography": "India/UAE",
+      "investorTypeRaw": "other",
+      "equityKind": "其他",
+      "comment": "",
+      "region": "south-asia",
+      "countries": "印度；阿联酋",
+      "locCode": "IN"
+    },
+    {
+      "name": "Synergy Capital",
+      "geography": "",
+      "investorTypeRaw": "credit-fund",
+      "equityKind": "信贷基金",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "Adyen",
+      "geography": "Netherlands",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "荷兰",
+      "locCode": "NL"
+    },
+    {
+      "name": "Affirm",
+      "geography": "US",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Amazon Lending",
+      "geography": "United States",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Aquiline Capital Partners",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Axis Bank",
+      "geography": "India",
+      "investorTypeRaw": "bank",
+      "equityKind": "银行财务投资人",
+      "comment": "",
+      "region": "south-asia",
+      "countries": "印度",
+      "locCode": "IN"
+    },
+    {
+      "name": "Baidu",
+      "geography": "China",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "Defer to Tun / Yali",
+      "region": "east-asia",
+      "countries": "中国",
+      "locCode": "CN"
+    },
+    {
+      "name": "Bain Capital Private Equity LP",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Bajaj Finserv",
+      "geography": "India",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "south-asia",
+      "countries": "印度",
+      "locCode": "IN"
+    },
+    {
+      "name": "Bank Of Communications",
+      "geography": "China",
+      "investorTypeRaw": "bank",
+      "equityKind": "银行财务投资人",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "中国",
+      "locCode": "CN"
+    },
+    {
+      "name": "Barings",
+      "geography": "United States",
+      "investorTypeRaw": "credit-fund",
+      "equityKind": "信贷基金",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Bridgepoint Group",
+      "geography": "United Kingdom",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "英国",
+      "locCode": "GB"
+    },
+    {
+      "name": "Brookfield Asset Management (Growth)",
+      "geography": "UAE (DIFC)",
+      "investorTypeRaw": "other",
+      "equityKind": "其他",
+      "comment": "",
+      "region": "mena",
+      "countries": "阿联酋",
+      "locCode": "AE"
+    },
+    {
+      "name": "Centerbridge Partners, L.P.",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Central Group",
+      "geography": "Thailand",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "se-asia",
+      "countries": "泰国",
+      "locCode": "TH"
+    },
+    {
+      "name": "Chryscapital",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Cinven Group",
+      "geography": "United Kingdom",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "英国",
+      "locCode": "GB"
+    },
+    {
+      "name": "Citi",
+      "geography": "United States",
+      "investorTypeRaw": "bank",
+      "equityKind": "银行财务投资人",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Coatue Management",
+      "geography": "United States",
+      "investorTypeRaw": "VC",
+      "equityKind": "VC",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "CreditEase",
+      "geography": "China",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "Defer to Tun / Yali",
+      "region": "east-asia",
+      "countries": "中国",
+      "locCode": "CN"
+    },
+    {
+      "name": "eBay",
+      "geography": "US",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Enova",
+      "geography": "",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "Eurazeo",
+      "geography": "France",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "法国",
+      "locCode": "FR"
+    },
+    {
+      "name": "FIS",
+      "geography": "US",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Fiserv",
+      "geography": "United States",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Flipkart",
+      "geography": "India",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "south-asia",
+      "countries": "印度",
+      "locCode": "IN"
+    },
+    {
+      "name": "Francisco Partners",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Genstar Capital",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Google / CapitalG",
+      "geography": "United States",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "GoTo Group",
+      "geography": "Indonesia",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "se-asia",
+      "countries": "印度尼西亚",
+      "locCode": "ID"
+    },
+    {
+      "name": "HSBC Asset Management",
+      "geography": "",
+      "investorTypeRaw": "other",
+      "equityKind": "其他",
+      "comment": "Scheduled meeting with HSBC Ventures, but please go ahead with HSBC AM given a different pocket",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "IFC",
+      "geography": "",
+      "investorTypeRaw": "other",
+      "equityKind": "其他",
+      "comment": "I am speaking to them (Xu Weichuan who looks at FIG), may need to try Sandy's channel if no traction",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "IHC",
+      "geography": "UAE (Abu Dhabi)",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "mena",
+      "countries": "阿联酋",
+      "locCode": "AE"
+    },
+    {
+      "name": "Insight Partners",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Jade Invest",
+      "geography": "",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "Kakao Bank",
+      "geography": "Korea",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "韩国",
+      "locCode": "KR"
+    },
+    {
+      "name": "Khazanah Nasional Bhd.",
+      "geography": "Malaysia",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "se-asia",
+      "countries": "马来西亚",
+      "locCode": "MY"
+    },
+    {
+      "name": "Klarna",
+      "geography": "Sweden",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "瑞典",
+      "locCode": "SE"
+    },
+    {
+      "name": "Korelya Capital",
+      "geography": "",
+      "investorTypeRaw": "VC",
+      "equityKind": "VC",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "LendingTree",
+      "geography": "United States",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Lexin Fintech",
+      "geography": "China",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "Defer to Tun / Yali",
+      "region": "east-asia",
+      "countries": "中国",
+      "locCode": "CN"
+    },
+    {
+      "name": "Lindsay Goldberg",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Mastercard",
+      "geography": "",
+      "investorTypeRaw": "other",
+      "equityKind": "其他",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "Mercado Libre",
+      "geography": "Argentina",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "latam",
+      "countries": "阿根廷",
+      "locCode": "AR"
+    },
+    {
+      "name": "Mitsubishi UFJ Financial Group",
+      "geography": "Japan",
+      "investorTypeRaw": "bank",
+      "equityKind": "银行财务投资人",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "日本",
+      "locCode": "JP"
+    },
+    {
+      "name": "Mitsui & Co",
+      "geography": "Japan",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "日本",
+      "locCode": "JP"
+    },
+    {
+      "name": "MoneyGram",
+      "geography": "US",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Monzo",
+      "geography": "United Kingdom",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "英国",
+      "locCode": "GB"
+    },
+    {
+      "name": "Naspers",
+      "geography": "South Africa",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "africa",
+      "countries": "南非",
+      "locCode": "ZA"
+    },
+    {
+      "name": "Naver",
+      "geography": "",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "New Mountain Capital",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "NewView Capital",
+      "geography": "United States",
+      "investorTypeRaw": "VC",
+      "equityKind": "VC",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Nordic Capital",
+      "geography": "Sweden",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "瑞典",
+      "locCode": "SE"
+    },
+    {
+      "name": "Novaquest Capital Management",
+      "geography": "",
+      "investorTypeRaw": "credit-fund",
+      "equityKind": "信贷基金",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "NuBank",
+      "geography": "",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "Nuvei",
+      "geography": "Malaysia",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "se-asia",
+      "countries": "马来西亚",
+      "locCode": "MY"
+    },
+    {
+      "name": "Permira",
+      "geography": "United Kingdom",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "英国",
+      "locCode": "GB"
+    },
+    {
+      "name": "Ping An",
+      "geography": "China",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "中国",
+      "locCode": "CN"
+    },
+    {
+      "name": "Prosus",
+      "geography": "Netherlands",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "Already on older list under Sandy",
+      "region": "west",
+      "countries": "荷兰",
+      "locCode": "NL"
+    },
+    {
+      "name": "Rakuten",
+      "geography": "Japan",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "日本",
+      "locCode": "JP"
+    },
+    {
+      "name": "Revolut",
+      "geography": "United Kingdom",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "英国",
+      "locCode": "GB"
+    },
+    {
+      "name": "Saxo Bank",
+      "geography": "Denmark",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "Denmark",
+      "locCode": "全球"
+    },
+    {
+      "name": "SBI Investment",
+      "geography": "Japan",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "日本",
+      "locCode": "JP"
+    },
+    {
+      "name": "SEA Group",
+      "geography": "Singapore",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "se-asia",
+      "countries": "新加坡",
+      "locCode": "SG"
+    },
+    {
+      "name": "Searchlight Capital",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Sequoia Capital",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "Already on older list under Sandy",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "SK Group / SK Telecom",
+      "geography": "Korea",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "韩国",
+      "locCode": "KR"
+    },
+    {
+      "name": "SoFi",
+      "geography": "United States",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Sofina Group",
+      "geography": "Belgium",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "Belgium",
+      "locCode": "全球"
+    },
+    {
+      "name": "SoftBank Group",
+      "geography": "Japan",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "日本",
+      "locCode": "JP"
+    },
+    {
+      "name": "Sony Bank",
+      "geography": "Japan",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "日本",
+      "locCode": "JP"
+    },
+    {
+      "name": "Square (Block)",
+      "geography": "United States",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Starling Bank",
+      "geography": "United Kingdom",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "英国",
+      "locCode": "GB"
+    },
+    {
+      "name": "Stone Point Capital",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Stripe",
+      "geography": "United States",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Sumitomo Mitsui Financial Group",
+      "geography": "Japan",
+      "investorTypeRaw": "bank",
+      "equityKind": "银行财务投资人",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "日本",
+      "locCode": "JP"
+    },
+    {
+      "name": "Summit Partners",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Tata Group",
+      "geography": "India",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "south-asia",
+      "countries": "印度",
+      "locCode": "IN"
+    },
+    {
+      "name": "THL Partners",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Toss",
+      "geography": "",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "Uber",
+      "geography": "US",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Upstart Holdings",
+      "geography": "United States",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Veritas Capital",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Vingroup",
+      "geography": "Vietnam",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "se-asia",
+      "countries": "越南",
+      "locCode": "VN"
+    },
+    {
+      "name": "Vitruvian Partners",
+      "geography": "United Kingdom",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "英国",
+      "locCode": "GB"
+    },
+    {
+      "name": "Walmart",
+      "geography": "US",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Warburg Pincus",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Wellington Management Group LLP",
+      "geography": "United States",
+      "investorTypeRaw": "PE",
+      "equityKind": "PE",
+      "comment": "",
+      "region": "west",
+      "countries": "美国",
+      "locCode": "US"
+    },
+    {
+      "name": "Worldline",
+      "geography": "",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "WorldPay",
+      "geography": "United Kingdom",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "west",
+      "countries": "英国",
+      "locCode": "GB"
+    },
+    {
+      "name": "Xiaomi",
+      "geography": "China",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "Defer to Tun / Yali",
+      "region": "east-asia",
+      "countries": "中国",
+      "locCode": "CN"
+    },
+    {
+      "name": "Zerobridge",
+      "geography": "",
+      "investorTypeRaw": "other",
+      "equityKind": "其他",
+      "comment": "",
+      "region": "west",
+      "countries": "待核",
+      "locCode": "全球"
+    },
+    {
+      "name": "Duxiaoman",
+      "geography": "China",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "Defer to Tun / Yali",
+      "region": "east-asia",
+      "countries": "中国",
+      "locCode": "CN"
+    },
+    {
+      "name": "Finvolution",
+      "geography": "China",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "Defer to Tun / Yali - this is ????",
+      "region": "east-asia",
+      "countries": "中国",
+      "locCode": "CN"
+    },
+    {
+      "name": "ORIX",
+      "geography": "Japan",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "日本",
+      "locCode": "JP"
+    },
+    {
+      "name": "SMB Bank",
+      "geography": "China",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "Which bank is this? ?????",
+      "region": "east-asia",
+      "countries": "中国",
+      "locCode": "CN"
+    },
+    {
+      "name": "Suning",
+      "geography": "China",
+      "investorTypeRaw": "strategic",
+      "equityKind": "战略",
+      "comment": "",
+      "region": "east-asia",
+      "countries": "中国",
+      "locCode": "CN"
+    }
+  ]
+}

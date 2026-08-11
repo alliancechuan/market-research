@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "source": "SEC PH Lending/Financing Companies 公开名录交叉（官网 Cloudflare 拦截，未能整表抓取）",
+    "as_of": "2026-08-08",
+    "note": "以 CRM 已建档品牌 + 公开 SEC Lending/Financing/OLP 口径交叉；法定全称待官网 PDF/Excel 回填",
+    "source_url": "https://www.sec.gov.ph/lending-companies-and-financing-companies-2/list-of-financing-companies/"
+  },
+  "companies": [
+    { "brand": "JuanHand", "legalName": "JuanHand / FinVolution PH", "group": "JuanHand/FinVolution（信也·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Tala", "legalName": "Tala Philippines", "group": "Tala（Tala·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Cashalo", "legalName": "Cashalo / Paloo", "group": "Cashalo/Paloo（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Digido", "legalName": "Digido", "group": "Digido（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "OLP Directory", "legalName": "Online Loans Pilipinas", "group": "Online Loans Pilipinas（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Skyro", "legalName": "Skyro", "group": "Skyro（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Pesoloan", "legalName": "Pesoloan", "group": "Pesoloan（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Tekcash", "legalName": "Tekcash", "group": "Tekcash（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Credit Cash", "legalName": "Credit Cash PH", "group": "Credit Cash PH（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Cashify", "legalName": "Cashify PH", "group": "Cashify PH（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Peso Cash", "legalName": "Peso Cash Loan", "group": "Peso Cash Loan（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "PeraMoo", "legalName": "PeraMoo", "group": "PeraMoo（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Mr. Cash", "legalName": "Mr. Cash", "group": "Mr. Cash（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "MabilisCash", "legalName": "MabilisCash", "group": "MabilisCash（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "FTLending", "legalName": "FTLending", "group": "FTLending（·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Billease", "legalName": "Billease", "group": "Billease（·PH）", "kind": "Financing/BNPL", "line": "bnpl" },
+    { "brand": "Kredivo PH", "legalName": "Kredivo Philippines", "group": "Kredivo PH（·PH）", "kind": "Financing/BNPL", "line": "bnpl" },
+    { "brand": "UmaCash", "legalName": "UmaCash", "group": "UmaCash｜UmaCash｜UmaCash（UmaCash·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "Pesopop", "legalName": "Pesopop", "group": "Pesopop｜Pesopop｜Pesopop（Pesopop·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "LoanRanger", "legalName": "LoanRanger", "group": "LoanRanger｜LoanRanger｜LoanRanger（LoanRanger·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "CashCow", "legalName": "CashCow PH", "group": "CashCow｜CashCow｜CashCow（CashCow·PH）", "kind": "Lending/OLP", "line": "cash" },
+    { "brand": "QuickPeso", "legalName": "QuickPeso", "group": "QuickPeso｜QuickPeso｜QuickPeso（QuickPeso·PH）", "kind": "Lending/OLP", "line": "cash" }
+  ]
+}

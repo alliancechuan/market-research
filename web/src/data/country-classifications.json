@@ -1,0 +1,850 @@
+{
+  "meta": {
+    "title": "CRM覆盖国家 · IMF/世行分类",
+    "updated": "2026-08-10",
+    "source": "nbfc-loan-book-strict-refresh-2026-08-10.xlsx · 国家主表_推荐口径",
+    "note": "IMF发展标签：发达 / 发展中·新兴；世行收入：高/中高/中低/低收入。台湾等可能无世行收入码。"
+  },
+  "rows": [
+    {
+      "country_code": "IN",
+      "country_name_zh": "印度",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "South Asia",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "CN",
+      "country_name_zh": "中国",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "ID",
+      "country_name_zh": "印度尼西亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "TH",
+      "country_name_zh": "泰国",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "MY",
+      "country_name_zh": "马来西亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "PH",
+      "country_name_zh": "菲律宾",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "VN",
+      "country_name_zh": "越南",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "JP",
+      "country_name_zh": "日本",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "KR",
+      "country_name_zh": "韩国",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "TW",
+      "country_name_zh": "中国台湾",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "",
+      "wb_income_code": "",
+      "wb_region": "East Asia & Pacific (IMF/geo; WB无独立经济体条目)",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "BD",
+      "country_name_zh": "孟加拉",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "South Asia",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "PK",
+      "country_name_zh": "巴基斯坦",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "LK",
+      "country_name_zh": "斯里兰卡",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "South Asia",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "MX",
+      "country_name_zh": "墨西哥",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Latin America & Caribbean",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "BR",
+      "country_name_zh": "巴西",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Latin America & Caribbean",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "KE",
+      "country_name_zh": "肯尼亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "ZA",
+      "country_name_zh": "南非",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "NG",
+      "country_name_zh": "尼日利亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "GH",
+      "country_name_zh": "加纳",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "MN",
+      "country_name_zh": "外蒙古",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "KZ",
+      "country_name_zh": "哈萨克斯坦",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "UZ",
+      "country_name_zh": "乌兹别克斯坦",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "KG",
+      "country_name_zh": "吉尔吉斯斯坦",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "TJ",
+      "country_name_zh": "塔吉克斯坦",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "TM",
+      "country_name_zh": "土库曼斯坦",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "CO",
+      "country_name_zh": "哥伦比亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Latin America & Caribbean",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "AR",
+      "country_name_zh": "阿根廷",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Latin America & Caribbean",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "PE",
+      "country_name_zh": "秘鲁",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Latin America & Caribbean",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "CL",
+      "country_name_zh": "智利",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Latin America & Caribbean",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "EG",
+      "country_name_zh": "埃及",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "MA",
+      "country_name_zh": "摩洛哥",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "DZ",
+      "country_name_zh": "阿尔及利亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "TN",
+      "country_name_zh": "突尼斯",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "LY",
+      "country_name_zh": "利比亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "SD",
+      "country_name_zh": "苏丹",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "低收入",
+      "wb_income_code": "LIC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "SA",
+      "country_name_zh": "沙特",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "AE",
+      "country_name_zh": "阿联酋",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "BH",
+      "country_name_zh": "巴林",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "QA",
+      "country_name_zh": "卡塔尔",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "KW",
+      "country_name_zh": "科威特",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "OM",
+      "country_name_zh": "阿曼",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "JO",
+      "country_name_zh": "约旦",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "LB",
+      "country_name_zh": "黎巴嫩",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "IQ",
+      "country_name_zh": "伊拉克",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "IL",
+      "country_name_zh": "以色列",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "PS",
+      "country_name_zh": "巴勒斯坦",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "TR",
+      "country_name_zh": "土耳其",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "YE",
+      "country_name_zh": "也门",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "低收入",
+      "wb_income_code": "LIC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "IR",
+      "country_name_zh": "伊朗",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Middle East, North Africa, Afghanistan & Pakistan",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "TZ",
+      "country_name_zh": "坦桑尼亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "UG",
+      "country_name_zh": "乌干达",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "低收入",
+      "wb_income_code": "LIC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "RW",
+      "country_name_zh": "卢旺达",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "低收入",
+      "wb_income_code": "LIC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "ET",
+      "country_name_zh": "埃塞俄比亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "低收入",
+      "wb_income_code": "LIC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "CI",
+      "country_name_zh": "科特迪瓦",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "SN",
+      "country_name_zh": "塞内加尔",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "CM",
+      "country_name_zh": "喀麦隆",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "AO",
+      "country_name_zh": "安哥拉",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "MZ",
+      "country_name_zh": "莫桑比克",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "低收入",
+      "wb_income_code": "LIC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "ZM",
+      "country_name_zh": "赞比亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "ZW",
+      "country_name_zh": "津巴布韦",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "BW",
+      "country_name_zh": "博茨瓦纳",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "NA",
+      "country_name_zh": "纳米比亚",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "MU",
+      "country_name_zh": "毛里求斯",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "MG",
+      "country_name_zh": "马达加斯加",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "低收入",
+      "wb_income_code": "LIC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "BJ",
+      "country_name_zh": "贝宁",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中低收入",
+      "wb_income_code": "LMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "BF",
+      "country_name_zh": "布基纳法索",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "低收入",
+      "wb_income_code": "LIC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "ML",
+      "country_name_zh": "马里",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "低收入",
+      "wb_income_code": "LIC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "CD",
+      "country_name_zh": "刚果（金）",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "低收入",
+      "wb_income_code": "LIC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "GA",
+      "country_name_zh": "加蓬",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "中高收入",
+      "wb_income_code": "UMC",
+      "wb_region": "Sub-Saharan Africa",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "US",
+      "country_name_zh": "美国",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "North America",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "CA",
+      "country_name_zh": "加拿大",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "North America",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "GB",
+      "country_name_zh": "英国",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "DE",
+      "country_name_zh": "德国",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "FR",
+      "country_name_zh": "法国",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "NL",
+      "country_name_zh": "荷兰",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "ES",
+      "country_name_zh": "西班牙",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "PT",
+      "country_name_zh": "葡萄牙",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "IT",
+      "country_name_zh": "意大利",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "SE",
+      "country_name_zh": "瑞典",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "PL",
+      "country_name_zh": "波兰",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "IE",
+      "country_name_zh": "爱尔兰",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "是"
+    },
+    {
+      "country_code": "HK",
+      "country_name_zh": "中国香港",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "SG",
+      "country_name_zh": "新加坡",
+      "imf_dev_label": "发达",
+      "imf_weo_group": "发达经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "East Asia & Pacific",
+      "oecd_member": "否"
+    },
+    {
+      "country_code": "RU",
+      "country_name_zh": "俄罗斯",
+      "imf_dev_label": "发展中/新兴",
+      "imf_weo_group": "新兴市场与发展中经济体",
+      "wb_income_group": "高收入",
+      "wb_income_code": "HIC",
+      "wb_region": "Europe & Central Asia",
+      "oecd_member": "否"
+    }
+  ]
+}

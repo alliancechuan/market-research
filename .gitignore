@@ -9,3 +9,11 @@ web/dist/
 !global-platform-fintech-atlas.canvas.status.json
 tsconfig.json
 .DS_Store
+
+# local temp / office lock files
+tmp_*/
+.tmp/
+web/public/downloads/~$*
+**/~$*.xlsx
+.gh-pages-latest/
+/package-lock.json

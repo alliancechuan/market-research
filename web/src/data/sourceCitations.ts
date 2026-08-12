@@ -1,4 +1,5 @@
 import { INDUSTRY_RESEARCH_LIBRARY } from "./industryResearchLibrary";
+import { FINTECH_STOCK_SOURCE_LINKS } from "./fintechStockSourceLinks";
 
 export type SourceCiteKind =
   | "macro"
@@ -139,6 +140,52 @@ export const CORE_SOURCE_CITATIONS: SourceCitation[] = [
     url: "https://ourworldindata.org/",
     note: "GNI/人 PPP 等转载；非住户可支配收入一手",
   },
+  {
+    no: 16,
+    id: "yahoo-finance",
+    title: "腾讯行情 + Yahoo Finance（上市公司股价/市值）",
+    kind: "market_data",
+    url: "https://finance.yahoo.com/",
+    note: "抓取以腾讯 qt.gtimg.cn 为主、Yahoo 回退；观察池报价页仍挂 Yahoo；落库 fintech-stock-quotes",
+  },
+  {
+    no: 17,
+    id: "sec-edgar",
+    title: "SEC EDGAR（美股定期披露）",
+    kind: "disclosure",
+    url: "https://www.sec.gov/edgar/search/",
+    note: "6-K/10-Q/8-K 原文；与 T2 listed-player-disclosure / fintech-stock-earnings 交叉",
+  },
+  {
+    no: 18,
+    id: "hkexnews",
+    title: "港交所披露易",
+    kind: "disclosure",
+    url: "https://www.hkexnews.hk/",
+    note: "港股年报/业绩公告；维信等 HKEX 标的",
+  },
+  {
+    no: 19,
+    id: "listed-exchanges",
+    title: "本地交易所门户（上市观察池）",
+    kind: "exchange",
+    note: "NSE/IDX/SET/JSE/EGX/Tadawul/BMV/B3/PSE/KASE 等；展开条目见信源目录「上市公司」与 fintech-stock-source-links",
+  },
+  {
+    no: 20,
+    id: "listed-player-disclosure",
+    title: "上市定期披露 KPI 缓存（T2）",
+    kind: "disclosure",
+    note: "listed-player-disclosure → fintech-stock-earnings；玩家卡与上市公司页共用；公司 IR 展开见信源目录",
+  },
+  {
+    no: 21,
+    id: "chuhai-xiaheiban",
+    title: "出海小黑板（海外现金贷/投放·财报解读）",
+    kind: "research",
+    url: "https://mp.weixin.qq.com/s/YiR4UKOwOg4cnIiLRj4yOA",
+    note: "微信公众号；FinVolution 海外业务解读与印尼利率短笺等；置信中，须与 IR/OJK 原文交叉",
+  },
 ];
 
 const KIND_LABEL: Record<string, string> = {
@@ -149,6 +196,9 @@ const KIND_LABEL: Record<string, string> = {
   news: "新闻",
   bond: "债券",
   secondary: "二级",
+  market_data: "行情",
+  disclosure: "披露",
+  exchange: "交易所",
 };
 
 export function sourceCiteKindLabel(kind: string): string {
@@ -184,10 +234,9 @@ export function replacePendingDualWithCites(text: string): string {
   return s;
 }
 
-function researchLibraryCitations(): SourceCitation[] {
-  const start = 21;
+function researchLibraryCitations(startNo: number): SourceCitation[] {
   const rows: SourceCitation[] = [];
-  let n = start;
+  let n = startNo;
   for (const report of INDUSTRY_RESEARCH_LIBRARY.reports || []) {
     const pack = (report.docKind || report.sourceType || "").includes("regulator") ||
       (report.docKind || "") === "regulator_pack" ||
@@ -226,13 +275,53 @@ function researchLibraryCitations(): SourceCitation[] {
   return rows;
 }
 
+/** 上市观察池：交易所门户 + 公司财报/IR（接在研报库编号之后） */
+function fintechStockLibraryCitations(startNo: number): SourceCitation[] {
+  const rows: SourceCitation[] = [];
+  let n = startNo;
+  const asOf = FINTECH_STOCK_SOURCE_LINKS.asOf;
+  for (const ex of FINTECH_STOCK_SOURCE_LINKS.exchanges || []) {
+    rows.push({
+      no: n++,
+      id: `listed-ex:${ex.name}`,
+      title: `交易所 · ${ex.name}`,
+      kind: "exchange",
+      url: ex.url,
+      asOf,
+      note: "观察池〔19〕展开 · fintech-stock-source-links",
+    });
+  }
+  for (const c of FINTECH_STOCK_SOURCE_LINKS.companies || []) {
+    if (!c.irUrl) continue;
+    rows.push({
+      no: n++,
+      id: `listed-ir:${c.id}`,
+      title: `${c.nameZh} · 财报/IR`,
+      kind: "disclosure",
+      url: c.irUrl,
+      asOf: c.period || asOf,
+      note: [c.symbol || c.yahoo, c.exchange, c.sourceNote].filter(Boolean).join(" · "),
+    });
+  }
+  return rows;
+}
+
+export function isListedStockCitation(c: SourceCitation): boolean {
+  return c.id.startsWith("listed-ex:") || c.id.startsWith("listed-ir:");
+}
+
 let _catalog: SourceCitation[] | null = null;
 
 export function getSourceCitationCatalog(): SourceCitation[] {
   if (_catalog) return _catalog;
   const byNo = new Map<number, SourceCitation>();
   for (const c of CORE_SOURCE_CITATIONS) byNo.set(c.no, c);
-  for (const c of researchLibraryCitations()) {
+  const research = researchLibraryCitations(22);
+  for (const c of research) {
+    if (!byNo.has(c.no)) byNo.set(c.no, c);
+  }
+  const nextNo = (research.length ? Math.max(...research.map((c) => c.no)) : 20) + 1;
+  for (const c of fintechStockLibraryCitations(nextNo)) {
     if (!byNo.has(c.no)) byNo.set(c.no, c);
   }
   _catalog = [...byNo.values()].sort((a, b) => a.no - b.no);

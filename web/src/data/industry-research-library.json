@@ -1,6 +1,6 @@
 {
   "asOf": "2026-08-12",
-  "note": "情报库分两轨。一是专题研报/上市披露（含点点海外现金贷 2025 年报、2026 年报与 2026H1）；二是监管与信源包。不要把监管文件标成研报。点点 2026H2 尚未公开，仍挂 pending。历史点点专题以公开摘要+官网链接入库；完整 PDF 若后续粘贴可替换 localPath。",
+  "note": "情报库分两轨。一是专题研报/上市披露（含点点海外现金贷 2025 年报、2026 年报与 2026H1）；二是监管与信源包。不要把监管文件标成研报。点点 2026H2 尚未公开，仍挂 pending。历史点点专题以公开摘要+官网链接入库；完整 PDF 若后续粘贴可替换 localPath。 已吸收出海小黑板：拍拍贷/信也海外业务 2021–2023 财报解读系列 + 印尼千三日息上限短笺。",
   "refresh": {
     "cadence": "季度主更 + 粘贴即入库",
     "nextDue": "2026-10-15",
@@ -133,6 +133,14 @@
         "priority": 2,
         "cadence": "年报/季报",
         "note": "Monee 信贷余额"
+      },
+      {
+        "id": "chuhai-xiaheiban",
+        "nameZh": "出海小黑板",
+        "kind": "platform_research",
+        "priority": 3,
+        "cadence": "微信专题（财报解读/监管短笺）",
+        "note": "海外现金贷投放/风控/上市公司海外业务解读；置信中，须与 IR/监管原文交叉"
       }
     ],
     "queue": {
@@ -171,6 +179,309 @@
     }
   },
   "reports": [
+    {
+      "id": "chuhai-finv-2023-overseas",
+      "title": "出海小黑板《从拍拍贷2023财报看其海外业务》",
+      "publisher": "出海小黑板",
+      "period": "2023 FY / 2024-03解读",
+      "asOf": "2024-03-19",
+      "confidence": "中",
+      "sourceType": "platform_research",
+      "docKind": "research_report",
+      "docKindLabel": "研报",
+      "localPath": "reports/chuhai-finv-2023-overseas.html",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "FinVolution（拍拍贷/信也）2023 海外放款约 78.5 亿人民币（+84.7% YoY），海外收入约占集团 17%（约 21.3 亿人民币）。主市场仍为印尼+菲律宾；作者强调合规持牌优先，观望墨西哥/泰国。",
+      "macroBullets": [
+        "海外累计注册用户约 2460 万（+58.7%），累计交易用户约 480 万（+41.2%）。",
+        "海外未偿贷款余额约 12.6 亿人民币（+57.5%），低于放款增速；Q4 余额略低于 Q3。"
+      ],
+      "policyBullets": [
+        "交叉《印尼步入千三时代》：OJK 自 2024 起日息上限降至 0.3%（其后逐年降至千二/千一）。"
+      ],
+      "industryMetrics": {
+        "finv_overseas_origination_2023": "约 78.5 亿人民币（+84.7% YoY）",
+        "finv_overseas_outstanding_2023ye": "约 12.6 亿人民币",
+        "finv_overseas_revenue_share_2023": "约 17% 集团收入（约 21.3 亿人民币）",
+        "finv_overseas_markets_2023": "印尼 + 菲律宾（作者口径）"
+      },
+      "marketNotes": [
+        {
+          "region": "ID",
+          "summary": "AdaKami；本地金融机构资金占比此前已抬升；千三利率上限后，资金本地化+牌照玩家相对有利（作者观点）。"
+        },
+        {
+          "region": "PH",
+          "summary": "JuanHand；与印尼并列海外主市场。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "chuhai-wx-finv-2023",
+          "type": "platform_research",
+          "title": "从拍拍贷2023财报看其海外业务",
+          "url": "https://mp.weixin.qq.com/s/YiR4UKOwOg4cnIiLRj4yOA",
+          "asOf": "2024-03-19",
+          "confidence": "中",
+          "bullets": [
+            "海外放款 78.5 亿 RMB",
+            "+84.7% YoY",
+            "收入占比约 17%",
+            "ID+PH"
+          ]
+        },
+        {
+          "id": "finv-ir-2023fy",
+          "type": "listed_ir",
+          "title": "FinVolution FY2023 unaudited results（公司 IR）",
+          "url": "https://ir.finvgroup.com/2024-03-18-FinVolution-Group-Reports-Fourth-Quarter-and-Fiscal-Year-2023-Unaudited-Financial-Results",
+          "asOf": "2024-03-18",
+          "confidence": "高",
+          "bullets": [
+            "一手财报入口；微信文为解读"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "AdaKami / 信也印尼",
+          "groupKeys": [
+            "AdaKami/FinVolution（信也·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "出海小黑板解读：2023 海外主市场仍含印尼；集团海外放款约 78.5 亿人民币。",
+          "cashLoanHint": "印尼千三后，本地资金+持牌优势更关键（作者观点，须回指 OJK）。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "JuanHand / 信也菲律宾",
+          "groupKeys": [
+            "JuanHand/FinVolution（信也·PH）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "PH"
+          ],
+          "metric": "出海小黑板：与印尼并列 2023 海外主市场。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "FinVolution / 信也",
+          "groupKeys": [
+            "FinVolution/信也（信也·CN）"
+          ],
+          "region": "east-asia",
+          "countries": [
+            "CN"
+          ],
+          "metric": "海外收入约占集团 17%（约 21.3 亿人民币，作者按财报推算）。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "信也海外 2023 放款高增、收入贡献抬升，但仍双国深耕；扩张优先看持牌可行性。解读非一手，须与 FINV IR 交叉。",
+        "bullets": [
+          "海外放款 78.5 亿人民币、+84.7%。",
+          "海外余额 12.6 亿；Q4 余额略回落。",
+          "收入占比约 17%。",
+          "市场：印尼+菲律宾；观望 MX/TH。"
+        ]
+      }
+    },
+    {
+      "id": "chuhai-finv-2022-overseas",
+      "title": "出海小黑板《从拍拍贷2022财报看其海外业务》",
+      "publisher": "出海小黑板",
+      "period": "2022 FY / 2023-03解读",
+      "asOf": "2023-03-23",
+      "confidence": "中",
+      "sourceType": "platform_research",
+      "docKind": "research_report",
+      "docKindLabel": "研报",
+      "localPath": "reports/chuhai-finv-2022-overseas.html",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "FinVolution 2022 海外放款约 43 亿人民币（+16.2%），海外资产余额约 8 亿（+166.7%，期限拉长）。印尼 AdaKami / 菲律宾 JuanHand；印尼放款资金本地化升至约 63%。",
+      "industryMetrics": {
+        "finv_overseas_origination_2022": "约 43 亿人民币（+16.2%）",
+        "finv_overseas_outstanding_2022ye": "约 8 亿人民币（+166.7%）",
+        "adakami_gp_downloads_cite": "Android 累计下载约 1884 万（作者引 GP，时点约 2023-03）",
+        "id_local_funding_share_2022": "约 63% 放款资金来自本地金融机构（作者引财报）"
+      },
+      "sources": [
+        {
+          "id": "chuhai-wx-finv-2022",
+          "type": "platform_research",
+          "title": "从拍拍贷2022财报看其海外业务",
+          "url": "http://mp.weixin.qq.com/s?__biz=Mzg4ODU3NTAzNg==&mid=2247484330&idx=1&sn=0c77dce4c78e71706e4d699f8326f968&chksm=cff846f9f88fcfef832b6ab1f5e1a0189c08bb1717bea13b6fb13c3c670c2b3420a76a79e519&scene=21",
+          "asOf": "2023-03-23",
+          "confidence": "中",
+          "bullets": [
+            "海外放款 ~43 亿",
+            "余额 ~8 亿",
+            "AdaKami/JuanHand",
+            "本地资金 63%"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "AdaKami",
+          "groupKeys": [
+            "AdaKami/FinVolution（信也·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "作者引 GP：Android 累计下载约 1884 万；2022 本地金融机构资金占比约 63%。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "JuanHand",
+          "groupKeys": [
+            "JuanHand/FinVolution（信也·PH）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "PH"
+          ],
+          "metric": "作者引 GP：Android 累计安装约 368 万。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "2022 海外放款温和增长但余额大增（期限拉长）；印尼资金本地化是关键信号。",
+        "bullets": [
+          "放款 43 亿/+16%",
+          "余额 8 亿/+167%",
+          "ID 本地资金 63%"
+        ]
+      }
+    },
+    {
+      "id": "chuhai-finv-2021-overseas",
+      "title": "出海小黑板《从拍拍贷2021财报看其海外业务》",
+      "publisher": "出海小黑板",
+      "period": "2021 FY / 2022-03解读",
+      "asOf": "2022-03-21",
+      "confidence": "中",
+      "sourceType": "platform_research",
+      "docKind": "research_report",
+      "docKindLabel": "研报",
+      "localPath": "reports/chuhai-finv-2021-overseas.html",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "FinVolution 2021 海外获客约 140 万人次（+122.6%），海外放款约 36.7 亿人民币（较 2020 约 10.6 亿大幅增长）。早期披露海外市场含印尼、菲律宾。",
+      "industryMetrics": {
+        "finv_overseas_acq_2021": "约 140 万人次（+122.6%）",
+        "finv_overseas_origination_2021": "约 36.7 亿人民币（作者口径）"
+      },
+      "policyBullets": [
+        "作者附：印尼 OJK 2021.11 起日息上限自 0.8% 降至 0.4%；KSP 路径被清退叙事。"
+      ],
+      "sources": [
+        {
+          "id": "chuhai-wx-finv-2021",
+          "type": "platform_research",
+          "title": "从拍拍贷2021财报看其海外业务",
+          "url": "http://mp.weixin.qq.com/s?__biz=Mzg4ODU3NTAzNg==&mid=2247484055&idx=1&sn=b153b4102f32d56efac3f078f37e4ca4&chksm=cff847c4f88fced2f273635e78b6683b66eb23e71ec059b05bbbab142af74ea06e505ef7242e&scene=21",
+          "asOf": "2022-03-21",
+          "confidence": "中",
+          "bullets": [
+            "获客 140 万",
+            "放款 ~36.7 亿",
+            "ID+PH"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "FinVolution 海外",
+          "groupKeys": [
+            "AdaKami/FinVolution（信也·ID）",
+            "JuanHand/FinVolution（信也·PH）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID",
+            "PH"
+          ],
+          "metric": "2021 海外获客与放款高增；市场以印尼/菲律宾为主（作者交叉 2020 年报披露）。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "系列开篇：海外从获客扩张进入规模化；利率上限与牌照路径决定利润厚度。",
+        "bullets": [
+          "获客翻倍+",
+          "放款约 37 亿人民币量级",
+          "附印尼利率/牌照观察"
+        ]
+      }
+    },
+    {
+      "id": "chuhai-id-ojk-rate-cap-2023",
+      "title": "出海小黑板《印尼步入千三时代》",
+      "publisher": "出海小黑板",
+      "period": "SEOJK 19/2023 / 2023-11",
+      "asOf": "2023-11-10",
+      "confidence": "中",
+      "sourceType": "regulator_pack",
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管/信源包",
+      "localPath": "reports/chuhai-id-ojk-rate-cap-2023.html",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "OJK SEOJK 19/06/2023：个人消费贷日息上限 2024 起 0.3%、2025 起 0.2%、2026 起 0.1%。催收与紧急联系人规范同步收紧。",
+      "policyBullets": [
+        "2024.1.1 起日息 ≤0.3%（千三）",
+        "2025.1.1 起 ≤0.2%；2026.1.1 起 ≤0.1%",
+        "作者提醒分期 APR vs 一次性 IRR 算法差异，须回指原文实例"
+      ],
+      "industryMetrics": {
+        "ojk_daily_rate_cap_2024": "0.3%/日",
+        "ojk_daily_rate_cap_2025": "0.2%/日",
+        "ojk_daily_rate_cap_2026": "0.1%/日"
+      },
+      "sources": [
+        {
+          "id": "chuhai-wx-id-qiansan",
+          "type": "regulator_news",
+          "title": "印尼步入千三时代",
+          "url": "http://mp.weixin.qq.com/s?__biz=Mzg4ODU3NTAzNg==&mid=2247484567&idx=1&sn=68e72de24265fbcf95a9b1b2d9154a54&chksm=cff841c4f88fc8d284b543888f8c8366be8dd3ee3f22d2d90c435c632b557e067228b278577f&scene=21",
+          "asOf": "2023-11-10",
+          "confidence": "中",
+          "bullets": [
+            "SEOJK 19/06/2023",
+            "千三→千二→千一"
+          ]
+        }
+      ],
+      "playerUpdates": [],
+      "analysis": {
+        "verdict": "印尼现金贷定价天花板阶梯下降；持牌+低资金成本玩家更有优势。须与 OJK 原文交叉〔4〕。",
+        "bullets": [
+          "2024 千三",
+          "2025 千二",
+          "2026 千一"
+        ]
+      }
+    },
     {
       "id": "diandian-2026h1-overseas-cashloan",
       "title": "2026海外现金贷市场研究报告 H1（年中更新）",

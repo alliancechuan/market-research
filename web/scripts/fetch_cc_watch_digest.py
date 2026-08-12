@@ -298,6 +298,7 @@ def main() -> None:
         },
         "markets": markets_out,
         "overallVerdict": verdict,
+        "foreword": prior.get("foreword") or "",
     }
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("wrote", OUT, "items", total, "rssHits", rss_ok, "altRssHits", alt_ok)

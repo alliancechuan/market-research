@@ -22061,15 +22061,40 @@
       "origin": "digibank",
       "line": "cash",
       "relevance": "欧美 · cash",
-      "irUrl": "",
-      "period": "",
-      "periodEnd": "",
-      "reportedAt": "",
-      "confidence": "",
-      "sourceNote": "",
-      "kpis": [],
-      "cashLoanHint": "",
-      "status": "pending"
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1818874/000181887426000020/a2026q1earningsrelease.htm",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-04-29",
+      "confidence": "高",
+      "sourceNote": "公司 8-K / IR",
+      "kpis": [
+        {
+          "id": "totalOrig",
+          "label": "总放款额",
+          "value": "$122 亿",
+          "yoy": "+68%"
+        },
+        {
+          "id": "plOrig",
+          "label": "个人贷放款",
+          "value": "$83 亿",
+          "yoy": "+51%"
+        },
+        {
+          "id": "slOrig",
+          "label": "学贷放款",
+          "value": "$26 亿",
+          "yoy": "+119%"
+        },
+        {
+          "id": "hlOrig",
+          "label": "房贷放款",
+          "value": "$12 亿",
+          "yoy": "+137%"
+        }
+      ],
+      "cashLoanHint": "数字银行+消金；个贷为现金贷对照主尺",
+      "status": "filled"
     },
     {
       "id": "synchrony-us-2",
@@ -22089,15 +22114,38 @@
       "origin": "credit-native",
       "line": "lease",
       "relevance": "欧美 · lease",
-      "irUrl": "",
-      "period": "",
-      "periodEnd": "",
-      "reportedAt": "",
-      "confidence": "",
-      "sourceNote": "",
-      "kpis": [],
-      "cashLoanHint": "",
-      "status": "pending"
+      "irUrl": "https://investors.synchrony.com/filings-regulatory/sec-filings/all-sec-filings/content/0001601712-26-000013/earningsrelease1q26.htm",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-04",
+      "confidence": "高",
+      "sourceNote": "公司业绩稿",
+      "kpis": [
+        {
+          "id": "recv",
+          "label": "贷款应收",
+          "value": "$1001 亿",
+          "yoy": "持平"
+        },
+        {
+          "id": "interest",
+          "label": "贷款利息与费用",
+          "value": "$54 亿",
+          "yoy": "+2%"
+        },
+        {
+          "id": "dq30",
+          "label": "30+ 逾期",
+          "value": "4.54%"
+        },
+        {
+          "id": "dq90",
+          "label": "90+ 逾期",
+          "value": "2.28%"
+        }
+      ],
+      "cashLoanHint": "美零售分期/私标卡；资产质量锚定",
+      "status": "filled"
     },
     {
       "id": "synchrony-us",
@@ -22117,15 +22165,38 @@
       "origin": "bnpl",
       "line": "bnpl",
       "relevance": "欧美 · bnpl",
-      "irUrl": "",
-      "period": "",
-      "periodEnd": "",
-      "reportedAt": "",
-      "confidence": "",
-      "sourceNote": "",
-      "kpis": [],
-      "cashLoanHint": "",
-      "status": "pending"
+      "irUrl": "https://investors.synchrony.com/filings-regulatory/sec-filings/all-sec-filings/content/0001601712-26-000013/earningsrelease1q26.htm",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-04",
+      "confidence": "高",
+      "sourceNote": "公司业绩稿",
+      "kpis": [
+        {
+          "id": "recv",
+          "label": "贷款应收",
+          "value": "$1001 亿",
+          "yoy": "持平"
+        },
+        {
+          "id": "interest",
+          "label": "贷款利息与费用",
+          "value": "$54 亿",
+          "yoy": "+2%"
+        },
+        {
+          "id": "dq30",
+          "label": "30+ 逾期",
+          "value": "4.54%"
+        },
+        {
+          "id": "dq90",
+          "label": "90+ 逾期",
+          "value": "2.28%"
+        }
+      ],
+      "cashLoanHint": "美零售分期/私标卡；资产质量锚定",
+      "status": "filled"
     },
     {
       "id": "upgrade-us",

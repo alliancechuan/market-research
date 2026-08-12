@@ -55,6 +55,8 @@ export type CcWatchDigest = {
   };
   markets: CcWatchMarket[];
   overallVerdict: string;
+  /** 周刊式卷首语（带评论的综述）；缺省时前端用 overallVerdict 合成 */
+  foreword?: string;
 };
 
 export const CC_WATCH_DIGEST = raw as CcWatchDigest;

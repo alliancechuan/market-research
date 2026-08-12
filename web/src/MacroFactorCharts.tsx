@@ -1,7 +1,16 @@
 import { useMemo, useState, type MouseEvent } from "react";
-import { useHostTheme, Text, Stack, Grid } from "./shims/cursor-canvas";
+import { useCanvasState, useHostTheme, Text, Stack, Grid } from "./shims/cursor-canvas";
 import { mapChrome } from "./heatMapTheme";
-import { FX_HISTORY, resolveFxSeries, type FxHistoryCountry } from "./data/fxHistory";
+import {
+  FX_HISTORY,
+  FX_CHG_PERIODS,
+  type FxChgPeriodId,
+  resolveFxSeries,
+  sliceFxPointsByMonths,
+  fxLocalStrengthChgPct as calcFxLocalStrengthChgPct,
+  fxPointsSpanLabel,
+  type FxHistoryCountry,
+} from "./data/fxHistory";
 
 /** 与 Atlas CountryMacroSnap 对齐的最小字段（避免循环依赖） */
 export type MacroChartSnap = {
@@ -291,17 +300,6 @@ function formatFxValue(v: number): string {
 const FX_UP = "#E53935";
 const FX_DOWN = "#1B8F4A";
 
-function fxLocalStrengthChgPct(series: FxHistoryCountry): number {
-  const pts = series.points;
-  if (!pts.length) return 0;
-  const first = pts[0]!.v;
-  const last = pts[pts.length - 1]!.v;
-  if (!first) return 0;
-  const quoteChg = ((last - first) / first) * 100;
-  // 本币/USD 上升 = 本币贬；美国卡 USD/EUR 上升 = 美元升
-  return series.quote === "usd_per_eur" ? quoteChg : -quoteChg;
-}
-
 function FxChgBadge({ strengthChg }: { strengthChg: number }) {
   const flat = Math.abs(strengthChg) < 0.05;
   const up = strengthChg > 0;
@@ -323,23 +321,9 @@ function FxChgBadge({ strengthChg }: { strengthChg: number }) {
   );
 }
 
-const FX_HISTORY_RANGE_HINT = "随机游走示意 · 约 5 年";
-
-function seriesSpanLabel(series: FxHistoryCountry): string {
-  if (series.synthetic) return "约 5 年";
-  const pts = series.points;
-  if (pts.length < 2) return "区间";
-  const a = Date.parse(pts[0]!.d);
-  const b = Date.parse(pts[pts.length - 1]!.d);
-  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return "区间";
-  const y = (b - a) / (365.25 * 24 * 3600 * 1000);
-  return y >= 1.5 ? `约 ${y.toFixed(1)} 年` : `约 ${(y * 12).toFixed(0)} 个月`;
-}
-
-function seriesDateRange(series: FxHistoryCountry): string {
-  const pts = series.points;
-  if (pts.length < 2) return FX_HISTORY.meta.range;
-  return `${pts[0]!.d}..${pts[pts.length - 1]!.d}`;
+function seriesDateRange(points: { d: string }[]): string {
+  if (points.length < 2) return FX_HISTORY.meta.range;
+  return `${points[0]!.d}..${points[points.length - 1]!.d}`;
 }
 
 /** 共同货币区说明：避免西非多国「曲线长一样」被当成示意 bug */
@@ -361,10 +345,16 @@ function FxTrendPanel({
 }) {
   const theme = useHostTheme();
   const c = mapChrome(theme);
-  const pts = series.points;
+  const [period, setPeriod] = useCanvasState<FxChgPeriodId>("fxChgPeriod1", "all");
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
-  const strengthChg = fxLocalStrengthChgPct(series);
+  const periodMeta = FX_CHG_PERIODS.find((p) => p.id === period) || FX_CHG_PERIODS[FX_CHG_PERIODS.length - 1]!;
+  const pts = useMemo(
+    () => sliceFxPointsByMonths(series.points, periodMeta.months),
+    [series.points, periodMeta.months],
+  );
+
+  const strengthChg = calcFxLocalStrengthChgPct(series, pts);
   const flat = Math.abs(strengthChg) < 0.05;
   const up = strengthChg > 0;
   const stroke = flat ? c.accent : up ? FX_UP : FX_DOWN;
@@ -383,14 +373,14 @@ function FxTrendPanel({
   const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${xAt(i).toFixed(1)},${yAt(p.v).toFixed(1)}`).join(" ");
   const area = `${line} L${xAt(pts.length - 1).toFixed(1)},${(H - padY).toFixed(1)} L${xAt(0).toFixed(1)},${(H - padY).toFixed(1)} Z`;
 
-  const activeIdx = hoverIdx ?? pts.length - 1;
+  const activeIdx = hoverIdx != null && hoverIdx < pts.length ? hoverIdx : pts.length - 1;
   const active = pts[activeIdx]!;
-  const spanLabel = seriesSpanLabel(series);
+  const spanLabel = fxPointsSpanLabel(pts, series.synthetic && period === "all");
 
   const shared = sharedCcyNote(series.ccy);
   const subtitle = series.synthetic
-    ? `示意 · ${series.pair} · ${FX_HISTORY_RANGE_HINT}`
-    : `周抽样 · ${series.pair} · ${seriesDateRange(series)}${shared ? ` · ${shared}` : ""}`;
+    ? `示意 · ${series.pair} · 随机游走 · 窗口 ${periodMeta.label}`
+    : `周抽样 · ${series.pair} · ${seriesDateRange(pts)} · 窗口 ${periodMeta.label}${shared ? ` · ${shared}` : ""}`;
 
   const onMove = (e: MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -402,6 +392,34 @@ function FxTrendPanel({
 
   const tipLeftPct = (activeIdx / Math.max(1, pts.length - 1)) * 100;
 
+  const chip = (id: FxChgPeriodId, label: string) => {
+    const active = period === id;
+    return (
+      <button
+        key={id}
+        type="button"
+        onClick={() => {
+          setPeriod(id);
+          setHoverIdx(null);
+        }}
+        style={{
+          height: 24,
+          padding: "0 8px",
+          borderRadius: 6,
+          border: `1px solid ${active ? c.accent : c.panelBorder}`,
+          background: active ? "rgba(80,140,180,0.12)" : c.panelBg,
+          color: active ? c.text : c.textSecondary,
+          cursor: "pointer",
+          font: "inherit",
+          fontSize: 11,
+          fontWeight: active ? 600 : 500,
+        }}
+      >
+        {label}
+      </button>
+    );
+  };
+
   return (
     <Panel
       title={`${countryLabel} · 汇率走势`}
@@ -409,9 +427,12 @@ function FxTrendPanel({
       footer={
         series.synthetic
           ? series.note
-          : `${series.source ?? "Frankfurter"} · ${series.unit}${series.note ? ` · ${series.note}` : ""} · 箭头按本币强弱（红涨绿跌）· 悬停看时点`
+          : `${series.source ?? "Frankfurter"} · ${series.unit}${series.note ? ` · ${series.note}` : ""} · 箭头按本币强弱（红涨绿跌）· 可选窗口重算 · 悬停看时点`
       }
     >
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+        {FX_CHG_PERIODS.map((p) => chip(p.id, p.label))}
+      </div>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
         <div>
           <span style={{ fontSize: 22, fontWeight: 600, color: hoverIdx != null ? stroke : c.text }}>

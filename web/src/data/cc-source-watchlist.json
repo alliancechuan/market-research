@@ -1,6 +1,6 @@
 {
   "asOf": "2026-08-10",
-  "note": "消费信贷定向信源：仅展业热力图六国（MX/TH/ID/PH/HK/IN）。晨报主位用（T1）；排序见 cc-source-tiers；上市披露见 listed-player-disclosure（T2）；36氪为 T6 弱相关。",
+  "note": "消费信贷定向信源：仅展业热力图六国（MX/TH/ID/PH/HK/IN）。晨报主位用（T1）；排序见 cc-source-tiers；上市披露+行情见 listed-player-disclosure / fintech-stock-*（T2，信源编号〔16〕–〔20〕）；36氪为 T6 弱相关。",
   "markets": [
     {
       "code": "IN",

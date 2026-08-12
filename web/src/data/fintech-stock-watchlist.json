@@ -1,0 +1,1329 @@
+{
+  "asOf": "2026-08-12",
+  "note": "口径：消费信贷/支付/分期/数字银行 + 生态数据/风控服务；含本地交易所。南亚：印度消金/支付 + 孟加拉 DSE（bKash/Rocket 母行）+ 斯里兰卡 COSE（LFC/Dialog）+ 巴基斯坦 PSX/VEON（JazzCash）。东亚含中国现金贷 ADR/港股 + 日韩数字银行/支付/消金。百行/同盾等未上市经 CRM 生态角色观察。",
+  "focus": [
+    "credit-native",
+    "bnpl",
+    "payment",
+    "digibank"
+  ],
+  "monitorIds": [
+    "grab",
+    "sea",
+    "goto",
+    "nu",
+    "meli",
+    "finv",
+    "qfin",
+    "xyf",
+    "paytm",
+    "bajaj",
+    "kakaobank",
+    "veon"
+  ],
+  "items": [
+    {
+      "id": "grab",
+      "nameZh": "Grab（含金融）",
+      "symbol": "GRAB",
+      "yahoo": "GRAB",
+      "exchange": "NASDAQ",
+      "region": "se-asia",
+      "origin": "ride-food",
+      "groupKey": "Grab Holdings/Grab（Grab·SEA）",
+      "country": "SG",
+      "markets": [
+        "SG",
+        "ID",
+        "MY",
+        "PH",
+        "TH",
+        "VN"
+      ]
+    },
+    {
+      "id": "sea",
+      "nameZh": "Sea / Shopee（含金融）",
+      "symbol": "SE",
+      "yahoo": "SE",
+      "exchange": "NYSE",
+      "region": "se-asia",
+      "origin": "ecommerce",
+      "groupKey": "Sea Limited/Shopee（Sea·SEA）",
+      "country": "SG",
+      "markets": [
+        "SG",
+        "ID",
+        "TW",
+        "TH",
+        "MY",
+        "PH",
+        "VN",
+        "BR"
+      ]
+    },
+    {
+      "id": "goto",
+      "nameZh": "GoTo（含金融）",
+      "symbol": "GOTO.JK",
+      "yahoo": "GOTO.JK",
+      "exchange": "IDX",
+      "region": "se-asia",
+      "origin": "ride-food",
+      "country": "ID",
+      "markets": [
+        "ID"
+      ]
+    },
+    {
+      "id": "nu",
+      "nameZh": "Nubank",
+      "symbol": "NU",
+      "yahoo": "NU",
+      "exchange": "NYSE",
+      "region": "latam",
+      "origin": "digibank",
+      "country": "BR",
+      "markets": [
+        "BR",
+        "MX",
+        "CO"
+      ]
+    },
+    {
+      "id": "meli",
+      "nameZh": "MercadoLibre（含信贷/支付）",
+      "symbol": "MELI",
+      "yahoo": "MELI",
+      "exchange": "NASDAQ",
+      "region": "latam",
+      "origin": "ecommerce",
+      "country": "AR",
+      "markets": [
+        "AR",
+        "BR",
+        "MX",
+        "CL",
+        "CO",
+        "PE"
+      ]
+    },
+    {
+      "id": "pags",
+      "nameZh": "PagSeguro",
+      "symbol": "PAGS",
+      "yahoo": "PAGS",
+      "exchange": "NYSE",
+      "region": "latam",
+      "origin": "payment",
+      "country": "BR",
+      "markets": [
+        "BR"
+      ]
+    },
+    {
+      "id": "stne",
+      "nameZh": "StoneCo",
+      "symbol": "STNE",
+      "yahoo": "STNE",
+      "exchange": "NASDAQ",
+      "region": "latam",
+      "origin": "payment",
+      "country": "BR",
+      "markets": [
+        "BR"
+      ]
+    },
+    {
+      "id": "dlo",
+      "nameZh": "dLocal",
+      "symbol": "DLO",
+      "yahoo": "DLO",
+      "exchange": "NASDAQ",
+      "region": "latam",
+      "origin": "payment",
+      "country": "UY",
+      "markets": [
+        "UY",
+        "BR",
+        "MX",
+        "AR"
+      ]
+    },
+    {
+      "id": "lexin",
+      "nameZh": "乐信 / 分期乐",
+      "symbol": "LX",
+      "yahoo": "LX",
+      "exchange": "NASDAQ",
+      "region": "east-asia",
+      "origin": "bnpl",
+      "country": "CN",
+      "markets": [
+        "CN"
+      ]
+    },
+    {
+      "id": "finv",
+      "nameZh": "信也",
+      "symbol": "FINV",
+      "yahoo": "FINV",
+      "exchange": "NYSE",
+      "region": "east-asia",
+      "origin": "credit-native",
+      "country": "CN",
+      "markets": [
+        "CN"
+      ]
+    },
+    {
+      "id": "qfin",
+      "nameZh": "奇富",
+      "symbol": "QFIN",
+      "yahoo": "QFIN",
+      "exchange": "NASDAQ",
+      "region": "east-asia",
+      "origin": "credit-native",
+      "country": "CN",
+      "markets": [
+        "CN"
+      ]
+    },
+    {
+      "id": "jfin",
+      "nameZh": "嘉银",
+      "symbol": "JFIN",
+      "yahoo": "JFIN",
+      "exchange": "NASDAQ",
+      "region": "east-asia",
+      "origin": "credit-native",
+      "country": "CN",
+      "markets": [
+        "CN"
+      ]
+    },
+    {
+      "id": "yrd",
+      "nameZh": "宜人",
+      "symbol": "YRD",
+      "yahoo": "YRD",
+      "exchange": "NYSE",
+      "region": "east-asia",
+      "origin": "credit-native",
+      "country": "CN",
+      "markets": [
+        "CN"
+      ]
+    },
+    {
+      "id": "vcredit",
+      "nameZh": "维信",
+      "symbol": "2003.HK",
+      "yahoo": "2003.HK",
+      "exchange": "HKEX",
+      "region": "east-asia",
+      "origin": "credit-native",
+      "country": "CN",
+      "markets": [
+        "CN"
+      ]
+    },
+    {
+      "id": "lufax",
+      "nameZh": "陆金所",
+      "symbol": "LU",
+      "yahoo": "LU",
+      "exchange": "NYSE",
+      "region": "east-asia",
+      "origin": "credit-native",
+      "country": "CN",
+      "markets": [
+        "CN"
+      ]
+    },
+    {
+      "id": "bajaj",
+      "nameZh": "Bajaj Finance",
+      "symbol": "BAJFINANCE.NS",
+      "yahoo": "BAJFINANCE.NS",
+      "exchange": "NSE",
+      "region": "south-asia",
+      "origin": "credit-native",
+      "country": "IN",
+      "markets": [
+        "IN"
+      ]
+    },
+    {
+      "id": "paytm",
+      "nameZh": "Paytm",
+      "symbol": "PAYTM.NS",
+      "yahoo": "PAYTM.NS",
+      "exchange": "NSE",
+      "region": "south-asia",
+      "origin": "payment",
+      "country": "IN",
+      "markets": [
+        "IN"
+      ]
+    },
+    {
+      "id": "sofi",
+      "nameZh": "SoFi",
+      "symbol": "SOFI",
+      "yahoo": "SOFI",
+      "exchange": "NASDAQ",
+      "region": "west",
+      "origin": "credit-native",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "afrm",
+      "nameZh": "Affirm",
+      "symbol": "AFRM",
+      "yahoo": "AFRM",
+      "exchange": "NASDAQ",
+      "region": "west",
+      "origin": "bnpl",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "upst",
+      "nameZh": "Upstart",
+      "symbol": "UPST",
+      "yahoo": "UPST",
+      "exchange": "NASDAQ",
+      "region": "west",
+      "origin": "credit-native",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "lc",
+      "nameZh": "LendingClub",
+      "symbol": "LC",
+      "yahoo": "LC",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "credit-native",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "enva",
+      "nameZh": "Enova",
+      "symbol": "ENVA",
+      "yahoo": "ENVA",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "credit-native",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "pypl",
+      "nameZh": "PayPal",
+      "symbol": "PYPL",
+      "yahoo": "PYPL",
+      "exchange": "NASDAQ",
+      "region": "west",
+      "origin": "payment",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "block",
+      "nameZh": "Block / Square",
+      "symbol": "XYZ",
+      "yahoo": "XYZ",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "payment",
+      "country": "US",
+      "markets": [
+        "US",
+        "AU"
+      ]
+    },
+    {
+      "id": "adyen",
+      "nameZh": "Adyen",
+      "symbol": "ADYEN.AS",
+      "yahoo": "ADYEN.AS",
+      "exchange": "Euronext",
+      "region": "west",
+      "origin": "payment",
+      "country": "NL",
+      "markets": [
+        "NL"
+      ]
+    },
+    {
+      "id": "wise",
+      "nameZh": "Wise",
+      "symbol": "WISE.L",
+      "yahoo": "WISE.L",
+      "exchange": "LSE",
+      "region": "west",
+      "origin": "payment",
+      "country": "GB",
+      "markets": [
+        "GB"
+      ]
+    },
+    {
+      "id": "visa",
+      "nameZh": "Visa",
+      "symbol": "V",
+      "yahoo": "V",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "payment",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "ma",
+      "nameZh": "Mastercard",
+      "symbol": "MA",
+      "yahoo": "MA",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "payment",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "xyf",
+      "nameZh": "小赢科技",
+      "symbol": "XYF",
+      "yahoo": "XYF",
+      "exchange": "NYSE",
+      "region": "east-asia",
+      "origin": "credit-native",
+      "groupKey": "小赢科技/小赢卡贷（小赢·CN）",
+      "country": "CN",
+      "markets": [
+        "CN"
+      ]
+    },
+    {
+      "id": "qd",
+      "nameZh": "趣店",
+      "symbol": "QD",
+      "yahoo": "QD",
+      "exchange": "NYSE",
+      "region": "east-asia",
+      "origin": "bnpl",
+      "country": "CN",
+      "markets": [
+        "CN"
+      ]
+    },
+    {
+      "id": "sezl",
+      "nameZh": "Sezzle",
+      "symbol": "SEZL",
+      "yahoo": "SEZL",
+      "exchange": "NASDAQ",
+      "region": "west",
+      "origin": "bnpl",
+      "country": "US",
+      "markets": [
+        "US",
+        "CA"
+      ]
+    },
+    {
+      "id": "zip",
+      "nameZh": "Zip Co",
+      "symbol": "ZIP.AX",
+      "yahoo": "ZIP.AX",
+      "exchange": "ASX",
+      "region": "west",
+      "origin": "bnpl",
+      "country": "AU",
+      "markets": [
+        "AU",
+        "US",
+        "NZ"
+      ]
+    },
+    {
+      "id": "opfi",
+      "nameZh": "OppFi",
+      "symbol": "OPFI",
+      "yahoo": "OPFI",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "credit-native",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "oport",
+      "nameZh": "Oportun",
+      "symbol": "OPRT",
+      "yahoo": "OPRT",
+      "exchange": "NASDAQ",
+      "region": "west",
+      "origin": "credit-native",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "syf",
+      "nameZh": "Synchrony",
+      "symbol": "SYF",
+      "yahoo": "SYF",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "bnpl",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "ally",
+      "nameZh": "Ally Financial",
+      "symbol": "ALLY",
+      "yahoo": "ALLY",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "credit-native",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "mtn",
+      "nameZh": "MTN（MoMo 钱包）",
+      "symbol": "MTN.JO",
+      "yahoo": "MTN.JO",
+      "exchange": "JSE",
+      "region": "africa",
+      "origin": "payment",
+      "country": "ZA",
+      "markets": [
+        "ZA",
+        "NG",
+        "GH",
+        "UG",
+        "RW"
+      ]
+    },
+    {
+      "id": "airtel-africa",
+      "nameZh": "Airtel Africa（Money）",
+      "symbol": "AAF.L",
+      "yahoo": "AAF.L",
+      "exchange": "LSE",
+      "region": "africa",
+      "origin": "payment",
+      "country": "NG",
+      "markets": [
+        "NG",
+        "KE",
+        "TZ",
+        "UG",
+        "RW",
+        "GB"
+      ]
+    },
+    {
+      "id": "capitec",
+      "nameZh": "Capitec（南非数字零售银行）",
+      "symbol": "CPI.JO",
+      "yahoo": "CPI.JO",
+      "exchange": "JSE",
+      "region": "africa",
+      "origin": "digibank",
+      "country": "ZA",
+      "markets": [
+        "ZA"
+      ]
+    },
+    {
+      "id": "equity-ke",
+      "nameZh": "Equity Group（肯尼亚数字零售）",
+      "symbol": "EQTY.NR",
+      "yahoo": "EQTY.NR",
+      "exchange": "NSE Kenya",
+      "region": "africa",
+      "origin": "digibank",
+      "country": "KE",
+      "markets": [
+        "KE",
+        "UG",
+        "TZ",
+        "RW"
+      ]
+    },
+    {
+      "id": "jumia",
+      "nameZh": "Jumia（非洲电商·Pay）",
+      "symbol": "JMIA",
+      "yahoo": "JMIA",
+      "exchange": "NYSE",
+      "region": "africa",
+      "origin": "ecommerce",
+      "country": "NG",
+      "markets": [
+        "NG",
+        "EG",
+        "KE",
+        "MA",
+        "DE"
+      ]
+    },
+    {
+      "id": "fawry",
+      "nameZh": "Fawry",
+      "symbol": "FWRY.CA",
+      "yahoo": "FWRY.CA",
+      "exchange": "EGX",
+      "region": "mena",
+      "origin": "payment",
+      "country": "EG",
+      "markets": [
+        "EG"
+      ]
+    },
+    {
+      "id": "efg-hermes",
+      "nameZh": "EFG Hermes（含 valU）",
+      "symbol": "HRHO.CA",
+      "yahoo": "HRHO.CA",
+      "exchange": "EGX",
+      "region": "mena",
+      "origin": "bnpl",
+      "country": "EG",
+      "markets": [
+        "EG"
+      ]
+    },
+    {
+      "id": "stc",
+      "nameZh": "stc（STC Pay）",
+      "symbol": "7010.SR",
+      "yahoo": "7010.SR",
+      "exchange": "Tadawul",
+      "region": "mena",
+      "origin": "payment",
+      "country": "SA",
+      "markets": [
+        "SA"
+      ]
+    },
+    {
+      "id": "kaspi",
+      "nameZh": "Kaspi.kz（超级App·支付/信贷）",
+      "symbol": "KSPI",
+      "yahoo": "KSPI",
+      "exchange": "NASDAQ",
+      "region": "central-asia",
+      "origin": "ecommerce",
+      "country": "KZ",
+      "markets": [
+        "KZ"
+      ]
+    },
+    {
+      "id": "halyk",
+      "nameZh": "Halyk Bank（哈萨克数字银行）",
+      "symbol": "HSBK",
+      "yahoo": "HSBK",
+      "exchange": "LSE",
+      "region": "central-asia",
+      "origin": "digibank",
+      "country": "KZ",
+      "markets": [
+        "KZ"
+      ]
+    },
+    {
+      "id": "safaricom",
+      "nameZh": "Safaricom（M-Pesa）",
+      "symbol": "SCOM.NR",
+      "yahoo": "SCOM.NR",
+      "exchange": "NSE Kenya",
+      "region": "africa",
+      "origin": "payment",
+      "country": "KE",
+      "markets": [
+        "KE"
+      ]
+    },
+    {
+      "id": "mtn-ghana",
+      "nameZh": "MTN Ghana（MoMo）",
+      "symbol": "MTNGH.GH",
+      "yahoo": "MTNGH.GH",
+      "exchange": "GSE",
+      "region": "africa",
+      "origin": "payment",
+      "country": "GH",
+      "markets": [
+        "GH"
+      ]
+    },
+    {
+      "id": "valu",
+      "nameZh": "valU（埃及 BNPL）",
+      "symbol": "VALU.CA",
+      "yahoo": "VALU.CA",
+      "exchange": "EGX",
+      "region": "mena",
+      "origin": "bnpl",
+      "country": "EG",
+      "markets": [
+        "EG"
+      ]
+    },
+    {
+      "id": "halyk-kase",
+      "nameZh": "Halyk（KASE·数字银行）",
+      "symbol": "HSBK.KZ",
+      "yahoo": "HSBK.KZ",
+      "exchange": "KASE",
+      "region": "central-asia",
+      "origin": "digibank",
+      "country": "KZ",
+      "markets": [
+        "KZ"
+      ]
+    },
+    {
+      "id": "bank-georgia",
+      "nameZh": "Bank of Georgia（数字零售）",
+      "symbol": "BGEO.L",
+      "yahoo": "BGEO.L",
+      "exchange": "LSE",
+      "region": "central-asia",
+      "origin": "digibank",
+      "country": "GE",
+      "markets": [
+        "GE"
+      ]
+    },
+    {
+      "id": "tbc-bank",
+      "nameZh": "TBC Bank（格鲁吉亚数字银行）",
+      "symbol": "TBCB.L",
+      "yahoo": "TBCB.L",
+      "exchange": "LSE",
+      "region": "central-asia",
+      "origin": "digibank",
+      "country": "GE",
+      "markets": [
+        "GE"
+      ]
+    },
+    {
+      "id": "axiata",
+      "nameZh": "Axiata（Boost）",
+      "symbol": "AXIATA.KL",
+      "yahoo": "AXIATA.KL",
+      "exchange": "Bursa MY",
+      "region": "se-asia",
+      "origin": "payment",
+      "country": "MY",
+      "markets": [
+        "MY"
+      ]
+    },
+    {
+      "id": "inter-br",
+      "nameZh": "Inter & Co",
+      "symbol": "INTR",
+      "yahoo": "INTR",
+      "exchange": "NASDAQ",
+      "region": "latam",
+      "origin": "digibank",
+      "country": "BR",
+      "markets": [
+        "BR"
+      ]
+    },
+    {
+      "id": "gentera",
+      "nameZh": "Gentera",
+      "symbol": "GENTERA.MX",
+      "yahoo": "GENTERA.MX",
+      "exchange": "BMV",
+      "region": "latam",
+      "origin": "credit-native",
+      "country": "MX",
+      "markets": [
+        "MX"
+      ]
+    },
+    {
+      "id": "globe-ph",
+      "nameZh": "Globe（GCash）",
+      "symbol": "GLO.PS",
+      "yahoo": "GLO.PS",
+      "exchange": "PSE",
+      "region": "se-asia",
+      "origin": "payment",
+      "country": "PH",
+      "markets": [
+        "PH"
+      ]
+    },
+    {
+      "id": "telkom-id",
+      "nameZh": "Telkom ID（LinkAja）",
+      "symbol": "TLKM.JK",
+      "yahoo": "TLKM.JK",
+      "exchange": "IDX",
+      "region": "se-asia",
+      "origin": "payment",
+      "country": "ID",
+      "markets": [
+        "ID"
+      ]
+    },
+    {
+      "id": "vodacom",
+      "nameZh": "Vodacom（M-Pesa SA）",
+      "symbol": "VOD.JO",
+      "yahoo": "VOD.JO",
+      "exchange": "JSE",
+      "region": "africa",
+      "origin": "payment",
+      "country": "ZA",
+      "markets": [
+        "ZA"
+      ]
+    },
+    {
+      "id": "etisalat",
+      "nameZh": "e&（Etisalat·钱包）",
+      "symbol": "EAND.AD",
+      "yahoo": "EAND.AD",
+      "exchange": "ADX",
+      "region": "mena",
+      "origin": "payment",
+      "country": "AE",
+      "markets": [
+        "AE",
+        "EG"
+      ]
+    },
+    {
+      "id": "true-th",
+      "nameZh": "True（TrueMoney）",
+      "symbol": "TRUE.BK",
+      "yahoo": "TRUE.BK",
+      "exchange": "SET",
+      "region": "se-asia",
+      "origin": "payment",
+      "country": "TH",
+      "markets": [
+        "TH"
+      ]
+    },
+    {
+      "id": "aeonts",
+      "nameZh": "AEON Thana（泰消费金融）",
+      "symbol": "AEONTS.BK",
+      "yahoo": "AEONTS.BK",
+      "exchange": "SET",
+      "region": "se-asia",
+      "origin": "credit-native",
+      "country": "TH",
+      "markets": [
+        "TH"
+      ]
+    },
+    {
+      "id": "adira",
+      "nameZh": "Adira Finance",
+      "symbol": "ADMF.JK",
+      "yahoo": "ADMF.JK",
+      "exchange": "IDX",
+      "region": "se-asia",
+      "origin": "credit-native",
+      "country": "ID",
+      "markets": [
+        "ID"
+      ]
+    },
+    {
+      "id": "bfi",
+      "nameZh": "BFI Finance",
+      "symbol": "BFIN.JK",
+      "yahoo": "BFIN.JK",
+      "exchange": "IDX",
+      "region": "se-asia",
+      "origin": "credit-native",
+      "country": "ID",
+      "markets": [
+        "ID"
+      ]
+    },
+    {
+      "id": "wom-finance",
+      "nameZh": "WOM Finance",
+      "symbol": "WOMF.JK",
+      "yahoo": "WOMF.JK",
+      "exchange": "IDX",
+      "region": "se-asia",
+      "origin": "credit-native",
+      "country": "ID",
+      "markets": [
+        "ID"
+      ]
+    },
+    {
+      "id": "sbi-cards",
+      "nameZh": "SBI Cards",
+      "symbol": "SBICARD.NS",
+      "yahoo": "SBICARD.NS",
+      "exchange": "NSE",
+      "region": "south-asia",
+      "origin": "credit-native",
+      "country": "IN",
+      "markets": [
+        "IN"
+      ]
+    },
+    {
+      "id": "cholafín",
+      "nameZh": "Cholamandalam",
+      "symbol": "CHOLAFIN.NS",
+      "yahoo": "CHOLAFIN.NS",
+      "exchange": "NSE",
+      "region": "south-asia",
+      "origin": "credit-native",
+      "country": "IN",
+      "markets": [
+        "IN"
+      ]
+    },
+    {
+      "id": "muthoot",
+      "nameZh": "Muthoot Finance",
+      "symbol": "MUTHOOTFIN.NS",
+      "yahoo": "MUTHOOTFIN.NS",
+      "exchange": "NSE",
+      "region": "south-asia",
+      "origin": "credit-native",
+      "country": "IN",
+      "markets": [
+        "IN"
+      ]
+    },
+    {
+      "id": "african-bank",
+      "nameZh": "African Bank",
+      "symbol": "ABL.JO",
+      "yahoo": "ABL.JO",
+      "exchange": "JSE",
+      "region": "africa",
+      "origin": "credit-native",
+      "country": "ZA",
+      "markets": [
+        "ZA"
+      ]
+    },
+    {
+      "id": "pagaya",
+      "nameZh": "Pagaya",
+      "symbol": "PGY",
+      "yahoo": "PGY",
+      "exchange": "NASDAQ",
+      "region": "west",
+      "origin": "credit-native",
+      "country": "IL",
+      "markets": [
+        "IL",
+        "US"
+      ]
+    },
+    {
+      "id": "bread",
+      "nameZh": "Bread Financial",
+      "symbol": "BFH",
+      "yahoo": "BFH",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "bnpl",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "meliuz",
+      "nameZh": "Méliuz",
+      "symbol": "CASH3.SA",
+      "yahoo": "CASH3.SA",
+      "exchange": "B3",
+      "region": "latam",
+      "origin": "bnpl",
+      "country": "BR",
+      "markets": [
+        "BR"
+      ]
+    },
+    {
+      "id": "nubank-br",
+      "nameZh": "Nu Holdings（B3 存托）",
+      "symbol": "NUBR33.SA",
+      "yahoo": "NUBR33.SA",
+      "exchange": "B3",
+      "region": "latam",
+      "origin": "digibank",
+      "country": "BR",
+      "markets": [
+        "BR",
+        "MX",
+        "CO"
+      ]
+    },
+    {
+      "id": "experian",
+      "nameZh": "Experian（征信）",
+      "symbol": "EXPN.L",
+      "yahoo": "EXPN.L",
+      "exchange": "LSE",
+      "region": "west",
+      "origin": "data-service",
+      "groupKey": "Experian｜Experian｜Experian（数据服务方·全球）",
+      "country": "IE",
+      "markets": [
+        "IE",
+        "GB",
+        "US",
+        "BR"
+      ]
+    },
+    {
+      "id": "equifax",
+      "nameZh": "Equifax（征信）",
+      "symbol": "EFX",
+      "yahoo": "EFX",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "data-service",
+      "groupKey": "Equifax｜Equifax｜Equifax（数据服务方·全球）",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "transunion",
+      "nameZh": "TransUnion（征信·含 CIBIL）",
+      "symbol": "TRU",
+      "yahoo": "TRU",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "data-service",
+      "groupKey": "TransUnion CIBIL｜CIBIL｜TransUnion（数据服务方·IN）",
+      "country": "US",
+      "markets": [
+        "US",
+        "IN"
+      ]
+    },
+    {
+      "id": "dnb",
+      "nameZh": "Dun & Bradstreet",
+      "symbol": "DNB",
+      "yahoo": "DNB",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "data-service",
+      "groupKey": "Dun & Bradstreet｜D&B｜DNB（数据服务方·US）",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "fico",
+      "nameZh": "FICO（信用评分）",
+      "symbol": "FICO",
+      "yahoo": "FICO",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "risk-service",
+      "groupKey": "FICO｜FICO｜FICO（风控服务方·US）",
+      "country": "US",
+      "markets": [
+        "US"
+      ]
+    },
+    {
+      "id": "bairong",
+      "nameZh": "百融云创",
+      "symbol": "6608.HK",
+      "yahoo": "6608.HK",
+      "exchange": "HKEX",
+      "region": "east-asia",
+      "origin": "risk-service",
+      "groupKey": "百融云创｜百融｜Bairong（风控服务方·CN）",
+      "country": "CN",
+      "markets": [
+        "CN"
+      ]
+    },
+    {
+      "id": "relx",
+      "nameZh": "RELX（含 LexisNexis Risk）",
+      "symbol": "RELX",
+      "yahoo": "RELX",
+      "exchange": "NYSE",
+      "region": "west",
+      "origin": "risk-service",
+      "groupKey": "RELX｜LexisNexis｜RELX（风控服务方·全球）",
+      "country": "GB",
+      "markets": [
+        "GB",
+        "US",
+        "NL"
+      ]
+    },
+    {
+      "id": "nice",
+      "nameZh": "NICE（含 Actimize）",
+      "symbol": "NICE",
+      "yahoo": "NICE",
+      "exchange": "NASDAQ",
+      "region": "west",
+      "origin": "risk-service",
+      "groupKey": "NICE｜Actimize｜NICE（风控服务方·IL）",
+      "country": "IL",
+      "markets": [
+        "IL",
+        "US"
+      ]
+    },
+    {
+      "id": "kakaobank",
+      "nameZh": "KakaoBank（开开欧银行）",
+      "symbol": "323410.KS",
+      "yahoo": "323410.KS",
+      "exchange": "KRX",
+      "region": "east-asia",
+      "origin": "digibank",
+      "country": "KR",
+      "markets": [
+        "KR"
+      ]
+    },
+    {
+      "id": "kakaopay",
+      "nameZh": "KakaoPay",
+      "symbol": "377300.KS",
+      "yahoo": "377300.KS",
+      "exchange": "KRX",
+      "region": "east-asia",
+      "origin": "payment",
+      "country": "KR",
+      "markets": [
+        "KR"
+      ]
+    },
+    {
+      "id": "rakuten-bank",
+      "nameZh": "乐天银行",
+      "symbol": "5838.T",
+      "yahoo": "5838.T",
+      "exchange": "TSE",
+      "region": "east-asia",
+      "origin": "digibank",
+      "country": "JP",
+      "markets": [
+        "JP"
+      ]
+    },
+    {
+      "id": "acom",
+      "nameZh": "ACOM（消金）",
+      "symbol": "8572.T",
+      "yahoo": "8572.T",
+      "exchange": "TSE",
+      "region": "east-asia",
+      "origin": "credit-native",
+      "country": "JP",
+      "markets": [
+        "JP"
+      ]
+    },
+    {
+      "id": "credit-saison",
+      "nameZh": "Credit Saison",
+      "symbol": "8253.T",
+      "yahoo": "8253.T",
+      "exchange": "TSE",
+      "region": "east-asia",
+      "origin": "credit-native",
+      "country": "JP",
+      "markets": [
+        "JP"
+      ]
+    },
+    {
+      "id": "gmo-pg",
+      "nameZh": "GMO Payment Gateway",
+      "symbol": "3769.T",
+      "yahoo": "3769.T",
+      "exchange": "TSE",
+      "region": "east-asia",
+      "origin": "payment",
+      "country": "JP",
+      "markets": [
+        "JP"
+      ]
+    },
+    {
+      "id": "mercari",
+      "nameZh": "Mercari（含 Merpay）",
+      "symbol": "4385.T",
+      "yahoo": "4385.T",
+      "exchange": "TSE",
+      "region": "east-asia",
+      "origin": "ecommerce",
+      "country": "JP",
+      "markets": [
+        "JP"
+      ]
+    },
+    {
+      "id": "bracbank",
+      "nameZh": "BRAC Bank（含 bKash）",
+      "symbol": "BRACBANK",
+      "yahoo": "BRACBANK.BD",
+      "exchange": "DSE",
+      "region": "south-asia",
+      "origin": "payment",
+      "country": "BD",
+      "markets": [
+        "BD"
+      ],
+      "groupKey": "bKash（bKash·BD）"
+    },
+    {
+      "id": "dutchbangla",
+      "nameZh": "Dutch-Bangla（Rocket）",
+      "symbol": "DUTCHBANGL",
+      "yahoo": "DUTCHBANGL.BD",
+      "exchange": "DSE",
+      "region": "south-asia",
+      "origin": "payment",
+      "country": "BD",
+      "markets": [
+        "BD"
+      ],
+      "groupKey": "Rocket/DBBL（Rocket·BD）"
+    },
+    {
+      "id": "lolc-finance",
+      "nameZh": "LOLC Finance（斯里兰卡 LFC）",
+      "symbol": "LOFC.N0000",
+      "yahoo": "LOFC-N0000.CM",
+      "exchange": "COSE",
+      "region": "south-asia",
+      "origin": "credit-native",
+      "country": "LK",
+      "markets": [
+        "LK"
+      ]
+    },
+    {
+      "id": "dialog-finance",
+      "nameZh": "Dialog Finance（数字信贷）",
+      "symbol": "CALF.N0000",
+      "yahoo": "CALF-N0000.CM",
+      "exchange": "COSE",
+      "region": "south-asia",
+      "origin": "credit-native",
+      "country": "LK",
+      "markets": [
+        "LK"
+      ]
+    },
+    {
+      "id": "dialog-axiata",
+      "nameZh": "Dialog Axiata（eZ Cash）",
+      "symbol": "DIAL.N0000",
+      "yahoo": "DIAL-N0000.CM",
+      "exchange": "COSE",
+      "region": "south-asia",
+      "origin": "payment",
+      "country": "LK",
+      "markets": [
+        "LK"
+      ]
+    },
+    {
+      "id": "hbl",
+      "nameZh": "Habib Bank（HBL Konnect）",
+      "symbol": "HBL",
+      "yahoo": "HBL.KA",
+      "exchange": "PSX",
+      "region": "south-asia",
+      "origin": "digibank",
+      "country": "PK",
+      "markets": [
+        "PK"
+      ]
+    },
+    {
+      "id": "meezan",
+      "nameZh": "Meezan Bank（伊斯兰数字零售）",
+      "symbol": "MEBL",
+      "yahoo": "MEBL.KA",
+      "exchange": "PSX",
+      "region": "south-asia",
+      "origin": "digibank",
+      "country": "PK",
+      "markets": [
+        "PK"
+      ]
+    },
+    {
+      "id": "veon",
+      "nameZh": "VEON（JazzCash）",
+      "symbol": "VEON",
+      "yahoo": "VEON",
+      "exchange": "NASDAQ",
+      "region": "south-asia",
+      "origin": "payment",
+      "country": "PK",
+      "markets": [
+        "PK",
+        "BD",
+        "UZ"
+      ]
+    }
+  ]
+}

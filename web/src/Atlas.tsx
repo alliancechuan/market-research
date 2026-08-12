@@ -51,6 +51,29 @@ import { MORNING_BRIEF_36KR } from "./data/morningBrief36kr";
 import { CC_WATCH_DIGEST, diandianBucketLabel } from "./data/ccWatchDigest";
 import { CC_SOURCE_TIERS } from "./data/ccSourceTiers";
 import {
+  FINTECH_STOCK_QUOTES,
+  FINTECH_STOCK_REGION_ORDER,
+  FINTECH_STOCK_ORIGIN_ORDER,
+  fintechStockRegionLabel,
+  fintechStockOriginLabel,
+  fintechStockCountryLabel,
+  fintechStockCountryLine,
+  formatChangePct,
+  formatQuotePrice,
+  formatMarketCap,
+  formatPeRatio,
+  fintechStockMonitorQuotes,
+  FINTECH_STOCK_MONITOR_DEFAULT_IDS,
+  type FintechStockQuote,
+} from "./data/fintechStockQuotes";
+import {
+  resolveFintechStockEarning,
+  pickFintechFundamental,
+  fintechFundamentalSortValue,
+  FINTECH_FUNDAMENTAL_COLS,
+  type FintechFundSortKey,
+} from "./data/fintechStockEarnings";
+import {
   resolveListedDisclosure,
   listedDisclosureStats,
   listedCoverageByRegion,
@@ -78,6 +101,7 @@ import {
   citeMark,
   getSourceCitation,
   getSourceCitationCatalog,
+  isListedStockCitation,
   parseCiteNos,
   SOURCE_CITE_RE,
   sourceCiteKindLabel,
@@ -142,6 +166,7 @@ import inNbfcDigitalRoster from "./data/in-nbfc-digital-roster.json";
  *    - 研报源 · 墨腾创投（Momentum Works / 微信「墨腾创投」）：东南亚平台与金融科技长期学习源；见 MOTENG_LEARNED
  *    - 宏观源 · Trading Economics：国家/地区维度；入口 hub=macro（与机构类型同级点选）；框架见 MacroFactorFrameworkOverview；单国卡片 CountryMacroPanel / COUNTRY_MACRO
  *    - 债券源 · 中国货币网（chinamoney.com.cn / .org.cn）：银行间债市发行/流通/兑付/评级披露；核验国内 ABS·ABN·企业债等；见 CHINAMONEY_BOND
+ *    - 上市源 · 腾讯/Yahoo/SEC/披露易/本地交易所 + T2 KPI 缓存：顶栏「上市公司」；见〔16〕–〔20〕、fintech-stock-source-links（信源目录展开）
  *    - 场景 taxonomy 源 · 线上数字经济场景（Web2/Web3/Agent；见 SCENE_WIDE_TABLE / WEB3_SCENE_WIDE_TABLE）
  *    - 广告平台 Partner 目录源 · Meta/Google/TikTok/Apple Search Ads 官方目录（见 STANDARD_TRAFFIC_SOURCES）
  *    - 信源核实不作前端筛选标签；展开详情展示；多源齐备可给完整验证角标，提示客户经理用更高质量信源跟进
@@ -13998,6 +14023,75 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     controller: "百行征信有限公司",
   },
   {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "Experian｜Experian｜Experian（数据服务方·全球）",
+    brands: "Experian / Serasa Experian",
+    countries: "英国总部；美/拉美/亚太等",
+    languages: "英语/多本地语",
+    licenses: "征信与替代数据服务（各国牌照分拆）",
+    timing: "多年；LSE 上市",
+    regulators: "各国征信监管",
+    traffic: "B端机构接入",
+    volume: "公开上市口径",
+    users: "机构/消费者查询",
+    diandian: "公开信息/IR",
+    note: "全球三大征信之一；拉美含 Serasa；生态角色·数据服务方",
+    institutionTypes: ["数据服务方"],
+    verify: "仅监管",
+    licenseReg: "多国征信/信用信息",
+    trafficRank: "B端",
+    equity: "LSE: EXPN",
+    controller: "Experian plc",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "Equifax｜Equifax｜Equifax（数据服务方·全球）",
+    brands: "Equifax",
+    countries: "美国总部；多国",
+    languages: "英语/多本地语",
+    licenses: "征信与数据分析服务",
+    timing: "多年；NYSE 上市",
+    regulators: "各国征信监管",
+    traffic: "B端",
+    volume: "公开上市口径",
+    users: "机构/消费者查询",
+    diandian: "公开信息/IR",
+    note: "全球三大征信之一；生态角色·数据服务方",
+    institutionTypes: ["数据服务方"],
+    verify: "仅监管",
+    licenseReg: "多国征信/信用信息",
+    trafficRank: "B端",
+    equity: "NYSE: EFX",
+    controller: "Equifax Inc.",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "Dun & Bradstreet｜D&B｜DNB（数据服务方·US）",
+    brands: "Dun & Bradstreet / D&B",
+    countries: "美国等",
+    languages: "英语",
+    licenses: "企业信用与数据服务（B 端）",
+    timing: "多年；NYSE 上市",
+    regulators: "—",
+    traffic: "B端",
+    volume: "公开上市口径",
+    users: "机构客户",
+    diandian: "公开信息",
+    note: "企业征信/商业数据；生态角色·数据服务方",
+    institutionTypes: ["数据服务方"],
+    verify: "仅监管",
+    licenseReg: "商业数据服务（非放贷）",
+    trafficRank: "B端",
+    equity: "NYSE: DNB",
+    controller: "Dun & Bradstreet",
+  },
+  {
     region: "south-asia",
     line: "agent",
     tier: "头部",
@@ -14012,11 +14106,12 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     volume: "—",
     users: "机构/消费者查询",
     diandian: "公开信息",
-    note: "公开信息建档",
+    note: "公开信息建档；母公司 NYSE: TRU",
     institutionTypes: ["数据服务方"],
     verify: "仅监管",
     licenseReg: "IN：征信局",
     trafficRank: "B端",
+    equity: "NYSE: TRU（母公司）",
     controller: "TransUnion CIBIL",
   },
   {
@@ -14034,7 +14129,7 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     volume: "—",
     users: "机构",
     diandian: "公开信息",
-    note: "公开信息建档",
+    note: "公开信息建档；未上市本地征信",
     institutionTypes: ["数据服务方"],
     verify: "仅监管",
     licenseReg: "ID：征信/信用信息",
@@ -14297,6 +14392,52 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     trafficRank: "B端·评分",
     equity: "NYSE: FICO",
     controller: "Fair Isaac",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "RELX｜LexisNexis｜RELX（风控服务方·全球）",
+    brands: "LexisNexis Risk Solutions / RELX",
+    countries: "英/美等",
+    languages: "英语",
+    licenses: "风险数据与反欺诈/身份核验（B 端）",
+    timing: "多年；NYSE/LSE 上市",
+    regulators: "—",
+    traffic: "B端",
+    volume: "公开上市口径",
+    users: "金融机构与企业客户",
+    diandian: "公开信息/IR",
+    note: "含 LexisNexis Risk；生态角色·风控服务方",
+    institutionTypes: ["风控服务方"],
+    verify: "仅监管",
+    licenseReg: "风险数据服务（非放贷）",
+    trafficRank: "B端·风险数据",
+    equity: "NYSE: RELX",
+    controller: "RELX plc",
+  },
+  {
+    region: "west",
+    line: "agent",
+    tier: "头部",
+    group: "NICE｜Actimize｜NICE（风控服务方·IL）",
+    brands: "NICE Actimize",
+    countries: "以色列总部；全球金融机构客户",
+    languages: "英语",
+    licenses: "反欺诈/AML/金融犯罪合规软件（B 端）",
+    timing: "多年；NASDAQ 上市",
+    regulators: "—",
+    traffic: "B端",
+    volume: "公开上市口径",
+    users: "银行与支付机构",
+    diandian: "公开信息",
+    note: "金融犯罪与欺诈管理；生态角色·风控服务方",
+    institutionTypes: ["风控服务方"],
+    verify: "仅监管",
+    licenseReg: "合规/反欺诈软件（非放贷）",
+    trafficRank: "B端·反欺诈",
+    equity: "NASDAQ: NICE",
+    controller: "NICE Ltd.",
   },
   {
     region: "east-asia",
@@ -16822,14 +16963,68 @@ function DetailField({ label, value }: { label: string; value: string }) {
 
 /** 正文中的 〔12〕 可点，跳转信源编号目录 —— 实现见 SourceCite.tsx */
 
+function SourceCiteEntryCard({
+  c,
+  focusNo,
+}: {
+  c: ReturnType<typeof getSourceCitationCatalog>[number];
+  focusNo: number;
+}) {
+  const theme = useHostTheme();
+  const focused = focusNo === c.no;
+  return (
+    <div
+      id={`cite-${c.no}`}
+      style={{
+        padding: "10px 12px",
+        borderRadius: 8,
+        border: `1px solid ${focused ? theme.stroke.secondary : theme.stroke.tertiary}`,
+        background: focused ? theme.fill.quaternary : theme.bg.elevated,
+      }}
+    >
+      <Row gap={8} align="center" justify="space-between" wrap>
+        <Row gap={8} align="center" wrap>
+          <Pill tone={focused ? "info" : "neutral"} size="sm">
+            {citeMark(c.no)}
+          </Pill>
+          <Text size="small" weight="medium">
+            {c.title}
+          </Text>
+          <Pill tone="neutral" size="sm">
+            {sourceCiteKindLabel(c.kind)}
+          </Pill>
+          {c.reportId ? (
+            <Pill tone="neutral" size="sm">
+              {c.reportId}
+            </Pill>
+          ) : null}
+        </Row>
+        {c.url ? (
+          <Text size="small">
+            <Link href={c.url}>原文</Link>
+          </Text>
+        ) : null}
+      </Row>
+      {(c.asOf || c.note) && (
+        <div style={{ fontSize: 12, color: theme.text.tertiary, marginTop: 6 }}>
+          {[c.asOf, c.note].filter(Boolean).join(" · ")}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SourceCatalogPanel() {
   const catalog = getSourceCitationCatalog();
   const [focus, setFocus] = useCanvasState<string>("sourceCiteFocus", "");
   const focusNo = Number(focus) || 0;
   const theme = useHostTheme();
   const { hasReturn, label, goBack } = useSourceCiteReturn();
-  const core = catalog.filter((c) => c.no <= 20);
-  const research = catalog.filter((c) => c.no > 20);
+  const core = catalog.filter((c) => c.no <= 21);
+  const research = catalog.filter((c) => c.no > 21 && !isListedStockCitation(c));
+  const listed = catalog.filter((c) => isListedStockCitation(c));
+  const listedFocused = listed.some((c) => c.no === focusNo);
+  const researchFocused = research.some((c) => c.no === focusNo);
 
   useEffect(() => {
     if (!focusNo) return;
@@ -16869,100 +17064,60 @@ function SourceCatalogPanel() {
           </button>
         </Row>
         <Text size="small" tone="tertiary">
-          正文用〔n〕标注出处；点击编号跳转本页，可用右上角返回上一页。宏观卡每条读数带时点/时段，底部「本卡信源」汇总编号。核心含 TE〔1〕、IMF〔8〕、世行〔10〕、Frankfurter〔13〕、BIS〔14〕等。
+          每条为统一词条：编号〔n〕· 名称 · 类型 · 原文。正文点〔n〕跳转本页并高亮。核心含 TE〔1〕、点点〔2〕、墨腾〔3〕、出海小黑板〔21〕等。
         </Text>
       </Stack>
+
       <Stack gap={8}>
-        <Text weight="medium">核心信源 · 1–20</Text>
+        <Text weight="medium">核心信源 · 〔1〕–〔21〕</Text>
         {core.map((c) => (
-          <div
-            key={c.id}
-            id={`cite-${c.no}`}
-            style={{
-              padding: "10px 12px",
-              borderRadius: 8,
-              border: `1px solid ${focusNo === c.no ? theme.stroke.secondary : theme.stroke.tertiary}`,
-              background: focusNo === c.no ? theme.fill.quaternary : theme.bg.elevated,
-            }}
-          >
-            <Row gap={8} align="center" justify="space-between" wrap>
-              <Row gap={8} align="center" wrap>
-                <Pill tone={focusNo === c.no ? "info" : "neutral"} size="sm">
-                  {citeMark(c.no)}
-                </Pill>
-                <Text size="small" weight="medium">
-                  {c.title}
-                </Text>
-                <Pill tone="neutral" size="sm">
-                  {sourceCiteKindLabel(c.kind)}
-                </Pill>
-              </Row>
-              {c.url ? (
-                <Text size="small">
-                  <Link href={c.url}>原文</Link>
-                </Text>
-              ) : null}
-            </Row>
-            {c.note ? (
-              <div style={{ fontSize: 12, color: theme.text.tertiary, marginTop: 6 }}>{c.note}</div>
-            ) : null}
-          </div>
+          <SourceCiteEntryCard key={c.id} c={c} focusNo={focusNo} />
         ))}
       </Stack>
-      <Stack gap={8}>
-        <Text weight="medium">情报库展开 · 21+</Text>
-        <Text size="small" tone="tertiary">
-          含「研报」与「监管/信源包」及其 sources[]；看 kind 标签区分，勿把 POJK/BSP 当成研报
-        </Text>
-        {research.map((c) => (
-          <div
-            key={c.id}
-            id={`cite-${c.no}`}
-            style={{
-              padding: "10px 12px",
-              borderRadius: 8,
-              border: `1px solid ${focusNo === c.no ? theme.stroke.secondary : theme.stroke.tertiary}`,
-              background: focusNo === c.no ? theme.fill.quaternary : theme.bg.elevated,
-            }}
-          >
-            <Row gap={8} align="center" justify="space-between" wrap>
-              <Row gap={8} align="center" wrap>
-                <Pill tone={focusNo === c.no ? "info" : "neutral"} size="sm">
-                  {citeMark(c.no)}
-                </Pill>
-                <Text size="small" weight="medium">
-                  {c.title}
-                </Text>
-                <Pill tone="neutral" size="sm">
-                  {sourceCiteKindLabel(c.kind)}
-                </Pill>
-                {c.reportId ? (
-                  <Pill tone="neutral" size="sm">
-                    {c.reportId}
-                  </Pill>
-                ) : null}
-              </Row>
-              {c.url ? (
-                <Text size="small">
-                  <Link href={c.url}>原文</Link>
-                </Text>
-              ) : null}
-            </Row>
-            {(c.asOf || c.note) && (
-              <div style={{ fontSize: 12, color: theme.text.tertiary, marginTop: 6 }}>
-                {[c.asOf, c.note].filter(Boolean).join(" · ")}
-              </div>
-            )}
-          </div>
-        ))}
-      </Stack>
+
+      <SoftFold
+        key={researchFocused ? `research-${focusNo}` : "research"}
+        title="情报库词条"
+        hint="研报与监管/信源包及其 sources[]"
+        count={research.length}
+        defaultOpen={researchFocused || research.length <= 12}
+      >
+        <Stack gap={8}>
+          {research.map((c) => (
+            <SourceCiteEntryCard key={c.id} c={c} focusNo={focusNo} />
+          ))}
+        </Stack>
+      </SoftFold>
+
+      <SoftFold
+        key={listedFocused ? `listed-${focusNo}` : "listed"}
+        title="上市公司词条"
+        hint="交易所门户与观察池已缓存财报/IR；行情总入口见〔16〕"
+        count={listed.length}
+        defaultOpen={listedFocused}
+      >
+        <Stack gap={8}>
+          {listed.map((c) => (
+            <SourceCiteEntryCard key={c.id} c={c} focusNo={focusNo} />
+          ))}
+        </Stack>
+      </SoftFold>
+
       {focusNo ? (
         <Text size="small" tone="tertiary">
           当前定位〔{focusNo}〕
           <button
             type="button"
             onClick={() => setFocus("")}
-            style={{ marginLeft: 8, border: "none", background: "transparent", color: theme.text.secondary, cursor: "pointer", font: "inherit", fontSize: 12 }}
+            style={{
+              marginLeft: 8,
+              border: "none",
+              background: "transparent",
+              color: theme.text.secondary,
+              cursor: "pointer",
+              font: "inherit",
+              fontSize: 12,
+            }}
           >
             清除高亮
           </button>
@@ -19310,6 +19465,12 @@ const LISTED_TICKER_BY_GROUP: Record<string, string> = {
   "Safaricom/M-Pesa（M-Pesa·KE）": "SCOM.NR",
   "百融云创｜百融｜Bairong（风控服务方·CN）": "6608.HK",
   "FICO｜FICO｜FICO（风控服务方·US）": "FICO.N",
+  "Experian｜Experian｜Experian（数据服务方·全球）": "EXPN.L",
+  "Equifax｜Equifax｜Equifax（数据服务方·全球）": "EFX.N",
+  "TransUnion CIBIL｜CIBIL｜TransUnion（数据服务方·IN）": "TRU.N",
+  "Dun & Bradstreet｜D&B｜DNB（数据服务方·US）": "DNB.N",
+  "RELX｜LexisNexis｜RELX（风控服务方·全球）": "RELX.N",
+  "NICE｜Actimize｜NICE（风控服务方·IL）": "NICE.O",
   "Nu Holdings/Nubank（Nubank·LATAM）": "NU.N",
   "PagSeguro/PagBank（PagBank·LATAM）": "PAGS.N",
   "XP Inc（XP·BR）": "XP.O",
@@ -21739,7 +21900,6 @@ function GeoAndLicenseFilters({
     if (k === "all") return (coveredCountries?.size ?? 0) > 0;
     return coveredCountries?.has(k) ?? false;
   };
-  const macroCountry = countryFilterSingle(country) ?? ("all" as CountryCode);
   const filterHint = formatCountryFilterLabel(country, region);
   const handleCountryChip = (k: CountryCode) => {
     if (onCountryChip) {
@@ -21836,8 +21996,6 @@ function GeoAndLicenseFilters({
           </Text>
         ) : null}
       </SoftFold>
-
-      <CountryMacroPanel country={macroCountry} />
 
       {showLicenseKind ? (
         <Stack gap={4}>
@@ -24128,21 +24286,1146 @@ type AtlasRole = "am" | "boss" | "roadshow";
 
 /** 总览不再展示「视角」切换；角色应由后台用户配置下发，前端只读 atlasRole。 */
 
+type WatchVerdictBullet = {
+  country: string;
+  text: string;
+};
+
+type WatchVerdictSection = {
+  id: "invested" | "hot" | "other";
+  label: string;
+  bullets: WatchVerdictBullet[];
+};
+
+/** 把 overallVerdict 长句拆成「展业国 / 热点国」要点，便于扫读 */
+function parseWatchVerdictSections(verdict: string): WatchVerdictSection[] {
+  const soft = softenBriefText(verdict).replace(/\s+/g, " ").trim();
+  if (!soft) return [];
+
+  const countryRe =
+    /^(印尼|印度|泰国|菲律宾|马来|越南|新加坡|中国香港|香港|墨西哥|巴西|阿根廷|哥伦比亚|肯尼亚|尼日利亚|南非|埃及|加纳|巴基斯坦|孟加拉|斯里兰卡|美国|日本|韩国|中国|沙特|阿联酋|哈萨克|格鲁吉亚|以色列|澳洲|澳大利亚)/;
+
+  const parseBullets = (blob: string): WatchVerdictBullet[] =>
+    blob
+      .split(/[；;]+/)
+      .map((p) => p.trim().replace(/^[，、。]+|[。]+$/g, ""))
+      .filter(Boolean)
+      .map((p) => {
+        const m = p.match(countryRe);
+        if (m) {
+          return { country: m[1], text: p.slice(m[1].length).replace(/^[\s：:·\-—]+/, "") || p };
+        }
+        return { country: "", text: p };
+      });
+
+  const sections: WatchVerdictSection[] = [];
+  const investedMatch = soft.match(/展业国[：:]\s*([\s\S]*?)(?=(?:热点国[：:])|$)/);
+  const hotMatch = soft.match(/热点国[：:]\s*([\s\S]*?)$/);
+
+  if (investedMatch?.[1]?.trim()) {
+    sections.push({ id: "invested", label: "展业国", bullets: parseBullets(investedMatch[1]) });
+  }
+  if (hotMatch?.[1]?.trim()) {
+    sections.push({ id: "hot", label: "热点国", bullets: parseBullets(hotMatch[1]) });
+  }
+
+  if (!sections.length) {
+    const bullets = parseBullets(soft.replace(/[。]/g, "；"));
+    if (bullets.length) sections.push({ id: "other", label: "本周要点", bullets });
+  }
+  return sections;
+}
+
+/** 电报式短语 → 好读的一句完整话 */
+function readableWatchSentence(country: string, raw: string): string {
+  let t = softenBriefText(raw || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^[：:\s]+/, "")
+    .replace(/[。；;！？]+$/g, "");
+  if (!t && !country) return "";
+
+  t = t
+    .replace(/拟禁\s*/g, "拟禁止 ")
+    .replace(/约束仍硬/g, "约束仍然偏硬")
+    .replace(/日报落地/g, "日报制度已经落地")
+    .replace(/存量竞争$/g, "仍处在存量竞争阶段")
+    .replace(/披露加严/g, "披露要求加严")
+    .replace(/探索信贷抵押/g, "正在探索把支付能力用于信贷抵押")
+    .replace(/持牌扩至约\s*(\d+)/g, "持牌机构扩至约 $1 家")
+    .replace(/与(.+?)并行$/g, "与$1在并行推进")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // 已是完整叙述则只补句号与国名前缀
+  const body = /[。！？]$/.test(t) ? t : `${t}。`;
+  if (!country) return softenBriefText(body);
+  if (body.startsWith(country)) return softenBriefText(body);
+  return softenBriefText(`${country}：${body}`);
+}
+
 function BossWatchBar({
   verdict,
-  meta,
+  onOpenCountry,
 }: {
   verdict: string;
-  /** 一行元信息，如：本周关注 · 2026-08-11 · 27 条 */
-  meta?: string;
+  /** 点某一句 → 打开该国快讯内容 */
+  onOpenCountry?: (countryNameZh: string) => void;
 }) {
-  const lines = briefParagraphs(verdict);
+  const theme = useHostTheme();
+  const stripBg = solidOverBase(theme.bg.elevated, theme.fill.tertiary);
+  const bullets = parseWatchVerdictSections(verdict)
+    .flatMap((s) => s.bullets)
+    .map((b) => ({
+      country: b.country,
+      line: readableWatchSentence(b.country, b.text),
+      short: b.text
+        ? readableWatchSentence("", b.text).replace(/[。！？]$/, "")
+        : "",
+    }))
+    .filter((b) => b.line);
+
+  if (!bullets.length) return null;
+
+  const renderTick = (b: (typeof bullets)[0], keySuffix: string) => {
+    const clickable = Boolean(onOpenCountry && b.country);
+    return (
+      <button
+        key={`${b.country || b.line}-${keySuffix}`}
+        type="button"
+        disabled={!clickable}
+        onClick={() => {
+          if (clickable && b.country) onOpenCountry?.(b.country);
+        }}
+        title={clickable ? `查看${b.country}快讯` : b.line}
+        style={{
+          flexShrink: 0,
+          display: "inline-flex",
+          alignItems: "baseline",
+          gap: 6,
+          margin: 0,
+          padding: "2px 0",
+          border: "none",
+          background: "transparent",
+          cursor: clickable ? "pointer" : "default",
+          font: "inherit",
+          fontSize: 12,
+          whiteSpace: "nowrap",
+          color: theme.text.primary,
+        }}
+      >
+        {b.country ? (
+          <span style={{ fontWeight: 700, color: theme.text.secondary }}>{b.country}</span>
+        ) : null}
+        <span style={{ fontWeight: 500 }}>{b.short || b.line}</span>
+      </button>
+    );
+  };
+
   return (
-    <Stack gap={8}>
-      {meta ? <HomeMeta>{meta}</HomeMeta> : null}
-      {lines.map((line, i) => (
-        <HomeProse key={`v-${i}`}>{line}</HomeProse>
-      ))}
+    <div
+      aria-label="国别速览"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        minHeight: 40,
+        maxHeight: 44,
+        padding: "6px 10px",
+        border: `1px solid ${theme.stroke.tertiary}`,
+        borderRadius: 10,
+        background: stripBg,
+        overflow: "hidden",
+      }}
+    >
+      <Text weight="medium" size="small" style={{ flexShrink: 0, minWidth: 56 }}>
+        国别速览
+      </Text>
+      <div className="fintech-ticker-viewport">
+        <div className="fintech-ticker-track fintech-ticker-track--slow" aria-live="off">
+          {bullets.map((b) => renderTick(b, "a"))}
+          {bullets.map((b) => renderTick(b, "b"))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 把带 alpha 的 fill 叠到不透明底上，供 sticky 表头/冻结列用（避免透出滚动内容） */
+function solidOverBase(base: string, overlay: string): string {
+  const parse = (h: string): [number, number, number, number] => {
+    const s = h.replace("#", "");
+    const r = parseInt(s.slice(0, 2), 16);
+    const g = parseInt(s.slice(2, 4), 16);
+    const b = parseInt(s.slice(4, 6), 16);
+    const a = s.length >= 8 ? parseInt(s.slice(6, 8), 16) / 255 : 1;
+    return [r, g, b, Number.isFinite(a) ? a : 1];
+  };
+  const [br, bg, bb] = parse(base);
+  const [or, og, ob, oa] = parse(overlay);
+  const mix = (o: number, b: number) => Math.round(o * oa + b * (1 - oa));
+  const hex = (n: number) => n.toString(16).padStart(2, "0");
+  return `#${hex(mix(or, br))}${hex(mix(og, bg))}${hex(mix(ob, bb))}`;
+}
+
+/** 上市公司 ↔ 快讯股价条：共用本地监控名单 */
+function useFintechStockMonitor() {
+  const defaultRaw = FINTECH_STOCK_MONITOR_DEFAULT_IDS.join("|");
+  const [raw, setRaw] = useCanvasState<string>("fintechMonitorIds1", defaultRaw);
+  const ids = raw.split("|").map((s) => s.trim()).filter(Boolean);
+  const set = new Set(ids);
+  const has = (id: string) => set.has(id);
+  const toggle = (id: string) => {
+    if (!id) return;
+    setRaw((prev) => {
+      const cur = prev.split("|").map((s) => s.trim()).filter(Boolean);
+      if (cur.includes(id)) return cur.filter((x) => x !== id).join("|");
+      return [...cur, id].join("|");
+    });
+  };
+  return { ids, has, toggle, count: ids.length };
+}
+
+/** 快讯旁横条：个别重点标的股价监控（非全市场涨跌幅/市值榜） */
+function FintechStockMonitorStrip({ onOpenAll }: { onOpenAll?: () => void }) {
+  const theme = useHostTheme();
+  const quotes = FINTECH_STOCK_QUOTES;
+  const { ids, count } = useFintechStockMonitor();
+  const upColor = "#2f6b3a";
+  const downColor = "#b42318";
+  const stripBg = solidOverBase(theme.bg.elevated, theme.fill.tertiary);
+
+  const rows = fintechStockMonitorQuotes(ids);
+  const total = (quotes.items || []).length;
+
+  const renderTick = (it: (typeof rows)[0], keySuffix: string) => {
+    const pct = it.changePct;
+    const tone =
+      pct == null || Number.isNaN(pct) ? theme.text.tertiary : pct >= 0 ? upColor : downColor;
+    return (
+      <div
+        key={`${it.id || it.symbol}-${keySuffix}`}
+        title={`${it.nameZh} · ${formatQuotePrice(it.price, it.currency)} · ${formatMarketCap(it.marketCapUsd, it.marketCapLabel)}`}
+        style={{
+          flexShrink: 0,
+          display: "inline-flex",
+          alignItems: "baseline",
+          gap: 6,
+          padding: "2px 0",
+          fontSize: 12,
+          whiteSpace: "nowrap",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        <span style={{ fontWeight: 600, color: theme.text.primary }}>{it.nameZh}</span>
+        <span style={{ fontWeight: 600, color: tone }}>{formatChangePct(pct)}</span>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      aria-label="股价监控"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        minHeight: 40,
+        maxHeight: 44,
+        padding: "6px 10px",
+        border: `1px solid ${theme.stroke.tertiary}`,
+        borderRadius: 10,
+        background: stripBg,
+        overflow: "hidden",
+      }}
+    >
+      <Text weight="medium" size="small" style={{ flexShrink: 0, minWidth: 56 }}>
+        股价监控
+      </Text>
+      <HomeMeta>{count}</HomeMeta>
+
+      <div className="fintech-ticker-viewport">
+        {rows.length ? (
+          <div className="fintech-ticker-track" aria-live="off">
+            {rows.map((it) => renderTick(it, "a"))}
+            {rows.map((it) => renderTick(it, "b"))}
+          </div>
+        ) : (
+          <HomeMeta>暂无监控标的 · 去上市公司添加</HomeMeta>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={onOpenAll}
+        style={{
+          flexShrink: 0,
+          height: 24,
+          padding: "0 10px",
+          borderRadius: 6,
+          border: `1px solid ${theme.stroke.tertiary}`,
+          background: theme.bg.elevated,
+          color: theme.text.primary,
+          cursor: onOpenAll ? "pointer" : "default",
+          font: "inherit",
+          fontSize: 11,
+          fontWeight: 600,
+          whiteSpace: "nowrap",
+        }}
+      >
+        全部 {total}
+      </button>
+    </div>
+  );
+}
+
+/** 上市公司当前筛选结果 → CSV（UTF-8 BOM，Excel 可直接开） */
+function downloadFintechStockCsv(
+  rows: FintechStockQuote[],
+  fundCols: { key: FintechFundSortKey; label: string }[],
+  asOf: string,
+) {
+  const esc = (v: string | number | null | undefined) => {
+    const s = v == null ? "" : String(v);
+    if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+  const headers = [
+    "名称",
+    "代码",
+    "交易所",
+    "国家",
+    "展业国",
+    "地区",
+    "业务",
+    "现价",
+    "币种",
+    "涨跌幅%",
+    "市值USD",
+    "市值标签",
+    "市盈率TTM",
+    ...fundCols.map((c) => c.label),
+    "财报期",
+    "IR链接",
+    "Yahoo",
+  ];
+  const lines = [headers.map(esc).join(",")];
+  for (const it of rows) {
+    const earn = resolveFintechStockEarning(it.id);
+    lines.push(
+      [
+        it.nameZh,
+        it.symbol,
+        it.exchange || "",
+        fintechStockCountryLabel(it.country),
+        (it.markets || []).map(fintechStockCountryLabel).join("·"),
+        fintechStockRegionLabel(it.region),
+        fintechStockOriginLabel(it.origin),
+        it.price ?? "",
+        it.currency || "",
+        it.changePct ?? "",
+        it.marketCapUsd ?? "",
+        (it.marketCapLabel || "").replace(/\$/g, ""),
+        it.peRatio ?? "",
+        ...fundCols.map((c) => pickFintechFundamental(earn, c.key)),
+        earn?.period || "",
+        earn?.irUrl || it.url || "",
+        it.yahoo || it.symbol || "",
+      ]
+        .map(esc)
+        .join(","),
+    );
+  }
+  const stamp = (asOf.match(/\d{4}-\d{2}-\d{2}/) || [new Date().toISOString().slice(0, 10)])[0];
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `fintech-listed-${stamp}-${rows.length}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** 顶栏「上市公司」页：全球金融科技上市观察池（股价+市值+最近财报缓存） */
+function FintechStockWatchPanel() {
+  const theme = useHostTheme();
+  const quotes = FINTECH_STOCK_QUOTES;
+  const tableBase = theme.bg.elevated;
+  const tableHeadBg = solidOverBase(tableBase, theme.fill.secondary);
+  const tableRowEven = tableBase;
+  const tableRowOdd = solidOverBase(tableBase, theme.fill.tertiary);
+  const [region, setRegion] = useCanvasState<string>("fintechStockRegion1", "");
+  const [country, setCountry] = useCanvasState<string>("fintechStockCountry1", "");
+  const [countryOpen, setCountryOpen] = useCanvasState<boolean>("fintechStockCountryOpen1", false);
+  const [origin, setOrigin] = useCanvasState<string>("fintechStockOrigin1", "");
+  const [sortBy, setSortBy] = useCanvasState<string>("fintechStockSortBy1", "marketCap");
+  const [sortDir, setSortDir] = useCanvasState<string>("fintechStockSortDir1", "desc");
+  /** 卡片 = 详情卡；一览 = 紧凑表阅读模式 */
+  const [viewMode, setViewMode] = useCanvasState<"cards" | "read">("fintechStockViewMode1", "cards");
+  const monitor = useFintechStockMonitor();
+
+  const monitorBtn = (id: string) => {
+    const on = monitor.has(id);
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          monitor.toggle(id);
+        }}
+        title={on ? "移出股价监控" : "加入股价监控"}
+        style={{
+          height: 22,
+          padding: "0 8px",
+          borderRadius: 6,
+          border: `1px solid ${on ? theme.stroke.secondary : theme.stroke.tertiary}`,
+          background: on ? theme.fill.secondary : theme.bg.elevated,
+          color: on ? theme.text.primary : theme.text.secondary,
+          cursor: "pointer",
+          font: "inherit",
+          fontSize: 11,
+          fontWeight: on ? 600 : 500,
+          lineHeight: 1,
+          whiteSpace: "nowrap",
+          flexShrink: 0,
+        }}
+      >
+        {on ? "监控中" : "加入监控"}
+      </button>
+    );
+  };
+
+  const filtered = (quotes.items || []).filter(
+    (it) =>
+      (!region || it.region === region) &&
+      (!country || it.country === country || (it.markets || []).includes(country)) &&
+      (!origin || it.origin === origin),
+  );
+
+  const countryOptions = (() => {
+    const pool = (quotes.items || []).filter((it) => !region || it.region === region);
+    const counts = new Map<string, number>();
+    for (const it of pool) {
+      if (!it.country) continue;
+      counts.set(it.country, (counts.get(it.country) || 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || fintechStockCountryLabel(a[0]).localeCompare(fintechStockCountryLabel(b[0]), "zh"))
+      .map(([code, n]) => ({ code, n }));
+  })();
+
+  const fundCols = FINTECH_FUNDAMENTAL_COLS.filter((c) =>
+    filtered.some((it) => pickFintechFundamental(resolveFintechStockEarning(it.id), c.key) !== "—"),
+  );
+
+  const fundSortKeys = new Set<string>(FINTECH_FUNDAMENTAL_COLS.map((c) => c.key));
+
+  const items = [...filtered].sort((a, b) => {
+    const dir = sortDir === "asc" ? 1 : -1;
+    const nullLast = (av: number | null | undefined, bv: number | null | undefined) => {
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return (av - bv) * dir;
+    };
+    if (sortBy === "changePct") return nullLast(a.changePct, b.changePct);
+    if (sortBy === "peRatio") return nullLast(a.peRatio, b.peRatio);
+    if (fundSortKeys.has(sortBy)) {
+      const key = sortBy as FintechFundSortKey;
+      return nullLast(
+        fintechFundamentalSortValue(resolveFintechStockEarning(a.id), key),
+        fintechFundamentalSortValue(resolveFintechStockEarning(b.id), key),
+      );
+    }
+    // marketCap default
+    return nullLast(a.marketCapUsd, b.marketCapUsd);
+  });
+
+  const upColor = "#2f6b3a";
+  const downColor = "#b42318";
+  const withChange = items.filter((x) => x.changePct != null).length;
+  const withEarn = items.filter((x) => resolveFintechStockEarning(x.id)?.kpis?.length).length;
+  const withFund = items.filter((x) => {
+    const e = resolveFintechStockEarning(x.id);
+    if (!e) return false;
+    return FINTECH_FUNDAMENTAL_COLS.some((c) => pickFintechFundamental(e, c.key) !== "—");
+  }).length;
+  const withPe = items.filter((x) => x.peRatio != null && x.peRatio > 0).length;
+
+  const chipStyle = (active: boolean) => ({
+    height: 28,
+    padding: "0 10px",
+    borderRadius: 8,
+    border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+    background: active ? theme.fill.secondary : theme.bg.elevated,
+    color: theme.text.primary,
+    cursor: "pointer" as const,
+    font: "inherit",
+    fontSize: 12,
+    fontWeight: active ? 600 : 500,
+  });
+
+  const toggleSort = (key: "marketCap" | "changePct" | "peRatio" | FintechFundSortKey) => {
+    if (sortBy === key) {
+      setSortDir(sortDir === "desc" ? "asc" : "desc");
+    } else {
+      setSortBy(key);
+      // 负债率默认升序（低杠杆优先）；其余金额/涨跌默认降序
+      setSortDir(key === "peRatio" || key === "debtRatio" ? "asc" : "desc");
+    }
+  };
+
+  const sortArrow = (key: string) => {
+    if (sortBy !== key) return "";
+    return sortDir === "desc" ? " ↓" : " ↑";
+  };
+
+  const marketDate = (() => {
+    const raw = quotes.asOf || "";
+    const m = raw.match(/(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : raw || "—";
+  })();
+
+  return (
+    <Stack gap={16}>
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 8,
+          background: theme.bg.elevated,
+          padding: "4px 0 10px",
+          borderBottom: `1px solid ${theme.stroke.tertiary}`,
+        }}
+      >
+      <Stack gap={10}>
+      <Row gap={8} align="center" justify="space-between" wrap>
+        <Text weight="medium">上市公司</Text>
+        <Row gap={6} align="center" wrap>
+          <HomeMeta>监控 {monitor.count}</HomeMeta>
+          <Pill
+            tone="neutral"
+            size="sm"
+            onClick={() => downloadFintechStockCsv(items, fundCols, marketDate)}
+            title={`导出当前筛选 ${items.length} 家（CSV，Excel 可开）`}
+          >
+            导出 CSV
+          </Pill>
+          <div
+            role="group"
+            aria-label="显示模式"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 0,
+              height: 28,
+              padding: "0 2px",
+              borderRadius: 8,
+              border: `1px solid ${theme.stroke.tertiary}`,
+              background: theme.bg.elevated,
+              color: theme.text.tertiary,
+              fontSize: 13,
+              lineHeight: 1,
+            }}
+          >
+            <button
+              type="button"
+              title="卡片"
+              aria-label="卡片"
+              aria-pressed={viewMode === "cards"}
+              onClick={() => setViewMode("cards")}
+              style={{
+                width: 28,
+                height: 24,
+                margin: 0,
+                padding: 0,
+                border: "none",
+                borderRadius: 6,
+                background: viewMode === "cards" ? theme.fill.secondary : "transparent",
+                color: viewMode === "cards" ? theme.text.primary : theme.text.tertiary,
+                cursor: "pointer",
+                font: "inherit",
+                fontSize: 14,
+                fontWeight: viewMode === "cards" ? 600 : 400,
+              }}
+            >
+              ▦
+            </button>
+            <span aria-hidden style={{ width: 1, height: 14, background: theme.stroke.tertiary, margin: "0 1px" }} />
+            <button
+              type="button"
+              title="一览"
+              aria-label="一览"
+              aria-pressed={viewMode === "read"}
+              onClick={() => setViewMode("read")}
+              style={{
+                width: 28,
+                height: 24,
+                margin: 0,
+                padding: 0,
+                border: "none",
+                borderRadius: 6,
+                background: viewMode === "read" ? theme.fill.secondary : "transparent",
+                color: viewMode === "read" ? theme.text.primary : theme.text.tertiary,
+                cursor: "pointer",
+                font: "inherit",
+                fontSize: 14,
+                fontWeight: viewMode === "read" ? 600 : 400,
+              }}
+            >
+              ☰
+            </button>
+          </div>
+          <HomeMeta>{marketDate}</HomeMeta>
+        </Row>
+      </Row>
+
+      {viewMode === "cards" ? (
+        <Row gap={6} wrap>
+          <HomeMeta>排序</HomeMeta>
+          <button type="button" onClick={() => toggleSort("marketCap")} style={chipStyle(sortBy === "marketCap")}>
+            市值{sortArrow("marketCap")}
+          </button>
+          <button type="button" onClick={() => toggleSort("changePct")} style={chipStyle(sortBy === "changePct")}>
+            涨跌幅{sortArrow("changePct")}
+          </button>
+          <button type="button" onClick={() => toggleSort("peRatio")} style={chipStyle(sortBy === "peRatio")}>
+            市盈率{sortArrow("peRatio")}
+          </button>
+        </Row>
+      ) : null}
+
+      <Row gap={6} wrap>
+        <button type="button" onClick={() => setOrigin("")} style={chipStyle(!origin)}>
+          全部业务
+        </button>
+        {FINTECH_STOCK_ORIGIN_ORDER.map((o) => {
+          const active = origin === o;
+          return (
+            <button
+              key={o}
+              type="button"
+              onClick={() => setOrigin(active ? "" : o)}
+              style={chipStyle(active)}
+            >
+              {fintechStockOriginLabel(o)}
+            </button>
+          );
+        })}
+      </Row>
+
+      <Row gap={6} wrap>
+        <button type="button" onClick={() => setRegion("")} style={chipStyle(!region)}>
+          全部地区
+        </button>
+        {FINTECH_STOCK_REGION_ORDER.map((r) => {
+          const active = region === r;
+          return (
+            <button
+              key={r}
+              type="button"
+              onClick={() => {
+                setRegion(active ? "" : r);
+                setCountry("");
+              }}
+              style={chipStyle(active)}
+            >
+              {fintechStockRegionLabel(r)}
+            </button>
+          );
+        })}
+      </Row>
+
+      <Row gap={6} wrap align="center">
+        <button
+          type="button"
+          onClick={() => setCountryOpen(!countryOpen)}
+          style={chipStyle(!!country || countryOpen)}
+          aria-expanded={countryOpen}
+        >
+          {country ? `国家 · ${fintechStockCountryLabel(country)}` : "国家"}
+          <span style={{ color: theme.text.tertiary, fontWeight: 500 }}>{countryOpen ? " ▴" : " ▾"}</span>
+        </button>
+        {country && !countryOpen ? (
+          <button type="button" onClick={() => setCountry("")} style={chipStyle(false)}>
+            清除
+          </button>
+        ) : null}
+        {countryOpen ? (
+          <>
+            <button type="button" onClick={() => setCountry("")} style={chipStyle(!country)}>
+              全部
+            </button>
+            {countryOptions.map(({ code, n }) => {
+              const active = country === code;
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setCountry(active ? "" : code)}
+                  style={chipStyle(active)}
+                  title={`主市场或展业含 ${fintechStockCountryLabel(code)}`}
+                >
+                  {fintechStockCountryLabel(code)}
+                  <span style={{ color: theme.text.tertiary, fontWeight: 500 }}>{` ${n}`}</span>
+                </button>
+              );
+            })}
+          </>
+        ) : null}
+      </Row>
+      </Stack>
+      </div>
+
+      {viewMode === "read" ? (
+        <div
+          style={{
+            maxHeight: "calc(100dvh - 220px)",
+            overflow: "auto",
+            border: `1px solid ${theme.stroke.tertiary}`,
+            borderRadius: 10,
+            WebkitOverflowScrolling: "touch",
+            background: tableBase,
+          }}
+        >
+
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "separate",
+              borderSpacing: 0,
+              fontSize: 12,
+              fontVariantNumeric: "tabular-nums",
+              background: tableBase,
+            }}
+          >
+            <thead>
+              <tr style={{ color: theme.text.tertiary, textAlign: "left" }}>
+                {[
+                  { key: "name", label: "名称", align: "left" as const },
+                  { key: "country", label: "国家", align: "left" as const, title: "主市场/总部；≠上市交易所所在国" },
+                  { key: "symbol", label: "代码", align: "left" as const },
+                  { key: "origin", label: "业务", align: "left" as const },
+                  { key: "price", label: "现价", align: "right" as const },
+                  { key: "changePct", label: `涨跌${sortArrow("changePct") || ""}`, align: "right" as const, sort: "changePct" as const },
+                  { key: "marketCap", label: `市值${sortArrow("marketCap") || ""}`, align: "right" as const, sort: "marketCap" as const },
+                  { key: "peRatio", label: `市盈率${sortArrow("peRatio") || ""}`, align: "right" as const, sort: "peRatio" as const },
+                  ...fundCols.map((c) => ({
+                    key: c.key,
+                    label: `${c.label}${sortArrow(c.key)}`,
+                    align: "right" as const,
+                    title: c.title,
+                    sort: c.key as FintechFundSortKey,
+                  })),
+                  { key: "earn", label: "财报", align: "left" as const },
+                  { key: "monitor", label: "监控", align: "center" as const },
+                ].map((col) => (
+                  <th
+                    key={col.key}
+                    title={"title" in col ? col.title : undefined}
+                    style={{
+                      position: "sticky",
+                      top: 0,
+                      left: col.key === "name" ? 0 : undefined,
+                      zIndex: col.key === "name" ? 5 : 3,
+                      padding: "8px 10px",
+                      fontWeight: 500,
+                      whiteSpace: "nowrap",
+                      borderBottom: `1px solid ${theme.stroke.tertiary}`,
+                      textAlign: col.align,
+                      cursor: "sort" in col && col.sort ? "pointer" : "default",
+                      userSelect: "none",
+                      background: tableHeadBg,
+                      boxShadow:
+                        col.key === "name"
+                          ? `1px 0 0 ${theme.stroke.tertiary}, 0 1px 0 ${theme.stroke.tertiary}`
+                          : `0 1px 0 ${theme.stroke.tertiary}`,
+                      minWidth: col.key === "name" ? 120 : undefined,
+                      maxWidth: col.key === "name" ? 160 : undefined,
+                    }}
+                    onClick={"sort" in col && col.sort ? () => toggleSort(col.sort!) : undefined}
+                  >
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {items.length ? (
+                items.map((it, idx) => {
+                  const pct = it.changePct;
+                  const tone =
+                    pct == null || Number.isNaN(pct) ? theme.text.tertiary : pct >= 0 ? upColor : downColor;
+                  const earn = resolveFintechStockEarning(it.id);
+                  const earnHint = earn?.kpis?.length
+                    ? earn.period || "有"
+                    : "—";
+                  const rowBg = idx % 2 ? tableRowOdd : tableRowEven;
+                  const cellPad: CSSProperties = {
+                    padding: "7px 10px",
+                    borderBottom: `1px solid ${theme.stroke.tertiary}`,
+                    background: rowBg,
+                  };
+                  return (
+                    <tr
+                      key={it.id || it.symbol}
+                      style={{
+                        background: rowBg,
+                        color: theme.text.primary,
+                      }}
+                    >
+                      <td
+                        style={{
+                          ...cellPad,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          fontWeight: 600,
+                          maxWidth: 160,
+                          minWidth: 120,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          boxShadow: `1px 0 0 ${theme.stroke.tertiary}`,
+                        }}
+                        title={it.nameZh}
+                      >
+                        {it.nameZh}
+                      </td>
+                      <td
+                        style={{
+                          ...cellPad,
+                          whiteSpace: "nowrap",
+                          color: theme.text.secondary,
+                          fontWeight: 600,
+                        }}
+                        title={(it.markets || []).map(fintechStockCountryLabel).join(" · ") || undefined}
+                      >
+                        {fintechStockCountryLine(it.country, it.markets)}
+                      </td>
+                      <td style={{ ...cellPad, whiteSpace: "nowrap" }}>
+                        <a
+                          href={
+                            it.url ||
+                            `https://finance.yahoo.com/quote/${encodeURIComponent(it.yahoo || it.symbol)}`
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: theme.text.secondary, textDecoration: "none" }}
+                        >
+                          {it.symbol}
+                        </a>
+                        {it.exchange ? (
+                          <span style={{ color: theme.text.tertiary }}> · {it.exchange}</span>
+                        ) : null}
+                      </td>
+                      <td style={{ ...cellPad, color: theme.text.secondary, whiteSpace: "nowrap" }}>
+                        {fintechStockOriginLabel(it.origin)}
+                      </td>
+                      <td style={{ ...cellPad, textAlign: "right", whiteSpace: "nowrap" }}>
+                        {formatQuotePrice(it.price, it.currency)}
+                      </td>
+                      <td style={{ ...cellPad, textAlign: "right", color: tone, whiteSpace: "nowrap" }}>
+                        {formatChangePct(pct)}
+                      </td>
+                      <td style={{ ...cellPad, textAlign: "right", whiteSpace: "nowrap" }}>
+                        {formatMarketCap(it.marketCapUsd, it.marketCapLabel)}
+                      </td>
+                      <td style={{ ...cellPad, textAlign: "right", whiteSpace: "nowrap" }}>
+                        {formatPeRatio(it.peRatio)}
+                      </td>
+                      {fundCols.map((c) => {
+                        const v = pickFintechFundamental(earn, c.key);
+                        return (
+                          <td
+                            key={c.key}
+                            title={c.title}
+                            style={{
+                              ...cellPad,
+                              textAlign: "right",
+                              whiteSpace: "nowrap",
+                              color: v === "—" ? theme.text.tertiary : theme.text.primary,
+                              maxWidth: 110,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {v}
+                          </td>
+                        );
+                      })}
+                      <td style={{ ...cellPad, color: theme.text.tertiary, whiteSpace: "nowrap" }}>
+                        {earn?.irUrl ? (
+                          <a href={earn.irUrl} target="_blank" rel="noreferrer" style={{ color: theme.text.secondary, textDecoration: "none" }}>
+                            {earnHint}
+                          </a>
+                        ) : (
+                          earnHint
+                        )}
+                      </td>
+                      <td style={{ ...cellPad, textAlign: "center", whiteSpace: "nowrap" }}>
+                        {monitorBtn(it.id)}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={10 + fundCols.length} style={{ padding: "12px 10px", color: theme.text.tertiary, background: tableBase }}>
+                    暂无符合筛选的标的
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+      <div
+        style={{
+          maxHeight: "calc(100dvh - 220px)",
+          overflow: "auto",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+          gap: 10,
+        }}
+      >
+        {items.length ? (
+          items.map((it) => {
+            const pct = it.changePct;
+            const tone =
+              pct == null || Number.isNaN(pct) ? theme.text.tertiary : pct >= 0 ? upColor : downColor;
+            const earn = resolveFintechStockEarning(it.id);
+            const kpis = (earn?.kpis || []).slice(0, 3);
+            return (
+              <div
+                key={it.id || it.symbol}
+                style={{
+                  border: `1px solid ${theme.stroke.tertiary}`,
+                  borderRadius: 10,
+                  background: theme.bg.elevated,
+                  padding: "10px 12px",
+                  display: "grid",
+                  gap: 8,
+                }}
+              >
+                <Row gap={8} align="start" justify="space-between">
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: theme.text.primary,
+                        lineHeight: 1.35,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {it.nameZh}
+                    </div>
+                    <a
+                      href={
+                        it.url ||
+                        `https://finance.yahoo.com/quote/${encodeURIComponent(it.yahoo || it.symbol)}`
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        fontSize: 12,
+                        color: theme.text.tertiary,
+                        textDecoration: "none",
+                      }}
+                    >
+                      {it.symbol}
+                      {it.exchange ? ` · ${it.exchange}` : ""}
+                    </a>
+                    <div style={{ fontSize: 11, color: theme.text.tertiary, marginTop: 2 }}>
+                      {fintechStockCountryLine(it.country, it.markets)}
+                      {it.origin ? ` · ${fintechStockOriginLabel(it.origin)}` : ""}
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gap: 6, justifyItems: "end", flexShrink: 0 }}>
+                    {monitorBtn(it.id)}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => toggleSort("changePct")}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleSort("changePct");
+                        }
+                      }}
+                      style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", cursor: "pointer" }}
+                    >
+                      <div style={{ fontSize: 13, fontWeight: 600, color: theme.text.primary }}>
+                        {formatQuotePrice(it.price, it.currency)}
+                      </div>
+                      <div style={{ fontSize: 12, color: tone }}>
+                        {formatChangePct(pct)}
+                        {sortBy === "changePct" ? sortArrow("changePct") : ""}
+                      </div>
+                    </div>
+                  </div>
+                </Row>
+                <button
+                  type="button"
+                  onClick={() => toggleSort("marketCap")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    width: "100%",
+                    margin: 0,
+                    padding: 0,
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    font: "inherit",
+                    textAlign: "left",
+                  }}
+                >
+                  <HomeMeta>市值{sortBy === "marketCap" ? sortArrow("marketCap") : ""}</HomeMeta>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: theme.text.primary,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {formatMarketCap(it.marketCapUsd, it.marketCapLabel)}
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleSort("peRatio")}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    width: "100%",
+                    margin: 0,
+                    padding: 0,
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    font: "inherit",
+                    textAlign: "left",
+                  }}
+                >
+                  <HomeMeta>市盈率 TTM{sortBy === "peRatio" ? sortArrow("peRatio") : ""}</HomeMeta>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: theme.text.primary,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {formatPeRatio(it.peRatio)}
+                  </div>
+                </button>
+                {kpis.length ? (
+                  <div
+                    style={{
+                      borderTop: `1px solid ${theme.stroke.tertiary}`,
+                      paddingTop: 8,
+                      display: "grid",
+                      gap: 6,
+                    }}
+                  >
+                    <Row gap={8} align="center" justify="space-between">
+                      <HomeMeta>
+                        最近财报
+                        {earn?.period ? ` · ${earn.period}` : ""}
+                      </HomeMeta>
+                      {earn?.irUrl ? (
+                        <a
+                          href={earn.irUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ fontSize: 11, color: theme.text.tertiary, textDecoration: "none" }}
+                        >
+                          原文
+                        </a>
+                      ) : null}
+                    </Row>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                        gap: 6,
+                      }}
+                    >
+                      {kpis.map((k) => (
+                        <div key={k.id} style={{ minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color: theme.text.tertiary,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {k.label}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: theme.text.primary,
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            {k.value}
+                          </div>
+                          {k.yoy ? (
+                            <div style={{ fontSize: 10, color: theme.text.tertiary }}>{k.yoy}</div>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <HomeMeta>最近财报 · 待缓存</HomeMeta>
+                )}
+              </div>
+            );
+          })
+        ) : (
+          <HomeMeta>暂无符合筛选的标的</HomeMeta>
+        )}
+      </div>
+      </div>
+      )}
+
+      <HomeMeta>
+        当前 {items.length} 家
+        {quotes.stats?.withMarketCap != null ? ` · 市值 ${quotes.stats.withMarketCap}` : ""}
+        {` · 涨跌幅 ${withChange}`}
+        {` · 市盈率 ${withPe}`}
+        {` · 财报缓存 ${withEarn}`}
+        {` · 财务列 ${withFund}`}
+        {` · 信源 ${citeMark(16)}${citeMark(17)}${citeMark(18)}${citeMark(20)}`}
+        {quotes.source ? ` · ${quotes.source}` : ""}
+      </HomeMeta>
+      {viewMode === "read" ? (
+        <HomeMeta>
+          市值/财务列统一美元（现价保留本币）；负债率为百分比。准现金/信贷余额仅在口径对齐时展示
+        </HomeMeta>
+      ) : null}
+      <HomeMeta>
+        数据链落库：fintech-stock-source-links（Yahoo/交易所/IR）· T2 listed-player-disclosure
+      </HomeMeta>
     </Stack>
   );
 }
@@ -24316,7 +25599,13 @@ function NewsflashRow({
   );
 }
 
-function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
+function MorningBriefHome({
+  role = "am",
+  onOpenStocks,
+}: {
+  role?: AtlasRole;
+  onOpenStocks?: () => void;
+}) {
   const watch = CC_WATCH_DIGEST;
   const brief = MORNING_BRIEF_36KR;
   const theme = useHostTheme();
@@ -24338,6 +25627,25 @@ function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
   );
   const bossVerdict = watch.overallVerdict || brief.overallVerdict || "";
   const dateLabel = watch.displayDate || brief.displayDate || "";
+
+  /** 本周读法 → 挂到国别 chip 的 title，避免再铺一套展业国/热点国卡片 */
+  const verdictTipByCode = (() => {
+    const map = new Map<string, string>();
+    const aliases: Record<string, string[]> = {
+      香港: ["中国香港", "香港"],
+      中国香港: ["中国香港", "香港"],
+      马来: ["马来西亚", "马来"],
+      澳洲: ["澳大利亚", "澳洲"],
+      澳大利亚: ["澳大利亚", "澳洲"],
+    };
+    for (const b of parseWatchVerdictSections(bossVerdict).flatMap((s) => s.bullets)) {
+      if (!b.country || !b.text) continue;
+      const names = aliases[b.country] || [b.country];
+      const hit = focusMkts.find((m) => names.some((n) => m.nameZh.includes(n) || n.includes(m.nameZh)));
+      if (hit && !map.has(hit.code)) map.set(hit.code, readableWatchSentence(b.country, b.text));
+    }
+    return map;
+  })();
 
   const watchFeed: FlashFeedItem[] = focusMkts
     .flatMap((m) =>
@@ -24386,25 +25694,27 @@ function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
   const countryChip = (m: (typeof focusMkts)[0]) => {
     const unread = readMktSet.has(m.code) ? 0 : m.count;
     const active = filterMkt === m.code;
+    const tip = verdictTipByCode.get(m.code);
     return (
       <button
         key={m.code}
         type="button"
+        title={tip || undefined}
         onClick={() => selectMarket(m.code)}
         style={{
           position: "relative",
           display: "inline-flex",
           alignItems: "center",
-          gap: 6,
-          height: 28,
-          padding: "0 10px",
-          borderRadius: 8,
+          gap: 4,
+          height: 24,
+          padding: "0 8px",
+          borderRadius: 6,
           border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
           background: active ? theme.fill.secondary : theme.bg.elevated,
           color: theme.text.primary,
           cursor: "pointer",
           font: "inherit",
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: active ? 600 : 500,
           lineHeight: 1,
           boxSizing: "border-box",
@@ -24419,54 +25729,77 @@ function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
     );
   };
 
-  return (
-    <Stack gap={16}>
-      {(role === "boss" || role === "am") && bossVerdict ? (
-        <BossWatchBar
-          verdict={bossVerdict}
-          meta={softenBriefText(
-            [
-              "本周关注",
-              dateLabel,
-              watchTotal ? `${watchTotal} 条` : "",
-              unreadMktTotal ? `未读 ${unreadMktTotal}` : "",
-            ]
-              .filter(Boolean)
-              .join(" · "),
-          )}
-        />
-      ) : dateLabel || watchTotal || unreadMktTotal ? (
-        <HomeMeta>
-          {softenBriefText(
-            [
-              dateLabel,
-              watchTotal ? `${watchTotal} 条` : "",
-              unreadMktTotal ? `未读 ${unreadMktTotal}` : "",
-            ]
-              .filter(Boolean)
-              .join(" · "),
-          )}
-        </HomeMeta>
-      ) : null}
+  const briefMeta = softenBriefText(
+    [
+      "本周关注",
+      dateLabel,
+      watchTotal ? `${watchTotal} 条` : "",
+      unreadMktTotal ? `未读 ${unreadMktTotal}` : "",
+    ]
+      .filter(Boolean)
+      .join(" · "),
+  );
 
-      <Stack gap={10}>
+  return (
+    <Stack gap={12}>
+      {briefMeta ? <HomeMeta>{briefMeta}</HomeMeta> : null}
+
+      <Stack gap={8}>
+        {(role === "boss" || role === "am") && bossVerdict ? (
+          <BossWatchBar
+            verdict={bossVerdict}
+            onOpenCountry={(nameZh) => {
+              const aliases: Record<string, string[]> = {
+                香港: ["中国香港", "香港"],
+                中国香港: ["中国香港", "香港"],
+                马来: ["马来西亚", "马来"],
+                澳洲: ["澳大利亚", "澳洲"],
+                澳大利亚: ["澳大利亚", "澳洲"],
+              };
+              const names = aliases[nameZh] || [nameZh];
+              const hit = focusMkts.find((m) => names.some((n) => m.nameZh.includes(n) || n.includes(m.nameZh)));
+              if (!hit) return;
+              setFilterMkt(hit.code);
+              if (!readMktSet.has(hit.code)) setReadMkts([...readMktSet, hit.code].join("|"));
+              const first = watchFeed.find((x) => x.marketCode === hit.code);
+              if (first) {
+                setOpenFlash(first.id);
+                if (!readFlashSet.has(first.id)) setReadFlash([...readFlashSet, first.id].join("|"));
+              } else {
+                setOpenFlash("");
+              }
+            }}
+          />
+        ) : null}
+        <FintechStockMonitorStrip onOpenAll={onOpenStocks} />
+      </Stack>
+
+      <Row gap={10} align="center" wrap>
         {investedMkts.length ? (
-          <Stack gap={6}>
+          <Row gap={5} align="center" wrap>
             <HomeMeta>展业国</HomeMeta>
-            <Row gap={8} wrap>
-              {investedMkts.map(countryChip)}
-            </Row>
-          </Stack>
+            {investedMkts.map(countryChip)}
+          </Row>
+        ) : null}
+        {investedMkts.length && hotMkts.length ? (
+          <span
+            aria-hidden
+            style={{
+              width: 1,
+              alignSelf: "stretch",
+              minHeight: 16,
+              background: theme.stroke.tertiary,
+              flexShrink: 0,
+            }}
+          />
         ) : null}
         {hotMkts.length ? (
-          <Stack gap={6}>
+          <Row gap={5} align="center" wrap>
             <HomeMeta>热点国</HomeMeta>
-            <Row gap={8} wrap>
-              {hotMkts.map(countryChip)}
-            </Row>
-          </Stack>
+            {hotMkts.map(countryChip)}
+          </Row>
         ) : null}
-      </Stack>
+      </Row>
 
       <Stack gap={0}>
         {filterMkt ? (
@@ -24474,6 +25807,7 @@ function MorningBriefHome({ role = "am" }: { role?: AtlasRole }) {
             <HomeMeta>
               {focusMkts.find((m) => m.code === filterMkt)?.nameZh || filterMkt}
               {visibleWatch.length ? ` · ${visibleWatch.length} 条` : ""}
+              {verdictTipByCode.get(filterMkt) ? ` · ${verdictTipByCode.get(filterMkt)}` : ""}
             </HomeMeta>
           </div>
         ) : null}
@@ -24518,17 +25852,17 @@ function UnreadBadge({ count, dot }: { count: number; dot?: boolean }) {
     <span
       style={{
         position: "absolute",
-        top: -6,
-        right: -6,
-        minWidth: 18,
-        height: 18,
-        padding: "0 5px",
+        top: -4,
+        right: -4,
+        minWidth: 14,
+        height: 14,
+        padding: "0 3px",
         borderRadius: 999,
         background: "#fa5151",
         color: "#fff",
-        fontSize: 11,
+        fontSize: 9,
         fontWeight: 600,
-        lineHeight: "18px",
+        lineHeight: "14px",
         textAlign: "center",
         boxSizing: "border-box",
       }}
@@ -25739,8 +27073,11 @@ export default function Canvas() {
     hub !== "compare" &&
     hub !== "sources";
   const [ecoNavOpen, setEcoNavOpen] = useCanvasState("ecoNavOpen1", "");
-  /** 情报：快讯（监管/媒体）| 研报（机构研报） */
-  const [intelLane, setIntelLane] = useCanvasState<"flash" | "research">("intelLane1", "flash");
+  /** 情报：快讯 | 研报 | 上市公司 */
+  const [intelLane, setIntelLane] = useCanvasState<"flash" | "research" | "stocks">(
+    "intelLane1",
+    "flash",
+  );
   /** 生态机构与数字经济 / 国别宏观互斥，不可同时点亮 */
   const ecoNavExpanded =
     (ecoNavOpen === "1" || isInstHub) && hub !== "scenes" && hub !== "macro";
@@ -26220,6 +27557,15 @@ export default function Canvas() {
             }}
           />
           <FilterChip
+            label={`上市公司 ${FINTECH_STOCK_QUOTES.stats?.total ?? FINTECH_STOCK_QUOTES.items.length}`}
+            active={hub === "home" && !ecoNavExpanded && intelLane === "stocks"}
+            onClick={() => {
+              setEcoNavOpen("");
+              setIntelLane("stocks");
+              setHub("home");
+            }}
+          />
+          <FilterChip
             label={`国别宏观 ${Object.keys(COUNTRY_MACRO).length}`}
             active={hub === "macro"}
             clearable
@@ -26358,7 +27704,9 @@ export default function Canvas() {
 
           {!ecoNavExpanded ? (
             intelLane === "flash" ? (
-              <MorningBriefHome role={atlasRole} />
+              <MorningBriefHome role={atlasRole} onOpenStocks={() => setIntelLane("stocks")} />
+            ) : intelLane === "stocks" ? (
+              <FintechStockWatchPanel />
             ) : atlasRole !== "roadshow" ? (
               <ResearchLibraryHomePanel />
             ) : (

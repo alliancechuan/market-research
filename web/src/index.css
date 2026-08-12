@@ -41,6 +41,48 @@ textarea {
   font: inherit;
 }
 
+/* 快讯股价条：自动横向播报，无滚动条 */
+.fintech-ticker-viewport {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent);
+}
+
+.fintech-ticker-track {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: max-content;
+  animation: fintech-ticker-marquee 42s linear infinite;
+}
+
+.fintech-ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* 国别速览文案更长，再慢一点 */
+.fintech-ticker-track.fintech-ticker-track--slow {
+  animation-duration: 90s;
+  gap: 28px;
+}
+
+@keyframes fintech-ticker-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fintech-ticker-track {
+    animation: none;
+  }
+}
+
 a {
   color: inherit;
 }

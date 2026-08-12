@@ -1,0 +1,1701 @@
+{
+  "asOf": "2026-08-12 15:24",
+  "note": "最近一期财报/业绩 KPI 缓存；主源 T2 listed-player-disclosure，可手工续写。",
+  "stats": {
+    "total": 40,
+    "fromDisclosure": 12,
+    "watchlist": 80,
+    "coverage": 0.5,
+    "withFundamentals": 33
+  },
+  "items": [
+    {
+      "id": "bajaj",
+      "nameZh": "Bajaj Finance",
+      "ticker": "BAJFINANCE.NS",
+      "period": "FY27Q1",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07",
+      "kpis": [
+        {
+          "id": "aum",
+          "label": "AUM",
+          "value": "₹5.47 万亿",
+          "yoy": "+24%"
+        },
+        {
+          "id": "gnpa",
+          "label": "GNPA",
+          "value": "0.96%"
+        },
+        {
+          "id": "nnpa",
+          "label": "NNPA",
+          "value": "0.39%"
+        },
+        {
+          "id": "urbanPL",
+          "label": "城市个人贷 AUM",
+          "value": "₹1.10 万亿"
+        }
+      ],
+      "irUrl": "https://www.business-standard.com/markets/capital-market-news/bajaj-finance-q1-pat-climbs-27-yoy-to-rs-5-986-cr-aum-tops-rs-5-46-lakh-crore-126073000969_1.html",
+      "sourceNote": "业绩新闻/IR",
+      "cashLoanHint": "展业国 IN 资产质量与个贷锚",
+      "confidence": "高",
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "creditAum": "$629 亿"
+      }
+    },
+    {
+      "id": "pypl",
+      "nameZh": "PayPal",
+      "ticker": "PYPL",
+      "period": "2026Q2",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07-28",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "净收入",
+          "value": "$86.8 亿",
+          "yoy": "+5%"
+        },
+        {
+          "id": "tpv",
+          "label": "TPV",
+          "value": "$4864 亿",
+          "yoy": "+10%"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "$11.04 亿",
+          "yoy": "-12%"
+        },
+        {
+          "id": "eps",
+          "label": "摊薄 EPS",
+          "value": "$1.25",
+          "yoy": "-3%"
+        }
+      ],
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1633917/000163391726000080/pypl2q-26earningsrelease.htm",
+      "sourceNote": "SEC·2Q26 Earnings Release",
+      "cashLoanHint": "支付网络+信贷衍生；看 TPV 与交易收入",
+      "confidence": "高",
+      "source": "manualIr",
+      "fundamentals": {
+        "equity": "$198 亿",
+        "revenue": "$86.8 亿",
+        "cashLike": "$113 亿",
+        "creditAum": "$87.6 亿",
+        "debtRatio": "76%"
+      }
+    },
+    {
+      "id": "block",
+      "nameZh": "Block / Square",
+      "ticker": "XYZ",
+      "period": "2026Q2",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-08-05",
+      "kpis": [
+        {
+          "id": "grossProfit",
+          "label": "毛利",
+          "value": "$31.7 亿",
+          "yoy": "+25%"
+        },
+        {
+          "id": "cashAppGp",
+          "label": "Cash App 毛利",
+          "value": "$19.7 亿",
+          "yoy": "+31%"
+        },
+        {
+          "id": "squareGp",
+          "label": "Square 毛利",
+          "value": "$11.6 亿",
+          "yoy": "+13%"
+        },
+        {
+          "id": "squareGpv",
+          "label": "Square GPV",
+          "value": "$728 亿",
+          "yoy": "+13%"
+        },
+        {
+          "id": "adjEps",
+          "label": "经调摊薄 EPS",
+          "value": "$1.02",
+          "yoy": "+65%"
+        }
+      ],
+      "irUrl": "https://s29.q4cdn.com/628966176/files/doc_financials/2026/q2/Q2-2026-Shareholder-Letter.pdf",
+      "sourceNote": "公司 IR·Q2 2026 Shareholder Letter",
+      "cashLoanHint": "Cash App / Square Loans 消费贷入口",
+      "confidence": "高",
+      "source": "manualIr"
+    },
+    {
+      "id": "ma",
+      "nameZh": "Mastercard",
+      "ticker": "MA",
+      "period": "2026Q2",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "净收入",
+          "value": "$93 亿",
+          "yoy": "+14%"
+        },
+        {
+          "id": "gdv",
+          "label": "GDV(本币)",
+          "value": "$2.9 万亿",
+          "yoy": "+8%"
+        },
+        {
+          "id": "xbVol",
+          "label": "跨境额增速(本币)",
+          "value": "+12%"
+        },
+        {
+          "id": "switched",
+          "label": "交换交易笔数",
+          "value": "474 亿笔",
+          "yoy": "+9%"
+        },
+        {
+          "id": "eps",
+          "label": "摊薄 EPS",
+          "value": "$4.97",
+          "yoy": "+22%"
+        }
+      ],
+      "irUrl": "https://www.stocktitan.net/sec-filings/MA/8-k-mastercard-inc-reports-material-event-dba840f2a9e8.html",
+      "sourceNote": "SEC 8-K / 业绩摘要（待换官方 IR PDF）",
+      "cashLoanHint": "卡组织；GDV/跨境看消费与跨境支付景气",
+      "confidence": "高",
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "$93.0 亿"
+      }
+    },
+    {
+      "id": "goto",
+      "nameZh": "GoTo（含金融）",
+      "ticker": "GOTO.JK",
+      "period": "2026Q2",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-08",
+      "kpis": [
+        {
+          "id": "netRevenue",
+          "label": "集团净收入",
+          "value": "IDR 5.7 万亿",
+          "yoy": "+31%"
+        },
+        {
+          "id": "coreGtv",
+          "label": "Core GTV",
+          "value": "IDR 164.3 万亿",
+          "yoy": "+83%"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "IDR 2520 亿",
+          "yoy": "连续两季盈利"
+        },
+        {
+          "id": "adjEbitda",
+          "label": "经调 EBITDA",
+          "value": ">IDR 1 万亿",
+          "yoy": "+137%"
+        },
+        {
+          "id": "fintechRev",
+          "label": "金融科技净收入",
+          "value": "IDR 2.1 万亿",
+          "yoy": "+53%"
+        }
+      ],
+      "irUrl": "https://www.gotocompany.com/en/investors",
+      "sourceNote": "公司业绩会摘要（Quartr 等转述）；待替换官方 PDF",
+      "cashLoanHint": "印尼出行+电商+金融；金融臂收入/EBITDA 增速关键",
+      "confidence": "中",
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "$3.52 亿",
+        "ebitda": ">$0.62 亿"
+      }
+    },
+    {
+      "id": "equifax",
+      "nameZh": "Equifax（征信）",
+      "ticker": "EFX",
+      "period": "2026Q2",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07-21",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "收入",
+          "value": "$17.00 亿",
+          "yoy": "+11%"
+        },
+        {
+          "id": "netIncome",
+          "label": "归属净利",
+          "value": "$1.839 亿"
+        },
+        {
+          "id": "opIncome",
+          "label": "经营利润",
+          "value": "$3.142 亿"
+        }
+      ],
+      "irUrl": "https://investor.equifax.com/news-events/press-releases/detail/1414/equifax-delivers-strong-11-growth-in-second-quarter-2026",
+      "sourceNote": "公司 IR 新闻稿·Q2 2026",
+      "cashLoanHint": "征信+劳动力数据；墨西哥征信收购意向",
+      "confidence": "高",
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "$17.0 亿"
+      }
+    },
+    {
+      "id": "transunion",
+      "nameZh": "TransUnion（征信·含 CIBIL）",
+      "ticker": "TRU",
+      "period": "2026Q2",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07-28",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "收入",
+          "value": "$13.10 亿",
+          "yoy": "+15%"
+        },
+        {
+          "id": "organicCc",
+          "label": "有机恒定汇率增速",
+          "value": "+10%"
+        },
+        {
+          "id": "adjEbitda",
+          "label": "经调 EBITDA",
+          "value": "$4.56 亿",
+          "yoy": "+12%"
+        },
+        {
+          "id": "adjEps",
+          "label": "经调摊薄 EPS",
+          "value": "$1.23",
+          "yoy": "+14%"
+        }
+      ],
+      "irUrl": "https://newsroom.transunion.com/transunion-announces-strong-second-quarter-2026-results/",
+      "sourceNote": "公司新闻稿·Q2 2026",
+      "cashLoanHint": "征信；印度 CIBIL 等新兴市场金融垂直",
+      "confidence": "高",
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "$13.1 亿",
+        "ebitda": "$4.56 亿"
+      }
+    },
+    {
+      "id": "enva",
+      "nameZh": "Enova",
+      "ticker": "ENVA",
+      "period": "2026Q2",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07-23",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "收入",
+          "value": "$9.29 亿",
+          "yoy": "+22%"
+        },
+        {
+          "id": "originations",
+          "label": "放款量增速",
+          "value": "+27%"
+        },
+        {
+          "id": "netRevMargin",
+          "label": "净收入利润率",
+          "value": "61%"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "$1.05 亿",
+          "yoy": "+38%"
+        },
+        {
+          "id": "eps",
+          "label": "摊薄 EPS",
+          "value": "$4.00",
+          "yoy": "+40%"
+        }
+      ],
+      "irUrl": "https://ir.enova.com/2026-07-23-Enova-Reports-Second-Quarter-2026-Results",
+      "sourceNote": "公司 IR·Q2 2026",
+      "cashLoanHint": "美现金贷/近原生态；放款增速与净收入利润率",
+      "confidence": "高",
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "$9.29 亿"
+      }
+    },
+    {
+      "id": "lc",
+      "nameZh": "LendingClub",
+      "ticker": "LC",
+      "period": "2026Q2",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07-27",
+      "kpis": [
+        {
+          "id": "originations",
+          "label": "放款量",
+          "value": "$31 亿",
+          "yoy": "+29%"
+        },
+        {
+          "id": "revenue",
+          "label": "收入",
+          "value": "$2.63 亿",
+          "yoy": "+6%"
+        },
+        {
+          "id": "preTax",
+          "label": "税前利润",
+          "value": "$0.76 亿",
+          "yoy": "+40%"
+        },
+        {
+          "id": "eps",
+          "label": "摊薄 EPS",
+          "value": "$0.50",
+          "yoy": "+52%"
+        }
+      ],
+      "irUrl": "https://ir.lendingclub.com/",
+      "sourceNote": "业绩会摘要（放款/收入/EPS）；待替换正式新闻稿 PDF",
+      "cashLoanHint": "美银行牌照个人贷；放款量与 ROTCE",
+      "confidence": "中",
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "$2.63 亿"
+      }
+    },
+    {
+      "id": "wise",
+      "nameZh": "Wise",
+      "ticker": "WISE.L",
+      "period": "FY27Q1",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07-16",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "净收入",
+          "value": "$7.14 亿",
+          "yoy": "+25%"
+        },
+        {
+          "id": "xbVol",
+          "label": "跨境量",
+          "value": "$693 亿",
+          "yoy": "+26%"
+        },
+        {
+          "id": "holdings",
+          "label": "客户余额",
+          "value": "$412 亿",
+          "yoy": "+31%"
+        },
+        {
+          "id": "active",
+          "label": "活跃客户",
+          "value": "1186 万",
+          "yoy": "+21%"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "$7.14 亿"
+      },
+      "irUrl": "https://markets.ft.markitdigital.com/data/announce/detail?dockey=1323-17692542-2VMRMHQU8AS16U6FQLIN77UULG",
+      "sourceNote": "Wise Q1 FY27 trading update；客户余额非公司准现金",
+      "cashLoanHint": "跨境支付；收入看 take rate 与卡收",
+      "confidence": "高",
+      "source": "manualIr"
+    },
+    {
+      "id": "paytm",
+      "nameZh": "Paytm",
+      "ticker": "PAYTM.NS",
+      "period": "FY27Q1",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07-20",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "经营收入",
+          "value": "₹2448 亿卢比",
+          "yoy": "+28%"
+        },
+        {
+          "id": "ebitda",
+          "label": "EBITDA",
+          "value": "₹203 亿卢比",
+          "yoy": "+182%"
+        },
+        {
+          "id": "pat",
+          "label": "PAT",
+          "value": "₹220 亿卢比",
+          "yoy": "+79%"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "$2.81 亿",
+        "ebitda": "$0.23 亿"
+      },
+      "irUrl": "https://paytm.com/document/ir/financial-results/Paytm_Earning-Release_Q1-FY-2027.pdf",
+      "sourceNote": "公司 IR·Q1 FY27；金额已按约 INR87 折美元",
+      "cashLoanHint": "印支付+金融；看经营收入与 EBITDA",
+      "confidence": "高",
+      "source": "manualIr"
+    },
+    {
+      "id": "fico",
+      "nameZh": "FICO（信用评分）",
+      "ticker": "FICO",
+      "period": "FY2026Q3",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07-29",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "收入",
+          "value": "$6.74 亿",
+          "yoy": "+26%"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "$2.37 亿",
+          "yoy": "+30%"
+        },
+        {
+          "id": "eps",
+          "label": "摊薄 EPS",
+          "value": "$10.45",
+          "yoy": "+41%"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "$6.74 亿"
+      },
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/814547/000081454726000031/exhibit991erq32026.htm",
+      "sourceNote": "SEC·Q3 FY2026 earnings",
+      "cashLoanHint": "评分/分析软件；非放贷主体",
+      "confidence": "高",
+      "source": "manualIr"
+    },
+    {
+      "id": "lexin",
+      "nameZh": "乐信 Lexin",
+      "ticker": "LX.O",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-25",
+      "kpis": [
+        {
+          "id": "originations",
+          "label": "放款量",
+          "value": "579 亿元",
+          "yoy": "+12.2%"
+        },
+        {
+          "id": "balance",
+          "label": "在贷本金",
+          "value": "965 亿元",
+          "yoy": "-10.1%"
+        },
+        {
+          "id": "delinq90",
+          "label": "90+ 逾期率",
+          "value": "3.5%"
+        },
+        {
+          "id": "gmv",
+          "label": "分期电商 GMV",
+          "value": "22.0 亿元",
+          "yoy": "+95%"
+        }
+      ],
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1708259/000119312526237752/lx-ex99_1.htm",
+      "sourceNote": "公司 6-K",
+      "cashLoanHint": null,
+      "confidence": "高",
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "creditAum": "$135 亿"
+      }
+    },
+    {
+      "id": "finv",
+      "nameZh": "信也 FinVolution",
+      "ticker": "FINV.N",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05",
+      "kpis": [
+        {
+          "id": "volumeTotal",
+          "label": "总成交量",
+          "value": "426 亿元",
+          "yoy": "-18.2%"
+        },
+        {
+          "id": "volumeCn",
+          "label": "国内成交量",
+          "value": "385 亿元",
+          "yoy": "-21.6%"
+        },
+        {
+          "id": "volumeOs",
+          "label": "海外成交量",
+          "value": "41 亿元",
+          "yoy": "+36.7%"
+        },
+        {
+          "id": "balanceOs",
+          "label": "海外在贷",
+          "value": "26 亿元",
+          "yoy": "+36.8%"
+        },
+        {
+          "id": "delinq90",
+          "label": "国内 90+ 逾期",
+          "value": "3.11%"
+        }
+      ],
+      "irUrl": "https://www.prnewswire.com/news-releases/finvolution-group-reports-first-quarter-2026-unaudited-financial-results-302781329.html",
+      "sourceNote": "公司新闻稿/IR",
+      "cashLoanHint": "海外量增；对照当地牌照",
+      "confidence": "高",
+      "source": "listed-player-disclosure"
+    },
+    {
+      "id": "jfin",
+      "nameZh": "嘉银 Jiayin",
+      "ticker": "JFIN.O",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-06-23",
+      "kpis": [
+        {
+          "id": "volume",
+          "label": "促成成交量",
+          "value": "193 亿元",
+          "yoy": "-45.8%"
+        },
+        {
+          "id": "delinq90",
+          "label": "90+ 逾期率",
+          "value": "2.25%"
+        },
+        {
+          "id": "revenue",
+          "label": "净收入",
+          "value": "7.57 亿元",
+          "yoy": "-57.4%"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "亏损 0.62 亿元"
+        }
+      ],
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1743102/000119312526278439/jfin-ex99.htm",
+      "sourceNote": "公司 6-K/新闻稿",
+      "cashLoanHint": "国内量价收缩；印尼看海外分部",
+      "confidence": "高",
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "revenue": "$1.06 亿"
+      }
+    },
+    {
+      "id": "qfin",
+      "nameZh": "奇富 QFIN",
+      "ticker": "QFIN.O",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-26",
+      "kpis": [
+        {
+          "id": "volume",
+          "label": "促成+自营放款量",
+          "value": "650 亿元",
+          "yoy": "-26.8%"
+        },
+        {
+          "id": "balance",
+          "label": "在贷余额",
+          "value": "1,144 亿元"
+        },
+        {
+          "id": "delinq90",
+          "label": "90+ 逾期率",
+          "value": "3.50%"
+        },
+        {
+          "id": "day1",
+          "label": "Day-1 逾期",
+          "value": "5.7%"
+        }
+      ],
+      "irUrl": "https://www.globenewswire.com/de/news-release/2026/05/26/3301561/0/en/Qfin-Holdings-Announces-First-Quarter-2026-Unaudited-Financial-Results.html",
+      "sourceNote": "公司新闻稿",
+      "cashLoanHint": null,
+      "confidence": "高",
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "creditAum": "$160 亿"
+      }
+    },
+    {
+      "id": "yrd",
+      "nameZh": "宜人 YRD",
+      "ticker": "YRD.N",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-06-25",
+      "kpis": [
+        {
+          "id": "volume",
+          "label": "促成成交量",
+          "value": "89 亿元",
+          "yoy": "-42%"
+        },
+        {
+          "id": "avgLoan",
+          "label": "笔均",
+          "value": "约 1.20 万元",
+          "yoy": "+67%"
+        },
+        {
+          "id": "dq1_30",
+          "label": "1–30 天逾期",
+          "value": "2.5%"
+        },
+        {
+          "id": "dq61_90",
+          "label": "61–90 天逾期",
+          "value": "3.2%"
+        }
+      ],
+      "irUrl": "https://ir.yiren.com/2026-06-25-Yiren-Digital-Reports-First-Quarter-2026-Unaudited-Financial-Results",
+      "sourceNote": "公司 IR",
+      "cashLoanHint": null,
+      "confidence": "高",
+      "source": "listed-player-disclosure"
+    },
+    {
+      "id": "grab",
+      "nameZh": "Grab",
+      "ticker": "GRAB.O",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-05",
+      "kpis": [
+        {
+          "id": "fsRev",
+          "label": "金融分部收入",
+          "value": "1.07 亿美元",
+          "yoy": "+43%"
+        },
+        {
+          "id": "disburse",
+          "label": "季放款额",
+          "value": "11 亿美元",
+          "yoy": "+67%"
+        },
+        {
+          "id": "glp",
+          "label": "总贷款组合",
+          "value": "14.4 亿美元",
+          "yoy": "+130%"
+        },
+        {
+          "id": "fsEbitda",
+          "label": "金融 Adj. EBITDA",
+          "value": "-0.17 亿美元"
+        }
+      ],
+      "irUrl": "https://s205.q4cdn.com/179588156/files/doc_news/2026/May/05/2026-Q1-Earnings-Press-Release.pdf",
+      "sourceNote": "公司新闻稿",
+      "cashLoanHint": "GrabFin+数字银行；展业国 ID/PH/TH/MY 对照当地牌照",
+      "confidence": "高",
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "ebitda": "-$0.17 亿"
+      }
+    },
+    {
+      "id": "nu",
+      "nameZh": "Nubank",
+      "ticker": "NU.N",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05",
+      "kpis": [
+        {
+          "id": "creditBook",
+          "label": "信贷组合",
+          "value": "372 亿美元",
+          "yoy": "+40%"
+        },
+        {
+          "id": "unsec",
+          "label": "无抵押贷",
+          "value": "约 100 亿美元"
+        },
+        {
+          "id": "npl1590",
+          "label": "NPL 15–90",
+          "value": "5.0%"
+        },
+        {
+          "id": "npl90",
+          "label": "NPL 90+",
+          "value": "6.5%"
+        },
+        {
+          "id": "mxCust",
+          "label": "墨西哥客户",
+          "value": "约 1500 万"
+        }
+      ],
+      "irUrl": "https://international.nubank.com.br/company/nu-holdings-ltd-reports-first-quarter-2026-financial-results/",
+      "sourceNote": "公司 IR",
+      "cashLoanHint": "展业国 MX 对照；信用卡为主、无抵押贷增速快",
+      "confidence": "高",
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "creditAum": "$372 亿"
+      }
+    },
+    {
+      "id": "xyf",
+      "nameZh": "小赢科技",
+      "ticker": "XYF",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-27",
+      "kpis": [
+        {
+          "id": "volume",
+          "label": "促成+自营放款量",
+          "value": "146.3 亿元",
+          "yoy": "-58.4%"
+        },
+        {
+          "id": "balance",
+          "label": "在贷余额",
+          "value": "353 亿元",
+          "yoy": "-39.6%"
+        },
+        {
+          "id": "dq31_60",
+          "label": "31–60 天逾期",
+          "value": "2.61%"
+        },
+        {
+          "id": "dq91_180",
+          "label": "91–180 天逾期",
+          "value": "9.95%"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "0.379 亿元",
+          "yoy": "-91.7%"
+        }
+      ],
+      "irUrl": "https://ir.xiaoyinggroup.com/2026-05-27-X-Financial-Reports-First-Quarter-2026-Unaudited-Financial-Results",
+      "sourceNote": "公司 IR / PR Newswire",
+      "cashLoanHint": "主动收量保质量；国内监管收紧下量价双压",
+      "confidence": "高",
+      "source": "manual_ir",
+      "fundamentals": {
+        "creditAum": "$49.4 亿"
+      }
+    },
+    {
+      "id": "lufax",
+      "nameZh": "陆金所",
+      "ticker": "LU",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-04-27",
+      "kpis": [
+        {
+          "id": "balance",
+          "label": "总在贷",
+          "value": "1,725 亿元",
+          "yoy": "-15.4%"
+        },
+        {
+          "id": "cfBalance",
+          "label": "消金在贷",
+          "value": "594 亿元",
+          "yoy": "+18.5%"
+        },
+        {
+          "id": "newLoans",
+          "label": "新促成贷款",
+          "value": "488 亿元",
+          "yoy": "-14.8%"
+        },
+        {
+          "id": "borrowers",
+          "label": "累计借款人",
+          "value": "约 2960 万",
+          "yoy": "+9.7%"
+        }
+      ],
+      "irUrl": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0427/2026042702728.pdf",
+      "sourceNote": "港交所披露 / 公司业绩",
+      "cashLoanHint": "总在贷收缩，消金子公司仍扩表",
+      "confidence": "高",
+      "source": "manual_ir"
+    },
+    {
+      "id": "afrm",
+      "nameZh": "Affirm",
+      "ticker": "AFRM",
+      "period": "FQ3'26",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-07",
+      "kpis": [
+        {
+          "id": "gmv",
+          "label": "GMV",
+          "value": "$11.6B",
+          "yoy": "+35%"
+        },
+        {
+          "id": "revenue",
+          "label": "净收入",
+          "value": "$10.39 亿",
+          "yoy": "+33%"
+        },
+        {
+          "id": "active",
+          "label": "活跃消费者",
+          "value": "2680 万"
+        },
+        {
+          "id": "portfolio",
+          "label": "平台贷款组合",
+          "value": "$18.4B"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "$1.029 亿"
+        }
+      ],
+      "irUrl": "https://investors.affirm.com/static-files/161db208-bf7a-4ef8-8175-478506c32492",
+      "sourceNote": "公司股东信 / 8-K",
+      "cashLoanHint": "美加 BNPL 主尺=GMV；对照展业国分期渗透",
+      "confidence": "高",
+      "source": "manual_ir",
+      "fundamentals": {
+        "revenue": "$10.4 亿",
+        "creditAum": "$184 亿"
+      }
+    },
+    {
+      "id": "opfi",
+      "nameZh": "OppFi",
+      "ticker": "OPFI",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-07",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "总收入",
+          "value": "$1.519 亿",
+          "yoy": "+8.3%"
+        },
+        {
+          "id": "endingRecv",
+          "label": "期末应收",
+          "value": "$4.449 亿",
+          "yoy": "+9.4%"
+        },
+        {
+          "id": "netOrig",
+          "label": "净放款",
+          "value": "$1.760 亿"
+        },
+        {
+          "id": "ncoRecv",
+          "label": "NCO/均应收(年化)",
+          "value": "55.5%"
+        }
+      ],
+      "irUrl": "https://www.prnewswire.com/news-releases/oppfi-reports-first-quarter-2026-results-record-quarterly-revenue-302764741.html",
+      "sourceNote": "公司新闻稿",
+      "cashLoanHint": "银行伙伴模式线上消金；核销率高，看客群下沉",
+      "confidence": "高",
+      "source": "manual_ir",
+      "fundamentals": {
+        "revenue": "$1.52 亿"
+      }
+    },
+    {
+      "id": "upst",
+      "nameZh": "Upstart",
+      "ticker": "UPST",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-05",
+      "kpis": [
+        {
+          "id": "originations",
+          "label": "促成放款额",
+          "value": "$34 亿",
+          "yoy": "+61%"
+        },
+        {
+          "id": "loans",
+          "label": "笔数",
+          "value": "42.5 万",
+          "yoy": "+77%"
+        },
+        {
+          "id": "revenue",
+          "label": "总收入",
+          "value": "$3.08 亿",
+          "yoy": "+44%"
+        },
+        {
+          "id": "adjEbitda",
+          "label": "Adj. EBITDA",
+          "value": "$4050 万"
+        }
+      ],
+      "irUrl": "https://ir.upstart.com/news-releases/news-release-details/upstart-announces-first-quarter-2026-results",
+      "sourceNote": "公司 IR",
+      "cashLoanHint": "AI 撮合消金；量增但利润仍承压",
+      "confidence": "高",
+      "source": "manual_ir",
+      "fundamentals": {
+        "revenue": "$3.08 亿",
+        "ebitda": "$0.41 亿"
+      }
+    },
+    {
+      "id": "sofi",
+      "nameZh": "SoFi Lending",
+      "ticker": "",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-04-29",
+      "kpis": [
+        {
+          "id": "totalOrig",
+          "label": "总放款额",
+          "value": "$122 亿",
+          "yoy": "+68%"
+        },
+        {
+          "id": "plOrig",
+          "label": "个人贷放款",
+          "value": "$83 亿",
+          "yoy": "+51%"
+        },
+        {
+          "id": "slOrig",
+          "label": "学贷放款",
+          "value": "$26 亿",
+          "yoy": "+119%"
+        },
+        {
+          "id": "hlOrig",
+          "label": "房贷放款",
+          "value": "$12 亿",
+          "yoy": "+137%"
+        }
+      ],
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1818874/000181887426000020/a2026q1earningsrelease.htm",
+      "sourceNote": "公司 8-K / IR",
+      "cashLoanHint": "数字银行+消金；个贷为现金贷对照主尺",
+      "confidence": "高",
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "equity": "$108 亿",
+        "debtRatio": "80%",
+        "cashLike": "$34.0 亿",
+        "creditAum": "$420 亿"
+      }
+    },
+    {
+      "id": "syf",
+      "nameZh": "Synchrony零售卡",
+      "ticker": "",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-04",
+      "kpis": [
+        {
+          "id": "recv",
+          "label": "贷款应收",
+          "value": "$1001 亿",
+          "yoy": "持平"
+        },
+        {
+          "id": "interest",
+          "label": "贷款利息与费用",
+          "value": "$54 亿",
+          "yoy": "+2%"
+        },
+        {
+          "id": "dq30",
+          "label": "30+ 逾期",
+          "value": "4.54%"
+        },
+        {
+          "id": "dq90",
+          "label": "90+ 逾期",
+          "value": "2.28%"
+        }
+      ],
+      "irUrl": "https://investors.synchrony.com/filings-regulatory/sec-filings/all-sec-filings/content/0001601712-26-000013/earningsrelease1q26.htm",
+      "sourceNote": "公司业绩稿",
+      "cashLoanHint": "美零售分期/私标卡；资产质量锚定",
+      "confidence": "高",
+      "source": "listed-player-disclosure"
+    },
+    {
+      "id": "pags",
+      "nameZh": "PagSeguro",
+      "ticker": "PAGS",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05",
+      "kpis": [
+        {
+          "id": "tpv",
+          "label": "TPV",
+          "value": "R$1282 亿",
+          "yoy": "-0.3%"
+        },
+        {
+          "id": "credit",
+          "label": "信贷组合",
+          "value": "R$50 亿",
+          "yoy": "+35.9%"
+        },
+        {
+          "id": "cashin",
+          "label": "Cash-in",
+          "value": "R$814 亿",
+          "yoy": "+10.8%"
+        },
+        {
+          "id": "deposits",
+          "label": "存款",
+          "value": "R$416 亿",
+          "yoy": "+22.9%"
+        }
+      ],
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1712807/000155485526000999/MainDocument.htm",
+      "sourceNote": "公司 6-K",
+      "cashLoanHint": "巴西收单+钱包信贷；信贷臂增速快于 TPV",
+      "confidence": "高",
+      "source": "manual_ir",
+      "fundamentals": {
+        "creditAum": "$9.09 亿"
+      }
+    },
+    {
+      "id": "stne",
+      "nameZh": "StoneCo",
+      "ticker": "STNE",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-14",
+      "kpis": [
+        {
+          "id": "tpv",
+          "label": "总 TPV",
+          "value": "R$1372 亿",
+          "yoy": "+2.7%"
+        },
+        {
+          "id": "pix",
+          "label": "PIX QR TPV",
+          "value": "R$274 亿",
+          "yoy": "+37.3%"
+        },
+        {
+          "id": "revenue",
+          "label": "总收入",
+          "value": "R$35.78 亿",
+          "yoy": "+6.5%"
+        },
+        {
+          "id": "ni",
+          "label": "持续经营净利",
+          "value": "R$5.491 亿",
+          "yoy": "+3.5%"
+        }
+      ],
+      "irUrl": "https://api.mziq.com/mzfilemanager/v2/d/46ed7b29-1318-408a-a036-ba544e2ecccb/13b6fad7-3f2c-a2f0-1ec4-4a76c625288e?origin=2",
+      "sourceNote": "公司 1Q26 Earnings Release",
+      "cashLoanHint": "巴西收单；PIX 高增，宏观利率压制小商户",
+      "confidence": "高",
+      "source": "manual_ir",
+      "fundamentals": {
+        "revenue": "$6.51 亿"
+      }
+    },
+    {
+      "id": "meli",
+      "nameZh": "MercadoLibre（含信贷/支付）",
+      "ticker": "MELI",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-07",
+      "kpis": [
+        {
+          "id": "credit",
+          "label": "信贷组合",
+          "value": "$146 亿",
+          "yoy": "+87%"
+        },
+        {
+          "id": "ccBook",
+          "label": "信用卡组合",
+          "value": "$66 亿",
+          "yoy": "+104%"
+        },
+        {
+          "id": "tpv",
+          "label": "TPV",
+          "value": "$872 亿",
+          "yoy": "+50%"
+        },
+        {
+          "id": "fintechMau",
+          "label": "Pago MAU",
+          "value": "8300 万",
+          "yoy": "+29%"
+        },
+        {
+          "id": "revenue",
+          "label": "收入+金融收入",
+          "value": "$88.45 亿",
+          "yoy": "+49%"
+        }
+      ],
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1099590/000109959026000014/meli-20260507xex991.htm",
+      "sourceNote": "公司 IR / 8-K",
+      "cashLoanHint": "拉美电商信贷主尺；展业国 MX 对照信用卡/消金",
+      "confidence": "高",
+      "source": "manual_ir",
+      "fundamentals": {
+        "revenue": "$88.5 亿",
+        "creditAum": "$146 亿"
+      }
+    },
+    {
+      "id": "sea",
+      "nameZh": "Sea / Shopee（含金融）",
+      "ticker": "SE",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-12",
+      "kpis": [
+        {
+          "id": "moneeRev",
+          "label": "Monee 收入",
+          "value": "$12 亿",
+          "yoy": "+57.8%"
+        },
+        {
+          "id": "loanBook",
+          "label": "消费+SME 在贷本金",
+          "value": "$99 亿",
+          "yoy": "+71.3%"
+        },
+        {
+          "id": "npl90",
+          "label": "90+ NPL",
+          "value": "1.1%"
+        },
+        {
+          "id": "moneeEbitda",
+          "label": "Monee Adj. EBITDA",
+          "value": "$2.752 亿",
+          "yoy": "+14.0%"
+        }
+      ],
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1703399/000119312526219378/d78490dex991.htm",
+      "sourceNote": "公司 6-K",
+      "cashLoanHint": "Shopee 金融臂 Monee；SEA+巴西在贷高增、资产质量稳",
+      "confidence": "高",
+      "source": "manual_ir",
+      "fundamentals": {
+        "ebitda": "$2.75 亿",
+        "creditAum": "$99.0 亿"
+      }
+    },
+    {
+      "id": "kaspi",
+      "nameZh": "Kaspi.kz（超级App·支付/信贷）",
+      "ticker": "KSPI",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-11",
+      "kpis": [
+        {
+          "id": "fintechRev",
+          "label": "Fintech 收入",
+          "value": "$8.97 亿",
+          "yoy": "+25%"
+        },
+        {
+          "id": "loanBook",
+          "label": "平均净贷款组合",
+          "value": "$151 亿",
+          "yoy": "+23%"
+        },
+        {
+          "id": "tfv",
+          "label": "TFV 放款流",
+          "value": "$54 亿",
+          "yoy": "-2%"
+        },
+        {
+          "id": "tpv",
+          "label": "支付 TPV",
+          "value": "$237 亿",
+          "yoy": "+14%"
+        },
+        {
+          "id": "npl",
+          "label": "NPL",
+          "value": "6.6%"
+        }
+      ],
+      "irUrl": "https://ir.kaspi.kz/media/1Q_2026_Results.pdf",
+      "sourceNote": "公司 1Q26 Results PDF",
+      "cashLoanHint": "中亚超级App；放款流稳、组合久期拉长",
+      "confidence": "高",
+      "source": "manual_ir"
+    },
+    {
+      "id": "inter-br",
+      "nameZh": "Inter & Co",
+      "ticker": "INTR",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05",
+      "kpis": [
+        {
+          "id": "loanBook",
+          "label": "毛贷款组合",
+          "value": "R$500 亿",
+          "yoy": "+33%"
+        },
+        {
+          "id": "npl90",
+          "label": "NPL 90+",
+          "value": "5.1%"
+        },
+        {
+          "id": "npl1590",
+          "label": "NPL 15–90",
+          "value": "4.6%"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "R$3.95 亿",
+          "yoy": "+37.8%"
+        },
+        {
+          "id": "tpv",
+          "label": "卡+PIX TPV",
+          "value": "R$4270 亿",
+          "yoy": "+25%"
+        }
+      ],
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1864163/000186416326000048/interco1q26earningsrelea.htm",
+      "sourceNote": "公司 1Q26 Earnings Release",
+      "cashLoanHint": "巴西数字银行；约 70% 抵押/担保，私银工资贷亮点",
+      "confidence": "高",
+      "source": "manual_ir"
+    },
+    {
+      "id": "nubank-br",
+      "nameZh": "Nu Holdings（B3 存托）",
+      "ticker": "NUBR33.SA",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05",
+      "kpis": [
+        {
+          "id": "creditBook",
+          "label": "信贷组合",
+          "value": "372 亿美元",
+          "yoy": "+40%"
+        },
+        {
+          "id": "unsec",
+          "label": "无抵押贷",
+          "value": "约 100 亿美元"
+        },
+        {
+          "id": "npl1590",
+          "label": "NPL 15–90",
+          "value": "5.0%"
+        },
+        {
+          "id": "npl90",
+          "label": "NPL 90+",
+          "value": "6.5%"
+        },
+        {
+          "id": "mxCust",
+          "label": "墨西哥客户",
+          "value": "约 1500 万"
+        }
+      ],
+      "irUrl": "https://international.nubank.com.br/company/nu-holdings-ltd-reports-first-quarter-2026-financial-results/",
+      "sourceNote": "公司 IR · B3 存托对齐 Nu Holdings 集团 KPI",
+      "cashLoanHint": "展业国 MX 对照；信用卡为主、无抵押贷增速快",
+      "confidence": "高",
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "creditAum": "$372 亿"
+      }
+    },
+    {
+      "id": "visa",
+      "nameZh": "Visa",
+      "ticker": "V",
+      "period": "FY2026Q2",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-04-28",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "净收入",
+          "value": "$112 亿",
+          "yoy": "+17%"
+        },
+        {
+          "id": "paymentsVol",
+          "label": "支付额增速(恒定美元)",
+          "value": "+9%"
+        },
+        {
+          "id": "xbVol",
+          "label": "跨境额增速",
+          "value": "+12%"
+        },
+        {
+          "id": "netIncome",
+          "label": "GAAP 净利",
+          "value": "$60 亿",
+          "yoy": "+32%"
+        },
+        {
+          "id": "eps",
+          "label": "GAAP EPS",
+          "value": "$3.14",
+          "yoy": "+36%"
+        }
+      ],
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000077/q22026earningsrelease.htm",
+      "sourceNote": "SEC·Visa Fiscal Q2 2026 Earnings Release",
+      "cashLoanHint": "卡组织基础设施；跨境与处理笔数是宏观支付景气锚",
+      "confidence": "高",
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "$112 亿"
+      }
+    },
+    {
+      "id": "dlo",
+      "nameZh": "dLocal",
+      "ticker": "DLO",
+      "period": "2026Q1",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-05-14",
+      "kpis": [
+        {
+          "id": "tpv",
+          "label": "TPV",
+          "value": "$141 亿",
+          "yoy": "+73%"
+        },
+        {
+          "id": "revenue",
+          "label": "收入",
+          "value": "$3.36 亿",
+          "yoy": "+55%"
+        },
+        {
+          "id": "grossProfit",
+          "label": "毛利",
+          "value": "$1.19 亿",
+          "yoy": "+40%"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "$0.42 亿",
+          "yoy": "-10%"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "$3.36 亿"
+      },
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1846832/000184683226000019/ex993dlocal1q26er.htm",
+      "sourceNote": "SEC·1Q26 Earnings Release",
+      "cashLoanHint": "新兴市场收单；看 TPV/收入",
+      "confidence": "高",
+      "source": "manualIr"
+    },
+    {
+      "id": "sbi-cards",
+      "nameZh": "SBI Cards",
+      "ticker": "SBICARD.NS",
+      "period": "FY2026",
+      "periodEnd": "2026-03-31",
+      "reportedAt": "2026-04-27",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "总收入",
+          "value": "₹20708 亿卢比",
+          "yoy": "+11%"
+        },
+        {
+          "id": "receivables",
+          "label": "应收/在贷",
+          "value": "₹56926 亿卢比",
+          "yoy": "+2%"
+        },
+        {
+          "id": "pat",
+          "label": "PAT",
+          "value": "₹2167 亿卢比",
+          "yoy": "+13%"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "$23.8 亿",
+        "creditAum": "$65.4 亿"
+      },
+      "irUrl": "https://www.sbicard.com/sbi-card-en/assets/docs/pdf/who-we-are/notices/Disclosure-under-Regulation-30-Investor-Presentation.pdf",
+      "sourceNote": "公司投资者材料·FY26；折美元约 INR87；信贷=Receivables",
+      "cashLoanHint": "印信用卡在贷；看 receivables 与 spend",
+      "confidence": "高",
+      "source": "manualIr"
+    },
+    {
+      "id": "capitec",
+      "nameZh": "Capitec（南非数字零售银行）",
+      "ticker": "CPI.JO",
+      "period": "FY2026",
+      "periodEnd": "2026-02-28",
+      "reportedAt": "2026-04",
+      "kpis": [
+        {
+          "id": "headline",
+          "label": "Headline earnings",
+          "value": "R168 亿",
+          "yoy": "+23%"
+        },
+        {
+          "id": "grossLoans",
+          "label": "总贷款",
+          "value": "R980 亿",
+          "yoy": "+9%"
+        },
+        {
+          "id": "equity",
+          "label": "权益",
+          "value": "R595 亿",
+          "yoy": "+17%"
+        },
+        {
+          "id": "cashInv",
+          "label": "现金与金融投资",
+          "value": "R1386 亿",
+          "yoy": "+8%"
+        }
+      ],
+      "fundamentals": {
+        "equity": "$33.4 亿",
+        "cashLike": "$77.9 亿",
+        "creditAum": "$55.1 亿"
+      },
+      "irUrl": "https://senspdf.jse.co.za/documents/2026/JSE/ISSE/CPI/CPIFY26.pdf",
+      "sourceNote": "JSE IAR FY26；折美元约 ZAR17.8；准现金=Cash and financial investments；信贷=Gross loans",
+      "cashLoanHint": "南非零售银行信贷；看贷款账面与 ECL",
+      "confidence": "高",
+      "source": "manualIr"
+    },
+    {
+      "id": "vcredit",
+      "nameZh": "维信 Vcredit",
+      "ticker": "2003.HK",
+      "period": "2025FY",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026-03-31",
+      "kpis": [
+        {
+          "id": "volume",
+          "label": "内地放款量",
+          "value": "584.5 亿元"
+        },
+        {
+          "id": "income",
+          "label": "总收入",
+          "value": "38.7 亿元"
+        },
+        {
+          "id": "users",
+          "label": "累计注册用户",
+          "value": "1.71 亿",
+          "yoy": "+8.2%"
+        },
+        {
+          "id": "newDq",
+          "label": "新贷逾期（年末）",
+          "value": "约 0.85%"
+        }
+      ],
+      "irUrl": "https://www.acnnewswire.com/press-release/english/106100/vcredit-releases-2025-full-year-results",
+      "sourceNote": "全年业绩公告",
+      "cashLoanHint": null,
+      "confidence": "高",
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "revenue": "$5.41 亿"
+      }
+    },
+    {
+      "id": "bairong",
+      "nameZh": "百融云创",
+      "ticker": "6608.HK",
+      "period": "FY2025",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026-03-26",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "收入",
+          "value": "29.20 亿元",
+          "yoy": "-0.31%"
+        },
+        {
+          "id": "netIncome",
+          "label": "年內溢利",
+          "value": "0.739 亿元",
+          "yoy": "-72%"
+        },
+        {
+          "id": "grossMargin",
+          "label": "毛利率",
+          "value": "72%"
+        },
+        {
+          "id": "baas",
+          "label": "BaaS 收入",
+          "value": "19.01 亿元",
+          "yoy": "-5%"
+        },
+        {
+          "id": "maas",
+          "label": "MaaS 收入",
+          "value": "10.19 亿元",
+          "yoy": "+9%"
+        }
+      ],
+      "irUrl": "https://www.hkexnews.hk/listedco/listconews/sehk/2026/0326/2026032600817_c.pdf",
+      "sourceNote": "港交所·截至2025-12-31年度业绩公告；2026H1 另发盈警净亏约 3.2–3.6 亿（待中报）",
+      "cashLoanHint": "助贷/金融云受监管冲击；风控服务收入结构看 MaaS vs BaaS",
+      "confidence": "高",
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "$4.08 亿"
+      }
+    },
+    {
+      "id": "experian",
+      "nameZh": "Experian（征信）",
+      "ticker": "EXPN.L",
+      "period": "FY26H1",
+      "periodEnd": "2025-09-30",
+      "reportedAt": "2025-11-12",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "持续业务收入",
+          "value": "$40.58 亿",
+          "yoy": "+13%"
+        },
+        {
+          "id": "organic",
+          "label": "有机收入增速",
+          "value": "+8%"
+        },
+        {
+          "id": "ebit",
+          "label": "Benchmark EBIT",
+          "value": "$11.49 亿",
+          "yoy": "+14%"
+        },
+        {
+          "id": "eps",
+          "label": "Benchmark EPS",
+          "value": "85.0¢",
+          "yoy": "+12%"
+        }
+      ],
+      "irUrl": "https://www.experian.com/content/dam/marketing/global/plc/en/assets/documents/results-and-presentations/2025/Experian-FY26-H1-results-announcement.pdf",
+      "sourceNote": "公司·FY26 H1 results announcement",
+      "cashLoanHint": "征信基础设施；有机增速与北美/拉美区域",
+      "confidence": "高",
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "$40.6 亿"
+      }
+    }
+  ]
+}

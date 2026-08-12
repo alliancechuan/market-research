@@ -63,6 +63,8 @@ export const LISTED_ORIGIN_LABEL: Record<string, string> = {
   "ride-food": "出行/外卖",
   digibank: "数字银行",
   bnpl: "BNPL/分期",
+  "data-service": "数据服务",
+  "risk-service": "风控服务",
   ...(LISTED_PLAYER_DISCLOSURE.origins || {}),
 };
 

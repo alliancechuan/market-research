@@ -1,6 +1,6 @@
 {
-  "asOf": "2026-08-10",
-  "note": "消费信贷信源分层。T2 名册与 Atlas 信贷种子对齐（全量数百家，按洲际×出身），非仅中资可比公司。竞争情报摸排优先各国领先数字银行、支付牌照、线上信贷机构（见 country-license-credit-priority）。",
+  "asOf": "2026-08-12",
+  "note": "消费信贷信源分层。T2 名册与 Atlas 信贷种子对齐（全量数百家，按洲际×出身），非仅中资可比公司。竞争情报摸排优先各国领先数字银行、支付牌照、线上信贷机构（见 country-license-credit-priority）。上市公司行情/披露数据链见〔16〕–〔20〕与 fintech-stock-source-links。",
   "tiers": [
     {
       "id": "T1",
@@ -14,11 +14,16 @@
     {
       "id": "T2",
       "rank": 2,
-      "nameZh": "上市定期披露",
-      "cadence": "季/年 + 重大公告",
-      "use": "玩家卡 KPI 槽 · 资产质量与规模核对",
-      "examples": ["10-Q/6-K/年报 KPI", "成交量/在贷/90+ 逾期", "国别分部"],
-      "dataKey": "listed-player-disclosure"
+      "nameZh": "上市定期披露与行情",
+      "cadence": "季/年 + 重大公告 · 日快照",
+      "use": "玩家卡 KPI · 顶栏「上市公司」股价/市值/最近财报",
+      "examples": [
+        "10-Q/6-K/年报 KPI（成交量/在贷/90+）",
+        "Yahoo 股价·市值快照〔16〕（腾讯行情为主）",
+        "SEC EDGAR〔17〕/港交所披露易〔18〕/本地交易所〔19〕",
+        "观察池 watchlist + earnings 缓存；公司 IR 进信源目录展开"
+      ],
+      "dataKey": "listed-player-disclosure / fintech-stock-watchlist / fintech-stock-quotes / fintech-stock-earnings / fintech-stock-source-links"
     },
     {
       "id": "T3",

@@ -3,8 +3,8 @@
  * 大屏另含指挥台分段控件（ScreenSeg*），强调操作反馈与指标可读性。
  */
 import type { CSSProperties, ReactNode } from "react";
-import { useEffect, useState } from "react";
-import { useHostTheme, Text, Button, Link, Stack, Row, mergeStyle } from "./shims/cursor-canvas";
+import { useEffect, useMemo, useState } from "react";
+import { useCanvasState, useHostTheme, Text, Button, Link, Stack, Row, mergeStyle } from "./shims/cursor-canvas";
 import {
   heatStopsAdded,
   heatStopsRemoved,
@@ -22,7 +22,14 @@ import {
   collectCountryMacroCiteNos,
 } from "./data/countryMacro";
 import { formatCountryLanguageLine, getCountryLanguage } from "./data/countryLanguage";
-import { resolveFxSeries } from "./data/fxHistory";
+import {
+  resolveFxSeries,
+  FX_CHG_PERIODS,
+  type FxChgPeriodId,
+  sliceFxPointsByMonths,
+  fxLocalStrengthChgPct,
+  fxPointsSpanLabel,
+} from "./data/fxHistory";
 import { MapMacroKV, MacroSourcesBlock, CitedText } from "./SourceCite";
 import { citeMark } from "./data/sourceCitations";
 
@@ -841,14 +848,20 @@ export function MapCountryMacroBrief({ code, dense = false }: { code: string; de
     fxHint: snap.fxHint,
     fxVolInYear: snap.fxVolInYear,
   });
+  const [fxPeriod, setFxPeriod] = useCanvasState<FxChgPeriodId>("fxChgPeriod1", "all");
+  const fxPeriodMeta = FX_CHG_PERIODS.find((p) => p.id === fxPeriod) || FX_CHG_PERIODS[FX_CHG_PERIODS.length - 1]!;
+  const fxPts = useMemo(
+    () => (fx?.points?.length ? sliceFxPointsByMonths(fx.points, fxPeriodMeta.months) : []),
+    [fx?.points, fxPeriodMeta.months],
+  );
   const groups = buildCashLoanMacroGroups(snap);
   const brief = dense ? "" : synthesizeCashLoanBrief(snap);
   const note = displayCreditNote(snap);
   const citeNos = collectCountryMacroCiteNos(snap);
 
   let spark: ReactNode = null;
-  if (fx?.points?.length) {
-    const pts = fx.points;
+  if (fx && fxPts.length >= 2) {
+    const pts = fxPts;
     const W = 240;
     const H = 44;
     const ys = pts.map((p) => p.v);
@@ -862,8 +875,7 @@ export function MapCountryMacroBrief({ code, dense = false }: { code: string; de
         return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
       })
       .join(" ");
-    const quoteChg = pts[0]!.v !== 0 ? ((pts[pts.length - 1]!.v - pts[0]!.v) / pts[0]!.v) * 100 : 0;
-    const strengthChg = fx.quote === "usd_per_eur" ? quoteChg : -quoteChg;
+    const strengthChg = fxLocalStrengthChgPct(fx, pts);
     const flat = Math.abs(strengthChg) < 0.05;
     const up = strengthChg > 0;
     const FX_UP = "#E53935";
@@ -871,12 +883,7 @@ export function MapCountryMacroBrief({ code, dense = false }: { code: string; de
     const stroke = flat ? c.accent : up ? FX_UP : FX_DOWN;
     const arrow = flat ? "–" : up ? "▲" : "▼";
     const word = flat ? "持平" : up ? "本币升" : "本币贬";
-    const d0 = pts[0]?.d?.slice(0, 7);
-    const d1 = pts[pts.length - 1]?.d?.slice(0, 7);
-    const y0 = pts[0]?.d?.slice(0, 4);
-    const y1 = pts[pts.length - 1]?.d?.slice(0, 4);
-    const spanHint =
-      d0 && d1 && d0 !== d1 ? `${d0}→${d1}` : y0 && y1 && y0 !== y1 ? `${y0}–${y1}` : y0 ? `${y0}起` : "区间";
+    const spanHint = fxPointsSpanLabel(pts, fx.synthetic && fxPeriod === "all");
     const fxCite = fx.synthetic ? "" : citeMark(13);
     spark = (
       <div style={{ marginBottom: 10 }}>
@@ -904,9 +911,35 @@ export function MapCountryMacroBrief({ code, dense = false }: { code: string; de
               <span style={{ fontWeight: 400 }}>{word}</span>
             </span>
             <span style={{ fontWeight: 500, color: c.textTertiary, fontSize: 10 }}>
-              {spanHint}累计（≠年内波幅）
+              {spanHint}累计 · {fxPeriodMeta.label}
             </span>
           </span>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
+          {FX_CHG_PERIODS.map((p) => {
+            const active = fxPeriod === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setFxPeriod(p.id)}
+                style={{
+                  height: 22,
+                  padding: "0 7px",
+                  borderRadius: 5,
+                  border: `1px solid ${active ? stroke : c.panelBorder}`,
+                  background: active ? "rgba(80,140,180,0.12)" : "transparent",
+                  color: active ? c.text : c.textTertiary,
+                  cursor: "pointer",
+                  font: "inherit",
+                  fontSize: 10,
+                  fontWeight: active ? 600 : 500,
+                }}
+              >
+                {p.label}
+              </button>
+            );
+          })}
         </div>
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={40} preserveAspectRatio="none" aria-hidden>
           <path d={line} fill="none" stroke={stroke} strokeWidth={1.4} strokeLinejoin="round" />

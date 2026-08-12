@@ -33,6 +33,65 @@ export function getFxHistory(code: string): FxHistoryCountry | undefined {
   return row;
 }
 
+/** 本币强弱涨跌计算窗口（相对序列末端） */
+export type FxChgPeriodId = "3m" | "6m" | "1y" | "3y" | "5y" | "all";
+
+export const FX_CHG_PERIODS: readonly { id: FxChgPeriodId; label: string; months: number | null }[] = [
+  { id: "3m", label: "3个月", months: 3 },
+  { id: "6m", label: "6个月", months: 6 },
+  { id: "1y", label: "1年", months: 12 },
+  { id: "3y", label: "3年", months: 36 },
+  { id: "5y", label: "5年", months: 60 },
+  { id: "all", label: "全区间", months: null },
+] as const;
+
+/** 截取末端 N 个月（含起止）；months=null 返回全序列 */
+export function sliceFxPointsByMonths(
+  points: FxHistoryPoint[],
+  months: number | null,
+): FxHistoryPoint[] {
+  if (!points.length) return [];
+  if (months == null || months <= 0) return points;
+  const last = points[points.length - 1]!;
+  const end = Date.parse(last.d);
+  if (!Number.isFinite(end)) return points;
+  const startMs = end - months * 30.4375 * 24 * 3600 * 1000;
+  let i = 0;
+  while (i < points.length - 1) {
+    const t = Date.parse(points[i]!.d);
+    if (Number.isFinite(t) && t >= startMs) break;
+    i += 1;
+  }
+  const sliced = points.slice(i);
+  return sliced.length >= 2 ? sliced : points.slice(-2);
+}
+
+/** 本币对美元强弱变动%（报价升≠本币涨） */
+export function fxLocalStrengthChgPct(
+  series: Pick<FxHistoryCountry, "quote">,
+  points: FxHistoryPoint[],
+): number {
+  if (points.length < 2) return 0;
+  const first = points[0]!.v;
+  const last = points[points.length - 1]!.v;
+  if (!first) return 0;
+  const quoteChg = ((last - first) / first) * 100;
+  return series.quote === "usd_per_eur" ? quoteChg : -quoteChg;
+}
+
+export function fxPointsSpanLabel(points: FxHistoryPoint[], synthetic?: boolean): string {
+  if (synthetic && points.length >= 200) return "约 5 年";
+  if (points.length < 2) return "区间";
+  const a = Date.parse(points[0]!.d);
+  const b = Date.parse(points[points.length - 1]!.d);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return "区间";
+  const y = (b - a) / (365.25 * 24 * 3600 * 1000);
+  if (y >= 1.5) return `约 ${y.toFixed(1)} 年`;
+  const m = y * 12;
+  if (m >= 1.2) return `约 ${m.toFixed(0)} 个月`;
+  return `约 ${(m * 30).toFixed(0)} 天`;
+}
+
 function parseLevel(fxTrend?: string, fxHint?: string): number | null {
   const raw = fxTrend || fxHint || "";
   const m = raw.match(/约\s*([\d.]+)/);

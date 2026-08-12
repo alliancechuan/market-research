@@ -1,6 +1,6 @@
 {
   "asOf": "2026-08-12",
-  "note": "情报库分两轨。一是专题研报/上市披露，如点点、墨腾、Grab/Nu/乐信 20-F；二是监管与信源包，如 BSP/OJK/RBI/SEC。不要把监管文件标成研报。点点 2026H2 海外现金贷专题尚未公开，仍挂 pending。",
+  "note": "情报库分两轨。一是专题研报/上市披露（含点点海外现金贷 2025 年报、2026 年报与 2026H1）；二是监管与信源包。不要把监管文件标成研报。点点 2026H2 尚未公开，仍挂 pending。历史点点专题以公开摘要+官网链接入库；完整 PDF 若后续粘贴可替换 localPath。",
   "refresh": {
     "cadence": "季度主更 + 粘贴即入库",
     "nextDue": "2026-10-15",
@@ -164,14 +164,16 @@
         "bot-personal-loan-pack",
         "cnbv-fintech-pack",
         "rbi-nbfc-revolving-credit-draft-202608",
-        "ojk-pindar-bnpl-jun2026-rdk-pack"
+        "ojk-pindar-bnpl-jun2026-rdk-pack",
+        "diandian-2025-overseas-cashloan",
+        "diandian-2026-annual-overseas-cashloan"
       ]
     }
   },
   "reports": [
     {
       "id": "diandian-2026h1-overseas-cashloan",
-      "title": "2026海外现金贷市场研究报告 H1",
+      "title": "2026海外现金贷市场研究报告 H1（年中更新）",
       "publisher": "点点数据 DianDian",
       "period": "2026H1",
       "asOf": "2026-08-11",
@@ -1122,6 +1124,337 @@
       },
       "docKind": "research_report",
       "docKindLabel": "研报"
+    },
+    {
+      "id": "diandian-2025-overseas-cashloan",
+      "title": "2025海外现金贷市场研究报告",
+      "publisher": "点点数据 DianDian",
+      "period": "2025（对照至 2024 年末）",
+      "asOf": "2026-08-12",
+      "confidence": "中",
+      "sourceType": "third_party_research",
+      "docKind": "research_report",
+      "docKindLabel": "第三方研报",
+      "localPath": "reports/diandian-2025-overseas-cashloan-summary.html",
+      "pages": 51,
+      "regions": [
+        "se-asia",
+        "latam",
+        "africa",
+        "south-asia"
+      ],
+      "thesis": "点点 2025 版：海外现金贷由人口红利、金融缺口、数字基建与政策四重驱动；2024 年全球规模约 1.67 万亿元。东南亚仍是中资主战场但流量成本上升，拉美/非洲成增量；竞争看本地化、风控、合规与场景生态。流量侧口径，不作放贷余额主尺。",
+      "growthFormula": "技术输出 + 本地化运营 + 场景获客；合规持牌是入场券。",
+      "policyBullets": [
+        "印尼 OJK 要求持牌并定期报送；中资头部多已合规审批路径。",
+        "菲律宾外资持股受限，需本地合作拿融资/放贷公司牌照；鼓励接入征信。",
+        "墨西哥 CNBV 简化小额信贷牌照叙事（媒体/报告口径，须回官网）。"
+      ],
+      "industryMetrics": {
+        "global_cashloan_size_2024": "约 1.67 万亿元（点点测算）",
+        "forward_5y_sea_af_latam": "合计规模或破约 2000 亿美元（点点）",
+        "download_penetration_sea_af": "东南亚约 41.03% / 非洲约 31.93%（现金贷占金融应用下载）",
+        "sea_downloads_2023_2024": "约 4.2 亿次（报告/媒体）",
+        "latam_downloads_2023_2024": "约 1.43 亿次（报告/媒体）"
+      },
+      "marketNotes": [
+        {
+          "region": "se-asia",
+          "summary": "印尼下载与活跃双高但竞争激烈；Easycash/AdaKami 指数与下载居前。菲律宾 JuanHand 指数/月活领先，Tala 紧随。"
+        },
+        {
+          "region": "latam",
+          "summary": "墨西哥高增长高风险；DiDi Finanzas 累计下载约 1229.7 万断层领先，Fortaprest 指数居前。"
+        },
+        {
+          "region": "africa",
+          "summary": "移动货币账户约 8.56 亿叙事支撑数字信贷基建；具体国家榜单以全文为准。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "dd-2025-official",
+          "type": "third_party_research",
+          "title": "点点官网：2025海外现金贷市场研究报告",
+          "url": "https://www.diandian.com/reports/U-2kWJcBZ6mDgTQ2u1yC",
+          "asOf": "2025-05",
+          "confidence": "中"
+        },
+        {
+          "id": "dd-2025-hibor",
+          "type": "third_party_research",
+          "title": "慧博：点点海外现金贷市场研究报告2025（51页）",
+          "url": "https://www.hibor.com.cn/data/c83c917a136f94d7cc046b3276b5f571.html",
+          "asOf": "2025-05-27",
+          "confidence": "中"
+        },
+        {
+          "id": "dd-2025-sohu",
+          "type": "news_relay",
+          "title": "搜狐转述：点点2025海外现金贷要点",
+          "url": "https://www.sohu.com/a/899001983_121711272",
+          "asOf": "2025",
+          "confidence": "中"
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "Easycash",
+          "groupKeys": [
+            "Easycash｜Easycash｜Easycash（Easycash·ID）",
+            "Fintopia/瓴岳/洋钱罐（洋钱罐·CN）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "截至 2024-12 APP 指数印尼现金贷第一；累计下载与月活亦居 TOP。",
+          "cashLoanHint": "流量侧领先≠余额主尺；须核 OJK 持牌。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "AdaKami",
+          "groupKeys": [
+            "AdaKami｜AdaKami｜AdaKami（AdaKami·ID）",
+            "AdaKami/FinVolution（信也·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "APP 指数印尼第二；信也海外样本之一。媒体称信也 2024 海外放款约 29 亿元（含 PH）。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "JuanHand",
+          "groupKeys": [
+            "JuanHand/FinVolution（信也·PH）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "PH"
+          ],
+          "metric": "截至 2024-12 菲律宾现金贷 APP 指数第一；月活约 122 万领先。",
+          "cashLoanHint": "须核 SEC CA/OLP。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Kredit Pintar",
+          "groupKeys": [
+            "Kredit Pintar｜Kredit Pintar｜KreditPintar（KreditPintar·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "印尼累计下载 TOP3、月活前列。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "DiDi Finanzas",
+          "groupKeys": [
+            "DiDi Finanzas/DiDi（滴滴·MX）"
+          ],
+          "region": "latam",
+          "countries": [
+            "MX"
+          ],
+          "metric": "2023–2024 墨西哥累计下载约 1229.7 万断层领先；媒体转述 2024 下载超 1200 万、月活超 128 万。",
+          "cashLoanHint": "场景导流样本；放贷主体须核 SOFOM/银行牌照。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Tala",
+          "groupKeys": [
+            "Tala（Tala·MULTI）",
+            "Tala（Tala·MX）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "PH",
+            "MX"
+          ],
+          "metric": "菲律宾下载超 700 万、月活第二；墨西哥亦在指数榜。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "2025 版刻画「东南亚红海化 + 拉美/非洲增量」；中资在印尼/菲下载与指数占优，但须用监管名录校正。",
+        "bullets": [
+          "规模约 1.67 万亿（2024）",
+          "印尼 Easycash/AdaKami 双强",
+          "菲 JuanHand 领先",
+          "墨 DiDi 下载断层",
+          "完整 PDF 待粘贴替换摘要页"
+        ]
+      }
+    },
+    {
+      "id": "diandian-2026-annual-overseas-cashloan",
+      "title": "2026海外现金贷市场研究报告（年报/春季版）",
+      "publisher": "点点数据 DianDian",
+      "period": "2026 春季年报（对照 2020–2025）",
+      "asOf": "2026-08-12",
+      "confidence": "中",
+      "sourceType": "third_party_research",
+      "docKind": "research_report",
+      "docKindLabel": "第三方研报",
+      "localPath": "reports/diandian-2026-annual-overseas-cashloan-summary.html",
+      "pages": 32,
+      "regions": [
+        "se-asia",
+        "latam",
+        "africa",
+        "south-asia",
+        "west"
+      ],
+      "thesis": "点点 2026 春季年报：全球现金贷 2020–2025 由 1.05 增至 1.82 万亿元（CAGR 11.7%），监管从鼓励创新转向审慎包容，行业进入合规精耕。与库内 2026H1 年中 PDF 分窗对照：年报偏全球格局与标杆，H1 偏下载/活跃最新窗。",
+      "growthFormula": "场景前置 + 数智风控 + 信用修复/财务健康生态，替代高息覆盖违约。",
+      "policyBullets": [
+        "印尼 OJK 日利率阶梯下调至约 0.1%、实缴资本抬升叙事（媒体转述）。",
+        "菲律宾 SEC 月利率上限约 12%、资本金大幅抬升叙事。",
+        "尼日利亚 DEON、肯尼亚 NDTC/P 扩容：从封禁转向主动治理。"
+      ],
+      "industryMetrics": {
+        "global_cashloan_size_2025": "约 1.82 万亿元 · CAGR 11.7%（2020–2025）",
+        "asia_oceania_share": "约 42.06%",
+        "africa_me_cagr_like": "增速约 19.82%（体量约 6.76%）",
+        "underbanked_2025": "约 64%",
+        "sea_monthly_downloads_2025": "约 2897.65 万",
+        "id_share_of_sea_downloads": "约 55.73%"
+      },
+      "marketNotes": [
+        {
+          "region": "se-asia",
+          "summary": "下载总量平稳、新应用占比高，份额博弈强于扩容；印尼仍最热。Kredivo MAU 年末约 1040 万。"
+        },
+        {
+          "region": "latam",
+          "summary": "利率波动 + Fintech 2.0/开放金融叙事；DiDi Finanzas 墨 MAU 约 362.8 万。"
+        },
+        {
+          "region": "africa",
+          "summary": "由高利周期转入降息周期；OKash 2025 累计下载约 916 万居非洲前列叙事。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "dd-2026-official-en",
+          "type": "third_party_research",
+          "title": "点点官网：Global Cash Loan Market Report 2026",
+          "url": "https://www.diandian.com/reports/5UsE12e1O30CiB6gQKsu",
+          "asOf": "2026-05",
+          "confidence": "中"
+        },
+        {
+          "id": "dd-2026-zh-reports",
+          "type": "third_party_research",
+          "title": "点点专题报告列表（含 2026 海外现金贷）",
+          "url": "https://www.diandian.com/zh/reports",
+          "asOf": "2026-05",
+          "confidence": "中"
+        },
+        {
+          "id": "dd-2026-eastmoney",
+          "type": "news_relay",
+          "title": "东方财富财富号：点点2026海外现金贷核心摘要",
+          "url": "https://caifuhao.eastmoney.com/news/20260423122019423325580",
+          "asOf": "2026-04-23",
+          "confidence": "中"
+        },
+        {
+          "id": "dd-2026-sina",
+          "type": "news_relay",
+          "title": "新浪财经：现金贷出海走向场景精耕（引点点）",
+          "url": "https://finance.sina.com.cn/roll/2026-04-24/doc-inhvpyyn4866807.shtml",
+          "asOf": "2026-04-24",
+          "confidence": "中"
+        },
+        {
+          "id": "dd-2026-hibor",
+          "type": "third_party_research",
+          "title": "慧博：点点2026海外现金贷（32页）",
+          "url": "http://www.hibor.net/data/d1007965f66b1f1cd9e8afe7b8a3e988.html",
+          "asOf": "2026-04-27",
+          "confidence": "中"
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "Kredivo",
+          "groupKeys": [
+            "Kredivo/FinAccel（Kredivo·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "OJK 现金贷+数字银行牌照叙事；2025 年末 MAU 约 1040.53 万；下载承压于场景 PayLater 竞争。",
+          "cashLoanHint": "BNPL 获客 + 现金分期收入结构；利率上限压利差。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "DiDi Finanzas",
+          "groupKeys": [
+            "DiDi Finanzas/DiDi（滴滴·MX）"
+          ],
+          "region": "latam",
+          "countries": [
+            "MX"
+          ],
+          "metric": "2025 墨贷款申请 +30%、支付用户 +55%、MAU 约 362.8 万（较年初 +38.7%）；CAT 高定价覆盖风险的市场主流区间叙事。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "OKash",
+          "groupKeys": [
+            "OKash（·NG）"
+          ],
+          "region": "africa",
+          "countries": [
+            "NG"
+          ],
+          "metric": "2025 累计下载约 916 万；5/8 月单月下载超 100 万叙事。",
+          "cashLoanHint": "须核尼日利亚放贷/DEON 合规。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Sea/Monee",
+          "groupKeys": [
+            "Sea Limited/Shopee（Sea·SEA）",
+            "Shopee Pinjam/Sea（Shopee·SEA）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID",
+            "MY",
+            "PH",
+            "TH",
+            "VN"
+          ],
+          "metric": "年报叙事下电商场景贷挤压独立平台获客；与 H1/20-F 交叉。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "2026 年报确认「规模仍增、模式换挡」：利率/资本门槛抬升后，场景与信用经营替代高息套利。",
+        "bullets": [
+          "1.82 万亿 / CAGR 11.7%",
+          "亚大 42%、非中东增速约 20%",
+          "Kredivo/DiDi/OKash 标杆",
+          "与 2026H1 PDF 分窗并用"
+        ]
+      }
     },
     {
       "id": "id-ph-bnpl-p2p-source-pack-2026",

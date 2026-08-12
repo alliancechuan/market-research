@@ -1135,7 +1135,7 @@
       "sourceType": "third_party_research",
       "docKind": "research_report",
       "docKindLabel": "第三方研报",
-      "localPath": "reports/diandian-2025-overseas-cashloan-summary.html",
+      "localPath": "reports/2025-overseas-cashloan-diandian.pdf",
       "pages": 51,
       "regions": [
         "se-asia",
@@ -1172,6 +1172,18 @@
         }
       ],
       "sources": [
+        {
+          "id": "dd-2025-local-pdf",
+          "type": "third_party_research",
+          "title": "本地 PDF：2025海外现金贷市场研究报告",
+          "url": "",
+          "asOf": "2025-05",
+          "confidence": "中",
+          "localPath": "reports/2025-overseas-cashloan-diandian.pdf",
+          "bullets": [
+            "51 页全文已落盘"
+          ]
+        },
         {
           "id": "dd-2025-official",
           "type": "third_party_research",
@@ -1291,7 +1303,7 @@
           "印尼 Easycash/AdaKami 双强",
           "菲 JuanHand 领先",
           "墨 DiDi 下载断层",
-          "完整 PDF 待粘贴替换摘要页"
+          "全文 PDF 已落盘（替换公开摘要页）"
         ]
       }
     },

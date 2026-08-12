@@ -1,0 +1,6 @@
+# 抓取缓存：HTML/XML 体积大且易过期，不入库
+*
+!.gitignore
+!flash/
+flash/*
+!flash/enrich-*.json

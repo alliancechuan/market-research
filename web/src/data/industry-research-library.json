@@ -1,6 +1,6 @@
 {
   "asOf": "2026-08-12",
-  "note": "情报库分两轨。一是专题研报/上市披露，如点点、墨腾、Grab/Nu/乐信 20-F；二是监管与信源包，如 BSP/OJK/RBI/SEC。不要把监管文件标成研报。正文出处编号可点进信源目录。",
+  "note": "情报库分两轨。一是专题研报/上市披露，如点点、墨腾、Grab/Nu/乐信 20-F；二是监管与信源包，如 BSP/OJK/RBI/SEC。不要把监管文件标成研报。点点 2026H2 海外现金贷专题尚未公开，仍挂 pending。",
   "refresh": {
     "cadence": "季度主更 + 粘贴即入库",
     "nextDue": "2026-10-15",
@@ -162,7 +162,9 @@
         "sea-20f-fy2025-fintech",
         "hkma-virtual-bank-pack",
         "bot-personal-loan-pack",
-        "cnbv-fintech-pack"
+        "cnbv-fintech-pack",
+        "rbi-nbfc-revolving-credit-draft-202608",
+        "ojk-pindar-bnpl-jun2026-rdk-pack"
       ]
     }
   },
@@ -2396,6 +2398,188 @@
           "Ley Fintech 官方出处已挂链",
           "CNBV 规范页可核验",
           "本机 PDF 因网络重置未落盘，摘要页可回链"
+        ]
+      }
+    },
+    {
+      "id": "rbi-nbfc-revolving-credit-draft-202608",
+      "title": "RBI 草案：禁止 NBFC 循环授信（仅期限贷，发卡 NBFC 除外）",
+      "publisher": "Reserve Bank of India（RBI）",
+      "period": "2026-08-06 草案 / 征求意见至 2026-08-28",
+      "asOf": "2026-08-12",
+      "confidence": "高",
+      "sourceType": "regulator_official",
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管专题",
+      "localPath": "reports/rbi-nbfc-revolving-credit-draft-202608-summary.html",
+      "regions": [
+        "south-asia"
+      ],
+      "thesis": "RBI 发布《NBFC—Credit Facilities》2026 修正草案：NBFC 仅可提供期限贷，禁止循环授信（revolving）；获发卡授权的 NBFC 除外。草案删除 Demand/Call Loans 专章，并定义 term loan 为本金固定、按摊还/到期偿还且偿还后额度不可回补。定稿后拟立即生效。",
+      "policyBullets": [
+        "新增 revolving credit / term loan 定义。",
+        "NBFC 仅可做期限贷，不得做循环授信产品。",
+        "例外：RBI 授权发卡的 NBFC。",
+        "删除 Demand/Call Loans 监管专章。",
+        "征求意见截止 2026-08-28；定稿拟立即生效。"
+      ],
+      "industryMetrics": {
+        "in_nbfc_revolving_ban_draft": "草案禁止 NBFC 循环授信（2026-08-06）"
+      },
+      "marketNotes": [
+        {
+          "region": "south-asia",
+          "summary": "印度线上现金贷若以 NBFC flexi/循环额度展业，需按期限贷重设计；与银行/发卡分轨。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "rbi-pr-63303",
+          "type": "regulator_official",
+          "title": "RBI Press Release：draft NBFC Credit Facilities Amendment Directions, 2026",
+          "url": "https://www.rbi.org.in/scripts/BS_PressReleaseDisplay.aspx?prid=63303",
+          "asOf": "2026-08-06",
+          "confidence": "高",
+          "bullets": [
+            "征求意见至 2026-08-28",
+            "PR 2026-2027/825"
+          ]
+        },
+        {
+          "id": "rbi-draft-id5135",
+          "type": "regulator_official",
+          "title": "Draft text：bs_viewcontent Id=5135",
+          "url": "https://rbi.org.in/scripts/bs_viewcontent.aspx?Id=5135",
+          "asOf": "2026-08-06",
+          "confidence": "高",
+          "bullets": [
+            "term loan / revolving 定义",
+            "§108A 禁循环授信",
+            "发卡 NBFC 例外"
+          ]
+        },
+        {
+          "id": "hindu-bl-relay",
+          "type": "regulator_media_relay",
+          "title": "Hindu BusinessLine：NBFC 不得提供 revolving credit",
+          "url": "https://www.thehindubusinessline.com/money-and-banking/nbfcs-have-to-restrict-their-lending-only-to-term-loans-cannot-offer-revolving-credit-rbi-draft-directions/article71316349.ece",
+          "asOf": "2026-08-07",
+          "confidence": "中"
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "印度 NBFC / 数字贷平台",
+          "groupKeys": [],
+          "region": "south-asia",
+          "countries": [
+            "IN"
+          ],
+          "metric": "草案落地后，非发卡 NBFC 的循环额度/flexi 产品或需改为固定本金期限贷。",
+          "cashLoanHint": "产品形态先核 term loan 定义；有卡牌照才可保留循环授信。",
+          "confidence": "高",
+          "applyToCrm": false
+        }
+      ],
+      "analysis": {
+        "verdict": "印度线上现金贷产品形态面临硬约束：NBFC 通道向期限贷收敛，循环额度空间收窄。",
+        "bullets": [
+          "官方草案可核验（Id=5135）",
+          "征求意见窗至 08-28",
+          "本机直链 PDF 常 403，已落摘要页回链官网"
+        ]
+      }
+    },
+    {
+      "id": "ojk-pindar-bnpl-jun2026-rdk-pack",
+      "title": "OJK RDK：Pindar/BNPL 2026-06 余额更新包",
+      "publisher": "OJK（经 Kompas/Kontan/CNN 转述 RDK）",
+      "period": "2026-06 数据 / 2026-08-04 发布会",
+      "asOf": "2026-08-12",
+      "confidence": "中",
+      "sourceType": "regulator_and_media_pack",
+      "docKind": "regulator_pack",
+      "docKindLabel": "监管专题",
+      "localPath": "reports/ojk-pindar-bnpl-jun2026-rdk-summary.html",
+      "regions": [
+        "se-asia"
+      ],
+      "thesis": "OJK 七月 RDK（2026-08-04）披露：截至 2026-06，Pindar outstanding 约 IDR105.14T（YoY +25.88%），TWP90 约 4.26%；multifinance BNPL 约 IDR13.40T（+57.02%）；银行 BNPL 余额约 IDR30.71T（另源交叉）。同时 Satgas PASTI 2026 年 1–7 月关闭非法 pinjol 约 951 家。用于刷新印尼网贷主尺，与 2026-03 IRU 包衔接。",
+      "policyBullets": [
+        "Pindar 余额继续扩张，但须分轨看 TWP90。",
+        "BNPL 分 bank / multifinance 两套 outstanding，勿混并。",
+        "非法平台持续清退，持牌与无牌并存。"
+      ],
+      "industryMetrics": {
+        "id_pindar_outstanding_202606": "IDR105.14T · YoY +25.88%",
+        "id_pindar_twp90_202606": "4.26%（5 月 4.42%）",
+        "id_bnpl_mf_outstanding_202606": "IDR13.40T · YoY +57.02% · NPF gross 3.09%",
+        "id_bnpl_bank_outstanding_202606": "约 IDR30.71T · YoY +33.54%（媒体交叉）",
+        "id_illegal_pinjol_closed_2026ytd_jul": "约 951（1–7 月）"
+      },
+      "marketNotes": [
+        {
+          "region": "se-asia",
+          "summary": "印尼网贷主尺升至约 105T 盾；资产质量回落但仍近 5% 阈值。BNPL 高速扩表需分牌照通道盯 NPF。"
+        }
+      ],
+      "sources": [
+        {
+          "id": "kompas-ojk-pindar-20260804",
+          "type": "regulator_media_relay",
+          "title": "Kompas：Pindar outstanding Rp105.14T（Juni 2026）",
+          "url": "https://money.kompas.com/read/2026/08/04/205106626/utang-pinjol-masyarakat-capai-rp-105-triliun-pada-juni-2026",
+          "asOf": "2026-08-04",
+          "confidence": "中",
+          "bullets": [
+            "IDR105.14T",
+            "TWP90 4.26%",
+            "BNPL MF 13.40T"
+          ]
+        },
+        {
+          "id": "kontan-bnpl-mf-20260804",
+          "type": "regulator_media_relay",
+          "title": "Kontan：Multifinance BNPL +57.02%",
+          "url": "https://keuangan.kontan.co.id/news/pembiayaan-paylater-multifinance-melonjak-5702-hingga-juni-2026",
+          "asOf": "2026-08-04",
+          "confidence": "中"
+        },
+        {
+          "id": "cnn-illegal-pinjol-20260804",
+          "type": "regulator_media_relay",
+          "title": "CNN Indonesia：2026 关闭非法 pinjol 951",
+          "url": "https://www.cnnindonesia.com/ekonomi/20260804203252-78-1388656/ojk-tutup-951-pinjol-ilegal-sepanjang-2026",
+          "asOf": "2026-08-04",
+          "confidence": "中",
+          "bullets": [
+            "Satgas PASTI",
+            "银行 BNPL ~30.71T 交叉"
+          ]
+        }
+      ],
+      "playerUpdates": [
+        {
+          "nameZh": "Kredivo / 印尼 Pindar 持牌主体",
+          "groupKeys": [
+            "Kredivo/FinAccel（Kredivo·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "行业 Pindar 在贷约 105T 盾；个券仍须看持牌与 BNPL 分轨余额/NPF。",
+          "cashLoanHint": "主尺用 OJK RDK 余额与 TWP90；第三方美元 BNPL 只作辅证。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
+      "analysis": {
+        "verdict": "印尼网贷余额再上台阶，资产质量略改善但仍需盯阈值；BNPL 分轨高速扩张。",
+        "bullets": [
+          "Pindar ≈105T 盾 / TWP90 4.26%",
+          "MF BNPL 13.4T、银行 BNPL ~30.7T",
+          "非法平台持续清退"
         ]
       }
     }

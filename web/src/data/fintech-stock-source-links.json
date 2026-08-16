@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-08-12",
+  "asOf": "2026-08-12 20:30",
   "note": "上市公司数据链：腾讯/Yahoo 行情入口 + 定期披露原文 + 交易所门户；对齐顶栏「上市公司」与 T2 披露缓存。",
   "dataKeys": [
     "fintech-stock-watchlist",
@@ -389,9 +389,9 @@
       "exchangeUrl": "https://www.nseindia.com/",
       "region": "south-asia",
       "origin": "credit-native",
-      "irUrl": "https://www.business-standard.com/markets/capital-market-news/bajaj-finance-q1-pat-climbs-27-yoy-to-rs-5-986-cr-aum-tops-rs-5-46-lakh-crore-126073000969_1.html",
+      "irUrl": "https://www.bajajfinserv.in/finance/investor-relations",
       "period": "FY27Q1",
-      "sourceNote": "业绩新闻/IR"
+      "sourceNote": "公司 IR"
     },
     {
       "id": "paytm",
@@ -907,7 +907,7 @@
       "exchangeUrl": "https://www.bursamalaysia.com/",
       "region": "se-asia",
       "origin": "payment",
-      "irUrl": null,
+      "irUrl": "https://www.axiata.com/media/news/2026/axiata-posts-rm365-million-in-profits-for-fy25",
       "period": null,
       "sourceNote": null
     },
@@ -935,9 +935,9 @@
       "exchangeUrl": "https://www.bmv.com.mx/",
       "region": "latam",
       "origin": "credit-native",
-      "irUrl": null,
-      "period": null,
-      "sourceNote": null
+      "irUrl": "https://www.gentera.com.mx/wcm/connect/7abc2fcf-dd5b-43cd-8eab-a934f31da07c/Gentera+4Q24.pdf?MOD=AJPERES",
+      "period": "FY2024",
+      "sourceNote": "公司 IR·4Q24"
     },
     {
       "id": "globe-ph",
@@ -949,9 +949,9 @@
       "exchangeUrl": "https://www.pse.com.ph/",
       "region": "se-asia",
       "origin": "payment",
-      "irUrl": null,
-      "period": null,
-      "sourceNote": null
+      "irUrl": "https://www.globe.com.ph/about-us/investor-relations",
+      "period": "FY2024",
+      "sourceNote": "公司 IR"
     },
     {
       "id": "telkom-id",
@@ -963,9 +963,9 @@
       "exchangeUrl": "https://www.idx.co.id/",
       "region": "se-asia",
       "origin": "payment",
-      "irUrl": null,
-      "period": null,
-      "sourceNote": null
+      "irUrl": "https://www.telkom.co.id/sites/about-telkom/en_US/page/investor-relations",
+      "period": "FY2024",
+      "sourceNote": "公司 IR"
     },
     {
       "id": "vodacom",
@@ -1005,9 +1005,9 @@
       "exchangeUrl": "https://www.set.or.th/",
       "region": "se-asia",
       "origin": "payment",
-      "irUrl": null,
-      "period": null,
-      "sourceNote": null
+      "irUrl": "https://investor.truecorp.co.th/",
+      "period": "FY2024",
+      "sourceNote": "公司 IR"
     },
     {
       "id": "aeonts",
@@ -1019,9 +1019,9 @@
       "exchangeUrl": "https://www.set.or.th/",
       "region": "se-asia",
       "origin": "credit-native",
-      "irUrl": null,
-      "period": null,
-      "sourceNote": null
+      "irUrl": "https://aeonts.listedcompany.com/",
+      "period": "FY2024",
+      "sourceNote": "公司 listedcompany IR"
     },
     {
       "id": "adira",
@@ -1033,9 +1033,9 @@
       "exchangeUrl": "https://www.idx.co.id/",
       "region": "se-asia",
       "origin": "credit-native",
-      "irUrl": null,
-      "period": null,
-      "sourceNote": null
+      "irUrl": "https://www.adira.co.id/id/investor",
+      "period": "FY2024",
+      "sourceNote": "公司 IR"
     },
     {
       "id": "bfi",
@@ -1047,9 +1047,9 @@
       "exchangeUrl": "https://www.idx.co.id/",
       "region": "se-asia",
       "origin": "credit-native",
-      "irUrl": null,
-      "period": null,
-      "sourceNote": null
+      "irUrl": "https://www.bfi.co.id/en/investor",
+      "period": "FY2024",
+      "sourceNote": "公司 IR"
     },
     {
       "id": "wom-finance",
@@ -1061,9 +1061,9 @@
       "exchangeUrl": "https://www.idx.co.id/",
       "region": "se-asia",
       "origin": "credit-native",
-      "irUrl": null,
-      "period": null,
-      "sourceNote": null
+      "irUrl": "https://www.wom.co.id/",
+      "period": "FY2024",
+      "sourceNote": "公司官网/披露入口"
     },
     {
       "id": "sbi-cards",
@@ -1089,9 +1089,9 @@
       "exchangeUrl": "https://www.nseindia.com/",
       "region": "south-asia",
       "origin": "credit-native",
-      "irUrl": null,
-      "period": null,
-      "sourceNote": null
+      "irUrl": "https://www.cholamandalam.com/investors",
+      "period": "FY2025",
+      "sourceNote": "公司 IR"
     },
     {
       "id": "muthoot",
@@ -1103,9 +1103,9 @@
       "exchangeUrl": "https://www.nseindia.com/",
       "region": "south-asia",
       "origin": "credit-native",
-      "irUrl": null,
-      "period": null,
-      "sourceNote": null
+      "irUrl": "https://www.muthootfinance.com/investor-presentation",
+      "period": "FY27Q1",
+      "sourceNote": "公司 IR"
     },
     {
       "id": "african-bank",
@@ -1502,7 +1502,7 @@
   ],
   "stats": {
     "companies": 95,
-    "withIr": 40,
+    "withIr": 58,
     "exchanges": 25
   }
 }

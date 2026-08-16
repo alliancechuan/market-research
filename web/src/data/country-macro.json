@@ -1,6 +1,6 @@
 {
   "CN": {
-    "asOf": "2026-08对照·TE中国大陆",
+    "asOf": "2026-08对照·TE中国大陆·汽油/电价续补",
     "gdpYoY": "4.3%（2026-06）",
     "gdpUsdBn": "约19.50万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约13793美元（2025-12）·过12000成熟阈值",
@@ -23,10 +23,13 @@
     "debtToGdp": "政府债务/GDP约99.2%（2025-12）",
     "consumerConfidence": "约89.9（2026-05）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约0.97美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.075美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约12.9（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "TW": {
-    "asOf": "2026-08对照·TE中国台湾",
+    "asOf": "2026-08对照·TE中国台湾·汽油/电价续补",
     "gdpYoY": "12.92%（2026-06）",
     "gdpUsdBn": "约24亿美元（2026-06）",
     "incomePerCapita": "—·官方可支配收入待续采·可用人均GDP对照",
@@ -49,10 +52,11 @@
     "householdDebtToGdp": "约94.3%（2024）·家庭债务/GDP·CEIC转述",
     "fxVolInYear": "±4.0%·年内高低相对均价粗算·currency-api·USD/TWD周抽样高低/均价·2025–2026",
     "gdpPerCapitaUsd": "约36000美元（2025级）·二级〔10〕",
-    "debtToGdp": "政府债务/GDP约25%–30%（近年）·二级〔10〕"
+    "debtToGdp": "政府债务/GDP约25%–30%（近年）·二级〔10〕",
+    "electricityResidential": "约0.090美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "HK": {
-    "asOf": "2026-08对照·TE中国香港",
+    "asOf": "2026-08对照·TE中国香港·汽油/电价续补",
     "gdpYoY": "4.3%（2026-06）；季环比折年约-0.6%（2026-06）；2025全年约3.5%",
     "gdpUsdBn": "约4270亿美元（2025-12）",
     "gdpPerCapitaUsd": "约46450美元（2025-12）·过12000成熟阈值",
@@ -75,10 +79,13 @@
     "debtToGdp": "政府债务/GDP约11.9%（2025-12）",
     "consumerConfidence": "约88.9（2026-03）",
     "creditNote": "信贷过热组：家庭债务水位偏高（近88%GDP）；MSO/SVF/银行牌照与HKMA/SFC监管续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值；家庭杠杆偏高、联系汇率随美利率。准入先过金钱服务经营者/银行牌照与利率上限评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值；家庭杠杆偏高、联系汇率随美利率。准入先过金钱服务经营者/银行牌照与利率上限评估（对照总表预警）。",
+    "gasolineRetail": "约4.17美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.181美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约23.0（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "JP": {
-    "asOf": "2026-08对照·TE日本",
+    "asOf": "2026-08对照·TE日本·汽油/电价续补",
     "gdpYoY": "0.6%（2026-03）",
     "gdpUsdBn": "约4.43万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约38619美元（2025-12）·过12000成熟阈值",
@@ -101,10 +108,13 @@
     "debtToGdp": "政府债务/GDP约249%（2025-12）",
     "consumerConfidence": "约34.9（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.04美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.202美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约5.1（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "KR": {
-    "asOf": "2026-08对照·TE韩国",
+    "asOf": "2026-08对照·TE韩国·汽油/电价续补",
     "gdpYoY": "3.7%（2026-06）",
     "gdpUsdBn": "约1.87万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约37470美元（2025-12）·过12000成熟阈值",
@@ -127,7 +137,10 @@
     "debtToGdp": "政府债务/GDP约49%（2025-12）",
     "consumerConfidence": "约107（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.29美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.131美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约9.8（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "MN": {
     "asOf": "2026-08对照·TE外蒙古",
@@ -156,7 +169,7 @@
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "ID": {
-    "asOf": "2026-08对照·TE印尼+OJK/R&M信源包",
+    "asOf": "2026-08对照·TE印尼+OJK/R&M信源包·汽油/电价续补",
     "gdpYoY": "5.29%（2026-06）",
     "gdpUsdBn": "约1.45万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4555美元（2025-12）",
@@ -179,10 +192,13 @@
     "householdDebtToGdp": "约15.5%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
     "consumerConfidence": "约118（2026-06）",
     "creditNote": "OJK口径（媒体转述〔11〕〔12〕〔4〕）：P2P outstanding 2025-04约Rp80.94T（+29%YoY，TWP90约2.93%）；2026-01约Rp98.54T（+25.5%YoY，TWP90约4.38%）。融资公司BNPL 2025-04约Rp8.24T（+47%YoY，NPF gross约3.78%）→2026-01约Rp12.18T（+71%YoY）；银行BNPL 2026-01约Rp27.1T（+20%YoY）。第三方BNPL（R&M媒体摘要）2025约US$8.59B，与OJK余额分轨〔7〕〔4〕。监管：POJK 40/2024（P2P/LPBBTI）〔4〕；POJK 32/2025（BNPL仅银行+融资公司，融资公司须事先批准）〔4〕。",
-    "cashLoanVerdict": "印尼现金贷/BNPL：先核POJK 40/2024（P2P）或POJK 32/2025（BNPL主体资格），再用OJK余额读行业水位；勿用第三方美元GMV替代监管余额。"
+    "cashLoanVerdict": "印尼现金贷/BNPL：先核POJK 40/2024（P2P）或POJK 32/2025（BNPL主体资格），再用OJK余额读行业水位；勿用第三方美元GMV替代监管余额。",
+    "gasolineRetail": "约0.55美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.089美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约6.2（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "VN": {
-    "asOf": "2026-08对照·TE越南",
+    "asOf": "2026-08对照·TE越南·汽油/电价续补",
     "gdpYoY": "8.39%（2026-06）",
     "gdpUsdBn": "约5150亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4308美元（2025-12）",
@@ -205,10 +221,13 @@
     "householdDebtToGdp": "约24.9%（2024）·家庭债务/GDP·IIF Global Debt Monitor",
     "fxVolInYear": "±0.9%·年内高低相对均价粗算·currency-api·USD/VND周抽样高低/均价·2025–2026",
     "privCreditOrConsumer": "国内私营信贷约125% GDP（近年）·二级〔10〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约0.73美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.073美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约10.0（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "MY": {
-    "asOf": "2026-08对照·TE马来西亚",
+    "asOf": "2026-08对照·TE马来西亚·汽油/电价续补",
     "gdpYoY": "5.8%（2026-06）",
     "gdpUsdBn": "约4720亿美元（2025-12）",
     "gdpPerCapitaUsd": "约12352美元（2025-12）·过12000成熟阈值",
@@ -231,10 +250,13 @@
     "debtToGdp": "政府债务/GDP约65.3%（2025-12）",
     "consumerConfidence": "约135（2026-03）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约0.49美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.049美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约10.0（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "TH": {
-    "asOf": "2026-08对照·TE泰国",
+    "asOf": "2026-08对照·TE泰国·汽油/电价续补",
     "gdpYoY": "2.8%（2026-03）",
     "gdpUsdBn": "约5770亿美元（2025-12）",
     "gdpPerCapitaUsd": "约6783美元（2025-12）",
@@ -257,10 +279,13 @@
     "debtToGdp": "政府债务/GDP约65.64%（2025-12）",
     "consumerConfidence": "约50.7（2026-06）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.08美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.126美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约8.6（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "PH": {
-    "asOf": "2026-08对照·TE菲律宾+BSP/SEC/R&M信源包",
+    "asOf": "2026-08对照·TE菲律宾+BSP/SEC/R&M信源包·汽油/电价续补",
     "gdpYoY": "2.8%（2026-03）",
     "gdpUsdBn": "约4870亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4066美元（2025-12）",
@@ -283,10 +308,13 @@
     "householdDebtToGdp": "约13.6%（2025-12）·家庭债务/GDP·CEIC转述",
     "consumerConfidence": "约-42（2026-06）",
     "creditNote": "第三方BNPL（PRNewswire/R&M 2024-02）：2024约US$2.29B，2029约US$3.87B（CAGR约11%）〔7〕。BSP 2024数字支付：零售笔数数字化57.4%、金额59.0%（超PDP目标52–54%）〔5〕。线上放贷：SEC 2023-02协同下架33未注册OLP〔6〕；BSP Circular 1133+SEC MC3〔5〕〔6〕 — ≤₱1万且≤4个月无担保贷名义≤6%/月、EIR≤15%/月、逾期≤5%/月、总成本≤本金100%。",
-    "cashLoanVerdict": "菲律宾：先核SEC Lending/Financing+OLP登记与BSP 1133定价带，再用BSP数字支付读场景渗透；第三方BNPL规模仅作量级。"
+    "cashLoanVerdict": "菲律宾：先核SEC Lending/Financing+OLP登记与BSP 1133定价带，再用BSP数字支付读场景渗透；第三方BNPL规模仅作量级。",
+    "gasolineRetail": "约0.92美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.196美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约4.7（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "IN": {
-    "asOf": "2026-08对照·TE印度",
+    "asOf": "2026-08对照·TE印度·汽油/电价续补",
     "gdpYoY": "7.8%（2026-03）",
     "gdpUsdBn": "约3.96万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约2523美元（2025-12）",
@@ -309,10 +337,13 @@
     "householdDebtToGdp": "约47.8%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
     "consumerConfidence": "约88.3（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.07美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.076美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约14.1（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "BD": {
-    "asOf": "2026-08对照·TE孟加拉",
+    "asOf": "2026-08对照·TE孟加拉·汽油/电价续补",
     "gdpYoY": "3.49%（2025-06）",
     "gdpUsdBn": "约4560亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1985美元（2025-12）·低于2000美元阈值",
@@ -335,10 +366,11 @@
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约6.2%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
     "fxVolInYear": "±1.0%·年内高低相对均价粗算·currency-api·USD/BDT周抽样高低/均价·2025–2026",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.054美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "PK": {
-    "asOf": "2026-08对照·TE巴基斯坦",
+    "asOf": "2026-08对照·TE巴基斯坦·汽油/电价续补",
     "gdpYoY": "4%（2026-03）",
     "gdpUsdBn": "约4070亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1669美元（2025-12）·低于2000美元阈值",
@@ -361,10 +393,13 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约2.1%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
-    "fxVolInYear": "±1.2%·年内高低相对均价粗算·currency-api·USD/PKR周抽样高低/均价·2025–2026"
+    "fxVolInYear": "±1.2%·年内高低相对均价粗算·currency-api·USD/PKR周抽样高低/均价·2025–2026",
+    "gasolineRetail": "约1.2美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.069美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约17.4（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "LK": {
-    "asOf": "2026-08对照·TE斯里兰卡",
+    "asOf": "2026-08对照·TE斯里兰卡·汽油/电价续补",
     "gdpYoY": "5.1%（2026-03）",
     "gdpUsdBn": "约1090亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4439美元（2025-12）",
@@ -387,10 +422,11 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约6.6%（2024-12）·家庭债务/GDP·CEIC转述",
     "fxVolInYear": "±5.8%·年内高低相对均价粗算·currency-api·USD/LKR周抽样高低/均价·2025–2026",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.183美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "KZ": {
-    "asOf": "2026-08对照·TE哈萨克斯坦",
+    "asOf": "2026-08对照·TE哈萨克斯坦·汽油/电价续补",
     "gdpYoY": "3%（2026-03）",
     "gdpUsdBn": "约3060亿美元（2025-12）",
     "gdpPerCapitaUsd": "约12492美元（2025-12）·过12000成熟阈值",
@@ -413,10 +449,13 @@
     "cashLoanVerdict": "人均GDP过成熟阈值；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±8.4%·年内高低相对均价粗算·currency-api·USD/KZT周抽样高低/均价·2025–2026",
     "householdDebtToGdp": "约67.2%（2026-Q1）·家庭债务/GDP·CEIC转述",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约0.69美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.046美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约15.0（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "UZ": {
-    "asOf": "2026-08对照·TE乌兹别克斯坦",
+    "asOf": "2026-08对照·TE乌兹别克斯坦·汽油/电价续补",
     "gdpYoY": "8.7%（2026-03）",
     "gdpUsdBn": "约1470亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4733美元（2025-12）",
@@ -439,10 +478,11 @@
     "fxVolInYear": "±3.2%·年内高低相对均价粗算·currency-api·USD/UZS周抽样高低/均价·2025–2026",
     "householdDebtToGdp": "约12.2%（2024）·家庭债务/GDP·央行个人贷款/GDP·Kun.uz转述",
     "privCreditOrConsumer": "国内私营信贷约40% GDP（近年）·二级〔10〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.023美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "KG": {
-    "asOf": "2026-08对照·TE吉尔吉斯斯坦",
+    "asOf": "2026-08对照·TE吉尔吉斯斯坦·汽油/电价续补",
     "gdpYoY": "10.1%（2026-03）",
     "gdpUsdBn": "约226亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1555美元（2025-12）·低于2000美元阈值",
@@ -465,7 +505,8 @@
     "householdDebtToGdp": "约12.6%（2026-Q2）·家庭债务/GDP·CEIC转述",
     "privCreditOrConsumer": "国内私营信贷约25% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±8.0%·年内高低相对均价粗算·USD/KGS·公开汇价抽样校正·2025–2026",
-    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录"
+    "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
+    "electricityResidential": "约0.013美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "TJ": {
     "asOf": "2026-08对照·TE塔吉克斯坦",
@@ -520,7 +561,7 @@
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "MX": {
-    "asOf": "2026-08对照·TE墨西哥",
+    "asOf": "2026-08对照·TE墨西哥·汽油/电价续补",
     "gdpYoY": "2.2%（2026-06）",
     "gdpUsdBn": "约1.83万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约10257美元（2025-12）",
@@ -543,10 +584,13 @@
     "householdDebtToGdp": "约17.4%（2025-Q4）·家庭债务/GDP·BIS·WS_TC家庭信贷/GDP",
     "consumerConfidence": "约45（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.36美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.095美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约14.3（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "BR": {
-    "asOf": "2026-08对照·TE巴西",
+    "asOf": "2026-08对照·TE巴西·汽油/电价续补",
     "gdpYoY": "1.8%（2026-03）",
     "gdpUsdBn": "约2.28万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约9748美元（2025-12）",
@@ -569,10 +613,13 @@
     "debtToGdp": "政府债务/GDP约78.64%（2025-12）",
     "consumerConfidence": "约88.3（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.28美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.125美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约10.2（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "CO": {
-    "asOf": "2026-08对照·TE哥伦比亚",
+    "asOf": "2026-08对照·TE哥伦比亚·汽油/电价续补",
     "gdpYoY": "2.2%（2026-03）",
     "gdpUsdBn": "约4570亿美元（2025-12）",
     "gdpPerCapitaUsd": "约6976美元（2025-12）",
@@ -595,10 +642,13 @@
     "consumerConfidence": "约24.3（2026-06）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
-    "fxVolInYear": "±11.2%·年内高低相对均价粗算·currency-api·USD/COP周抽样高低/均价·2025–2026"
+    "fxVolInYear": "±11.2%·年内高低相对均价粗算·currency-api·USD/COP周抽样高低/均价·2025–2026",
+    "gasolineRetail": "约1.29美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.199美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约6.5（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "AR": {
-    "asOf": "2026-08对照·TE阿根廷",
+    "asOf": "2026-08对照·TE阿根廷·汽油/电价续补",
     "gdpYoY": "2.3%（2026-03）",
     "gdpUsdBn": "约6830亿美元（2025-12）",
     "gdpPerCapitaUsd": "约13287美元（2025-12）·过12000成熟阈值",
@@ -621,10 +671,13 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP过成熟阈值；通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±6.0%·年内高低相对均价粗算·currency-api·USD/ARS周抽样高低/均价·2025–2026",
-    "privCreditOrConsumer": "国内私营信贷约14% GDP（近年）·二级〔10〕"
+    "privCreditOrConsumer": "国内私营信贷约14% GDP（近年）·二级〔10〕",
+    "gasolineRetail": "约1.38美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.018美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约76.7（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "PE": {
-    "asOf": "2026-08对照·TE秘鲁",
+    "asOf": "2026-08对照·TE秘鲁·汽油/电价续补",
     "gdpYoY": "3.5%（2026-03）",
     "gdpUsdBn": "约3350亿美元（2025-12）",
     "gdpPerCapitaUsd": "约6891美元（2025-12）",
@@ -647,10 +700,13 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±2.9%·年内高低相对均价粗算·currency-api·USD/PEN周抽样高低/均价·2025–2026",
-    "householdDebtToGdp": "约14.8%（2026-Q1）·家庭债务/GDP·CEIC转述"
+    "householdDebtToGdp": "约14.8%（2026-Q1）·家庭债务/GDP·CEIC转述",
+    "gasolineRetail": "约1.23美元/升（2026-06）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.186美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约6.6（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "CL": {
-    "asOf": "2026-08对照·TE智利",
+    "asOf": "2026-08对照·TE智利·汽油/电价续补",
     "gdpYoY": "-0.5%（2026-03）",
     "gdpUsdBn": "约3570亿美元（2025-12）",
     "gdpPerCapitaUsd": "约14905美元（2025-12）·过12000成熟阈值",
@@ -673,10 +729,13 @@
     "consumerConfidence": "约30.7（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
-    "fxVolInYear": "±6.1%·年内高低相对均价粗算·currency-api·USD/CLP周抽样高低/均价·2025–2026"
+    "fxVolInYear": "±6.1%·年内高低相对均价粗算·currency-api·USD/CLP周抽样高低/均价·2025–2026",
+    "gasolineRetail": "约1.54美元/升（2026-08）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.157美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约9.8（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "EG": {
-    "asOf": "2026-08对照·TE埃及",
+    "asOf": "2026-08对照·TE埃及·汽油/电价续补",
     "gdpYoY": "5%（2026-03）",
     "gdpUsdBn": "约3650亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4253美元（2025-12）",
@@ -699,10 +758,13 @@
     "cashLoanVerdict": "通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约7.2%（2025-12）·家庭债务/GDP·CEIC转述",
     "fxVolInYear": "±7.7%·年内高低相对均价粗算·currency-api·USD/EGP周抽样高低/均价·2025–2026",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约0.44美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.018美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约24.4（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "MA": {
-    "asOf": "2026-08对照·TE摩洛哥",
+    "asOf": "2026-08对照·TE摩洛哥·汽油/电价续补",
     "gdpYoY": "4.6%（2026-03）",
     "gdpUsdBn": "约1820亿美元（2025-12）",
     "gdpPerCapitaUsd": "约3644美元（2025-12）",
@@ -725,10 +787,11 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±2.2%·年内高低相对均价粗算·currency-api·USD/MAD周抽样高低/均价·2025–2026",
     "householdDebtToGdp": "约21.2%（2025）·家庭债务/GDP·CEIC转述",
-    "privCreditOrConsumer": "国内私营信贷约65% GDP（近年）·二级〔10〕"
+    "privCreditOrConsumer": "国内私营信贷约65% GDP（近年）·二级〔10〕",
+    "electricityResidential": "约0.116美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "DZ": {
-    "asOf": "2026-08对照·TE阿尔及利亚",
+    "asOf": "2026-08对照·TE阿尔及利亚·汽油/电价续补",
     "gdpYoY": "3.9%（2025-06）",
     "gdpUsdBn": "约2870亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4883美元（2025-12）",
@@ -751,10 +814,11 @@
     "householdDebtToGdp": "约8%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
     "privCreditOrConsumer": "国内私营信贷约18.5% GDP（近年）·二级〔10〕",
     "fxReserves": "约645.7亿美元（2024-Q1）·TE外汇储备·阿尔及利亚央行〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.039美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "TN": {
-    "asOf": "2026-08对照·TE突尼斯",
+    "asOf": "2026-08对照·TE突尼斯·汽油/电价续补",
     "gdpYoY": "2.6%（2026-03）",
     "gdpUsdBn": "约575亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4082美元（2025-12）",
@@ -777,10 +841,11 @@
     "fxVolInYear": "±1.8%·年内高低相对均价粗算·currency-api·USD/TND周抽样高低/均价·2025–2026",
     "householdDebtToGdp": "约18.5%（2024）·家庭债务/GDP·BCT银行对个人贷款/GDP",
     "privCreditOrConsumer": "国内私营信贷约60.6% GDP（近年）·二级〔10〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.066美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "LY": {
-    "asOf": "2026-08对照·TE利比亚",
+    "asOf": "2026-08对照·TE利比亚·汽油/电价续补",
     "gdpYoY": "6.9%（2025-12）",
     "gdpUsdBn": "约481亿美元（2025-12）",
     "gdpPerCapitaUsd": "约8634美元（2025-12）",
@@ -803,10 +868,11 @@
     "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     "debtToGdp": "政府债务/GDP口径战时不规则〔1〕",
     "fxReserves": "约104.7亿美元（2025）·世行总储备(含黄金)〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.008美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "SD": {
-    "asOf": "2026-08对照·TE苏丹",
+    "asOf": "2026-08对照·TE苏丹·汽油/电价续补",
     "gdpYoY": "-28%（2024-12）",
     "gdpUsdBn": "约602亿美元（2025-12）",
     "gdpPerCapitaUsd": "约582美元（2025-12）·低于2000美元阈值",
@@ -829,10 +895,13 @@
     "privCreditOrConsumer": "正规消费贷渗透极低·冲突扰动·二级〔10〕",
     "fxReserves": "冲突期外储数据稀缺·勿假装有官方外储数字〔1〕",
     "sectorMix": "农业与采掘主导、服务业受冲突冲击·三产占比待续拆〔1〕·2026-08补录",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约1.05美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.006美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约175（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "SA": {
-    "asOf": "2026-08对照·TE沙特",
+    "asOf": "2026-08对照·TE沙特·汽油/电价续补",
     "gdpYoY": "-4.8%（2026-06）",
     "gdpUsdBn": "约1.28万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约25066美元（2025-12）·过12000成熟阈值",
@@ -855,10 +924,13 @@
     "consumerConfidence": "约114（2026-03）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
-    "fxVolInYear": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/SAR·2025–2026"
+    "fxVolInYear": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/SAR·2025–2026",
+    "gasolineRetail": "约0.62美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.053美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约11.7（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "AE": {
-    "asOf": "2026-08对照·TE阿联酋",
+    "asOf": "2026-08对照·TE阿联酋·汽油/电价续补",
     "gdpYoY": "3%（2026-03）",
     "gdpUsdBn": "约5520亿美元（2024-12）",
     "gdpPerCapitaUsd": "约41605美元（2024-12）·过12000成熟阈值",
@@ -881,10 +953,13 @@
     "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约24.1%（2024）·家庭债务/GDP·CEIC转述",
     "fxVolInYear": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/AED·2025–2026",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约0.9美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.080美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约11.2（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "BH": {
-    "asOf": "2026-08对照·TE巴林",
+    "asOf": "2026-08对照·TE巴林·汽油/电价续补",
     "gdpYoY": "4.6%（2025-12）",
     "gdpUsdBn": "约490亿美元（2025-12）",
     "gdpPerCapitaUsd": "约26592美元（2025-12）·过12000成熟阈值",
@@ -907,10 +982,13 @@
     "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/BHD·2025–2026",
     "householdDebtToGdp": "约37%（2025）·家庭债务/GDP·零售银行个人贷款/GDP粗算·无BIS标准序列",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约0.59美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.048美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约12.3（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "QA": {
-    "asOf": "2026-08对照·TE卡塔尔",
+    "asOf": "2026-08对照·TE卡塔尔·汽油/电价续补",
     "gdpYoY": "2%（2025-12）",
     "gdpUsdBn": "约2160亿美元（2025-12）",
     "gdpPerCapitaUsd": "约61735美元（2025-12）·过12000成熟阈值",
@@ -933,10 +1011,13 @@
     "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/QAR·2025–2026",
     "householdDebtToGdp": "约25%（2021）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约0.56美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.032美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约17.5（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "KW": {
-    "asOf": "2026-08对照·TE科威特",
+    "asOf": "2026-08对照·TE科威特·汽油/电价续补",
     "gdpYoY": "2.41%（2025-12）",
     "gdpUsdBn": "约1570亿美元（2025-12）",
     "gdpPerCapitaUsd": "约24963美元（2025-12）·过12000成熟阈值",
@@ -959,10 +1040,13 @@
     "fxVolInYear": "±0.8%·年内高低相对均价粗算·currency-api·USD/KWD周抽样高低/均价·2025–2026",
     "householdDebtToGdp": "约1.0%（2025-09）·家庭债务/GDP·CEIC转述（CBK贷款口径）",
     "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约0.28美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.029美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约9.7（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "OM": {
-    "asOf": "2026-08对照·TE阿曼",
+    "asOf": "2026-08对照·TE阿曼·汽油/电价续补",
     "gdpYoY": "2.6%（2026-03）",
     "gdpUsdBn": "约1100亿美元（2025-12）",
     "gdpPerCapitaUsd": "约17074美元（2025-12）·过12000成熟阈值",
@@ -985,10 +1069,13 @@
     "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±0.3%内·美元钉住窄幅·年内高低相对均价粗算·USD/OMR·2025–2026",
     "householdDebtToGdp": "约41.1%（2023）·家庭债务/非石油名义GDP·CBO金融稳定报告·非总GDP口径",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约0.61美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.026美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约23.5（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "JO": {
-    "asOf": "2026-08对照·TE约旦",
+    "asOf": "2026-08对照·TE约旦·汽油/电价续补",
     "gdpYoY": "2.9%（2026-03）",
     "gdpUsdBn": "约616亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4579美元（2025-12）",
@@ -1011,10 +1098,11 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "fxVolInYear": "±0.5%内·美元钉住窄幅·年内高低相对均价粗算·USD/JOD·2025–2026",
     "householdDebtToGdp": "约69.5%（2026-Q1）·家庭债务/GDP·CEIC转述",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.090美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "LB": {
-    "asOf": "2026-08对照·TE黎巴嫩",
+    "asOf": "2026-08对照·TE黎巴嫩·汽油/电价续补",
     "gdpYoY": "-7.5%（2024-12）",
     "gdpUsdBn": "约260亿美元（2024-12）",
     "gdpPerCapitaUsd": "约5391美元（2024-12）",
@@ -1037,10 +1125,13 @@
     "fxVolInYear": "±1.8%·年内高低相对均价粗算·currency-api·USD/LBP周抽样高低/均价·2025–2026",
     "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     "fxReserves": "黄金储备约287吨（2025-03·TE）·官方外储口径战时不规则·勿假装有独立外储数字〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约1.35美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.137美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约9.9（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "IQ": {
-    "asOf": "2026-08对照·TE伊拉克",
+    "asOf": "2026-08对照·TE伊拉克·汽油/电价续补",
     "gdpYoY": "-1.5%（2024-12）",
     "gdpUsdBn": "约2540亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4005美元（2025-12）",
@@ -1063,10 +1154,11 @@
     "householdDebtToGdp": "约7.2%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
     "privCreditOrConsumer": "国内私营信贷约15% GDP（近年）·二级〔10〕",
     "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.015美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "IL": {
-    "asOf": "2026-08对照·TE以色列",
+    "asOf": "2026-08对照·TE以色列·汽油/电价续补",
     "gdpYoY": "1.7%（2026-03）",
     "gdpUsdBn": "约6110亿美元（2025-12）",
     "gdpPerCapitaUsd": "约42596美元（2025-12）·过12000成熟阈值",
@@ -1089,7 +1181,10 @@
     "debtToGdp": "政府债务/GDP约68.5%（2025-12）",
     "consumerConfidence": "约-18.56（2026-06）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约2.65美元/升（2026-08）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.176美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约15.1（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "PS": {
     "asOf": "2026-08对照·TE巴勒斯坦",
@@ -1118,7 +1213,7 @@
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "TR": {
-    "asOf": "2026-08对照·TE土耳其",
+    "asOf": "2026-08对照·TE土耳其·汽油/电价续补",
     "gdpYoY": "2.5%（2026-03）",
     "gdpUsdBn": "约1.60万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约15883美元（2025-12）·过12000成熟阈值",
@@ -1141,7 +1236,10 @@
     "debtToGdp": "政府债务/GDP约23.8%（2025-12）",
     "consumerConfidence": "约89.8（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值；通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值；通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.44美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.046美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约31.3（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "YE": {
     "asOf": "2026-08对照·TE也门",
@@ -1170,7 +1268,7 @@
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "IR": {
-    "asOf": "2026-08对照·TE伊朗",
+    "asOf": "2026-08对照·TE伊朗·汽油/电价续补",
     "gdpYoY": "1.59%（2024-12）",
     "gdpUsdBn": "约3630亿美元（2025-12）",
     "gdpPerCapitaUsd": "约5617美元（2025-12）",
@@ -1193,10 +1291,13 @@
     "privCreditOrConsumer": "国内私营信贷约50% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±87.6%·年内高低相对均价粗算·currency-api·USD/IRR周抽样高低/均价·2025–2026",
     "fxReserves": "制裁下外储口径不规则·勿假装有官方外储数字〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约0.36美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.002美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约180（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "NG": {
-    "asOf": "2026-08对照·TE尼日利亚",
+    "asOf": "2026-08对照·TE尼日利亚·汽油/电价续补",
     "gdpYoY": "3.89%（2026-03）",
     "gdpUsdBn": "约2910亿美元（2025-12）",
     "gdpPerCapitaUsd": "约2369美元（2025-12）",
@@ -1219,10 +1320,13 @@
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
     "cashLoanVerdict": "通胀破12%；高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约20.4%（2025-Q1）·家庭债务/GDP·IIF Global Debt Monitor",
-    "fxVolInYear": "±6.7%·年内高低相对均价粗算·currency-api·USD/NGN周抽样高低/均价·2025–2026"
+    "fxVolInYear": "±6.7%·年内高低相对均价粗算·currency-api·USD/NGN周抽样高低/均价·2025–2026",
+    "gasolineRetail": "约0.92美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.033美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约27.9（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "KE": {
-    "asOf": "2026-08对照·TE肯尼亚",
+    "asOf": "2026-08对照·TE肯尼亚·汽油/电价续补",
     "gdpYoY": "5.3%（2026-03）",
     "gdpUsdBn": "约1360亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1908美元（2025-12）·低于2000美元阈值",
@@ -1245,10 +1349,13 @@
     "householdDebtToGdp": "约10.4%（2025）·家庭债务/GDP·IIF Global Debt Monitor",
     "fxVolInYear": "±0.6%·年内高低相对均价粗算·currency-api·USD/KES周抽样高低/均价·2025–2026",
     "privCreditOrConsumer": "国内私营信贷约30% GDP（近年）·二级〔10〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约1.65美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.256美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约6.4（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "GH": {
-    "asOf": "2026-08对照·TE加纳",
+    "asOf": "2026-08对照·TE加纳·汽油/电价续补",
     "gdpYoY": "6.4%（2026-03）",
     "gdpUsdBn": "约1140亿美元（2025-12）",
     "gdpPerCapitaUsd": "约2261美元（2025-12）",
@@ -1271,10 +1378,13 @@
     "householdDebtToGdp": "约1.8%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
     "fxVolInYear": "±9.2%·年内高低相对均价粗算·currency-api·USD/GHS周抽样高低/均价·2025–2026",
     "privCreditOrConsumer": "国内私营信贷约12% GDP（近年）·二级〔10〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约1.48美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.115美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约12.9（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "ZA": {
-    "asOf": "2026-08对照·TE南非",
+    "asOf": "2026-08对照·TE南非·汽油/电价续补",
     "gdpYoY": "1.9%（2026-03）",
     "gdpUsdBn": "约4270亿美元（2025-12）",
     "gdpPerCapitaUsd": "约5713美元（2025-12）",
@@ -1297,10 +1407,13 @@
     "debtToGdp": "政府债务/GDP约78.9%（2025-12）",
     "consumerConfidence": "约-19（2026-06）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.56美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.175美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约8.9（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "TZ": {
-    "asOf": "2026-08对照·TE坦桑尼亚",
+    "asOf": "2026-08对照·TE坦桑尼亚·汽油/电价续补",
     "gdpYoY": "6%（2026-03）",
     "gdpUsdBn": "约901亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1153美元（2025-12）·低于2000美元阈值",
@@ -1323,10 +1436,13 @@
     "householdDebtToGdp": "约5%（2024）·家庭债务/GDP·无BIS家庭分项·银行个人信贷粗算",
     "fxVolInYear": "±4.0%·年内高低相对均价粗算·currency-api·USD/TZS周抽样高低/均价·2025–2026",
     "fxReserves": "约61.7亿美元（2025-10）·BoT月报转述外储存量·约4.7个月进口覆盖〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约1.47美元/升（2026-08）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.094美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约15.6（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "UG": {
-    "asOf": "2026-08对照·TE乌干达",
+    "asOf": "2026-08对照·TE乌干达·汽油/电价续补",
     "gdpYoY": "5.8%（2026-03）",
     "gdpUsdBn": "约620亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1021美元（2025-12）·低于2000美元阈值",
@@ -1349,10 +1465,11 @@
     "cashLoanVerdict": "人均GDP＜2000阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约4.1%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
     "fxVolInYear": "±4.4%·年内高低相对均价粗算·currency-api·USD/UGX周抽样高低/均价·2025–2026",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.174美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "RW": {
-    "asOf": "2026-08对照·TE卢旺达",
+    "asOf": "2026-08对照·TE卢旺达·汽油/电价续补",
     "gdpYoY": "-10%（2026-03）",
     "gdpUsdBn": "约164亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1116美元（2025-12）·低于2000美元阈值",
@@ -1375,10 +1492,11 @@
     "householdDebtToGdp": "约6%（2024）·家庭债务/GDP·无BIS家庭分项·银行个人信贷粗算",
     "fxVolInYear": "±1.2%·年内高低相对均价粗算·currency-api·USD/RWF周抽样高低/均价·2025–2026",
     "fxReserves": "约23.2亿美元（2025-06）·NBR年报外储·约4.8个月进口覆盖〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.185美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "ET": {
-    "asOf": "2026-08对照·TE埃塞俄比亚",
+    "asOf": "2026-08对照·TE埃塞俄比亚·汽油/电价续补",
     "gdpYoY": "7.3%（2024-12）",
     "gdpUsdBn": "约1260亿美元（2025-12）",
     "gdpPerCapitaUsd": "约945美元（2025-12）·低于2000美元阈值",
@@ -1401,10 +1519,11 @@
     "privCreditOrConsumer": "国内私营信贷约17.7% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±7.4%·年内高低相对均价粗算·currency-api·USD/ETB周抽样高低/均价·2025–2026",
     "fxReserves": "约37.8亿美元（2024）·世行总储备(含黄金)〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.003美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "CI": {
-    "asOf": "2026-08对照·TE科特迪瓦",
+    "asOf": "2026-08对照·TE科特迪瓦·汽油/电价续补",
     "gdpYoY": "6.7%（2026-03）",
     "gdpUsdBn": "约998亿美元（2025-12）",
     "gdpPerCapitaUsd": "约2491美元（2025-12）",
@@ -1427,10 +1546,11 @@
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
     "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.127美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "SN": {
-    "asOf": "2026-08对照·TE塞内加尔",
+    "asOf": "2026-08对照·TE塞内加尔·汽油/电价续补",
     "gdpYoY": "5.8%（2026-03）",
     "gdpUsdBn": "约370亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1582美元（2025-12）·低于2000美元阈值",
@@ -1453,10 +1573,11 @@
     "privCreditOrConsumer": "国内私营信贷约29.2% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
     "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.174美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "CM": {
-    "asOf": "2026-08对照·TE喀麦隆",
+    "asOf": "2026-08对照·TE喀麦隆·汽油/电价续补",
     "gdpYoY": "2.7%（2025-12）",
     "gdpUsdBn": "约589亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1489美元（2025-12）·低于2000美元阈值",
@@ -1479,10 +1600,11 @@
     "privCreditOrConsumer": "国内私营信贷约14.1% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XAF抽样高低/均价·currency-api·2025–2026",
     "fxReserves": "约50.6亿美元（2024）·世行总储备(含黄金)〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.080美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "AO": {
-    "asOf": "2026-08对照·TE安哥拉",
+    "asOf": "2026-08对照·TE安哥拉·汽油/电价续补",
     "gdpYoY": "5.3%（2026-03）",
     "gdpUsdBn": "约1220亿美元（2025-12）",
     "gdpPerCapitaUsd": "约2801美元（2025-12）",
@@ -1505,10 +1627,11 @@
     "cashLoanVerdict": "高政策利率。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约3%（2024）·家庭债务/GDP·无BIS/TE标准序列·银行个人信贷粗算",
     "fxVolInYear": "±0.6%·年内高低相对均价粗算·currency-api·USD/AOA周抽样高低/均价·2025–2026",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.013美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "MZ": {
-    "asOf": "2026-08对照·TE莫桑比克",
+    "asOf": "2026-08对照·TE莫桑比克·汽油/电价续补",
     "gdpYoY": "0.1%（2026-03）",
     "gdpUsdBn": "约223亿美元（2025-12）",
     "gdpPerCapitaUsd": "约586美元（2025-12）·低于2000美元阈值",
@@ -1531,10 +1654,11 @@
     "privCreditOrConsumer": "国内私营信贷约17.6% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±8.0%·年内高低相对均价粗算·USD/MZN·公开汇价抽样校正·2025–2026",
     "unemployment": "约3.5%（近年）·二级·ILO/公开转述〔1〕·2026-08补录",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.127美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "ZM": {
-    "asOf": "2026-08对照·TE赞比亚",
+    "asOf": "2026-08对照·TE赞比亚·汽油/电价续补",
     "gdpYoY": "7.7%（2026-03）",
     "gdpUsdBn": "约289亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1356美元（2025-12）·低于2000美元阈值",
@@ -1557,10 +1681,11 @@
     "householdDebtToGdp": "约2.1%（2024）·家庭债务/GDP·IMF FAS商业银行对家庭贷款/GDP",
     "privCreditOrConsumer": "国内私营信贷约12% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±15.4%·年内高低相对均价粗算·currency-api·USD/ZMW周抽样高低/均价·2025–2026",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.020美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "ZW": {
-    "asOf": "2026-08对照·TE津巴布韦",
+    "asOf": "2026-08对照·TE津巴布韦·汽油/电价续补",
     "gdpYoY": "8.2%（2025-12）",
     "gdpUsdBn": "约512亿美元（2025-12）",
     "gdpPerCapitaUsd": "约1503美元（2025-12）·低于2000美元阈值",
@@ -1583,10 +1708,11 @@
     "fxVolInYear": "±57.6%·年内高低相对均价粗算·currency-api·USD/ZWL周抽样高低/均价·2025–2026",
     "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     "fxReserves": "多币种流通·官方外储口径不规则·勿假装有官方外储数字〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "gasolineRetail": "约1.93美元/升（2026-07）·TE零售汽油〔1〕〔23〕"
   },
   "BW": {
-    "asOf": "2026-08对照·TE博茨瓦纳",
+    "asOf": "2026-08对照·TE博茨瓦纳·汽油/电价续补",
     "gdpYoY": "3.5%（2026-03）",
     "gdpUsdBn": "约199亿美元（2025-12）",
     "gdpPerCapitaUsd": "约6791美元（2025-12）",
@@ -1609,10 +1735,11 @@
     "cashLoanVerdict": "按宏观因子组续盯信贷过热与汇兑。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
     "householdDebtToGdp": "约21.3%（2025-12）·家庭债务/GDP·CEIC转述",
     "fxVolInYear": "±4.4%·年内高低相对均价粗算·currency-api·USD/BWP周抽样高低/均价·2025–2026",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.091美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "NA": {
-    "asOf": "2026-08对照·TE纳米比亚",
+    "asOf": "2026-08对照·TE纳米比亚·汽油/电价续补",
     "gdpYoY": "2%（2026-03）",
     "gdpUsdBn": "约151亿美元（2025-12）",
     "gdpPerCapitaUsd": "约4019美元（2025-12）",
@@ -1635,7 +1762,8 @@
     "householdDebtToGdp": "约30.7%（2024）·家庭债务/GDP·BoN金融稳定报告",
     "privCreditOrConsumer": "国内私营信贷约55% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±5.2%·年内高低相对均价粗算·currency-api·USD/NAD周抽样高低/均价·2025–2026",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.137美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "MU": {
     "asOf": "2026-08对照·TE毛里求斯",
@@ -1664,7 +1792,7 @@
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "MG": {
-    "asOf": "2026-08对照·TE马达加斯加",
+    "asOf": "2026-08对照·TE马达加斯加·汽油/电价续补",
     "gdpYoY": "4.3%（2024-12）",
     "gdpUsdBn": "约196亿美元（2025-12）",
     "gdpPerCapitaUsd": "约457美元（2025-12）·低于2000美元阈值",
@@ -1687,7 +1815,8 @@
     "fxVolInYear": "±5.2%·年内高低相对均价粗算·currency-api·USD/MGA周抽样高低/均价·2025–2026",
     "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     "fxReserves": "约27.8亿美元（2024）·世行总储备(含黄金)〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.125美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "BJ": {
     "asOf": "2026-08对照·TE贝宁",
@@ -1716,7 +1845,7 @@
     "consumerConfidence": "—·TE无消费者信心序列"
   },
   "BF": {
-    "asOf": "2026-08对照·TE布基纳法索",
+    "asOf": "2026-08对照·TE布基纳法索·汽油/电价续补",
     "gdpYoY": "5.6%（2026-03）",
     "gdpUsdBn": "约276亿美元（2025-12）",
     "gdpPerCapitaUsd": "约787美元（2025-12）·低于2000美元阈值",
@@ -1739,10 +1868,11 @@
     "privCreditOrConsumer": "国内私营信贷约25% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XOF抽样高低/均价·currency-api·2025–2026",
     "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.197美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "ML": {
-    "asOf": "2026-08对照·TE马里",
+    "asOf": "2026-08对照·TE马里·汽油/电价续补",
     "gdpYoY": "7.2%（2025-12）",
     "gdpUsdBn": "约301亿美元（2025-12）",
     "gdpPerCapitaUsd": "约934美元（2025-12）·低于2000美元阈值",
@@ -1765,10 +1895,11 @@
     "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     "debtToGdp": "政府债务/GDP约53%级（近年）·二级〔10〕",
     "fxReserves": "西非经货联盟(BCEAO)共同外储池·联盟外汇约16352亿XOF/约249亿欧元（2025末·BCEAO财报转述）·国别拆分待续核〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.209美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "CD": {
-    "asOf": "2026-08对照·TE刚果（金）",
+    "asOf": "2026-08对照·TE刚果（金）·汽油/电价续补",
     "gdpYoY": "6.7%（2024-12）",
     "gdpUsdBn": "约910亿美元（2025-12）",
     "gdpPerCapitaUsd": "约568美元（2025-12）·低于2000美元阈值",
@@ -1791,10 +1922,11 @@
     "privCreditOrConsumer": "国内私营信贷约8% GDP（近年）·二级〔10〕",
     "fxVolInYear": "±16.5%·年内高低相对均价粗算·currency-api·USD/CDF周抽样高低/均价·2025–2026",
     "unemployment": "约4.5%（近年）·二级·ILO/公开转述·非正式就业高〔1〕·2026-08补录",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.058美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "GA": {
-    "asOf": "2026-08对照·TE加蓬",
+    "asOf": "2026-08对照·TE加蓬·汽油/电价续补",
     "gdpYoY": "2.7%（2025-12）",
     "gdpUsdBn": "约214亿美元（2025-12）",
     "gdpPerCapitaUsd": "约6641美元（2025-12）",
@@ -1817,10 +1949,11 @@
     "fxVolInYear": "±2.1%·CFA钉住欧元·沿用USD/XAF抽样高低/均价·currency-api·2025–2026",
     "sectorMix": "三产分项待官方/TE续拆·对照总表三产阈值〔1〕·2026-08补录",
     "fxReserves": "中非经货共同体(BEAC)共同外储池·联盟外汇约6377亿XAF/约97亿欧元（2025末·BEAC转述）·国别拆分待续核〔1〕",
-    "consumerConfidence": "—·TE无消费者信心序列"
+    "consumerConfidence": "—·TE无消费者信心序列",
+    "electricityResidential": "约0.196美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕"
   },
   "US": {
-    "asOf": "2026-08对照·TE美国",
+    "asOf": "2026-08对照·TE美国·汽油/电价续补",
     "gdpYoY": "2.1%（2026-06）",
     "gdpUsdBn": "约30.77万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约67946美元（2025-12）·过12000成熟阈值",
@@ -1843,10 +1976,13 @@
     "debtToGdp": "政府债务/GDP约123%（2025-12）",
     "consumerConfidence": "约55.2（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.04美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.184美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约5.7（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "CA": {
-    "asOf": "2026-08对照·TE加拿大",
+    "asOf": "2026-08对照·TE加拿大·汽油/电价续补",
     "gdpYoY": "-0.1%（2026-03）",
     "gdpUsdBn": "约2.32万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约45418美元（2025-12）·过12000成熟阈值",
@@ -1869,10 +2005,13 @@
     "debtToGdp": "政府债务/GDP约114%（2025-12）",
     "consumerConfidence": "约47.6（2026-06）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.32美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.119美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约11.1（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "GB": {
-    "asOf": "2026-08对照·TE英国",
+    "asOf": "2026-08对照·TE英国·汽油/电价续补",
     "gdpYoY": "0.9%（2026-03）",
     "gdpUsdBn": "约4.00万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约48422美元（2025-12）·过12000成熟阈值",
@@ -1895,10 +2034,13 @@
     "debtToGdp": "政府债务/GDP约94.3%（2025-12）",
     "consumerConfidence": "约-17（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约2.1美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.345美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约6.1（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "DE": {
-    "asOf": "2026-08对照·TE德国",
+    "asOf": "2026-08对照·TE德国·汽油/电价续补",
     "gdpYoY": "0.9%（2026-06）",
     "gdpUsdBn": "约5.05万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约44147美元（2025-12）·过12000成熟阈值",
@@ -1921,10 +2063,13 @@
     "debtToGdp": "政府债务/GDP约63.5%（2025-12）",
     "consumerConfidence": "约-29.6（2026-08）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约2.49美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.341美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约7.3（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "FR": {
-    "asOf": "2026-08对照·TE法国",
+    "asOf": "2026-08对照·TE法国·汽油/电价续补",
     "gdpYoY": "0.7%（2026-06）",
     "gdpUsdBn": "约3.37万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约39919美元（2025-12）·过12000成熟阈值",
@@ -1947,10 +2092,13 @@
     "debtToGdp": "政府债务/GDP约116%（2025-12）",
     "consumerConfidence": "约86（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约2.33美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.294美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约7.9（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "NL": {
-    "asOf": "2026-08对照·TE荷兰",
+    "asOf": "2026-08对照·TE荷兰·汽油/电价续补",
     "gdpYoY": "1.3%（2026-06）",
     "gdpUsdBn": "约1.33万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约51817美元（2025-12）·过12000成熟阈值",
@@ -1973,10 +2121,13 @@
     "debtToGdp": "政府债务/GDP约44.4%（2025-12）",
     "consumerConfidence": "约-35（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约2.59美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.249美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约10.4（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "ES": {
-    "asOf": "2026-08对照·TE西班牙",
+    "asOf": "2026-08对照·TE西班牙·汽油/电价续补",
     "gdpYoY": "2.7%（2026-06）",
     "gdpUsdBn": "约1.91万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约29763美元（2025-12）·过12000成熟阈值",
@@ -1999,10 +2150,13 @@
     "debtToGdp": "政府债务/GDP约101%（2025-12）",
     "consumerConfidence": "约81.2（2026-06）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.94美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.211美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约9.2（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "PT": {
-    "asOf": "2026-08对照·TE葡萄牙",
+    "asOf": "2026-08对照·TE葡萄牙·汽油/电价续补",
     "gdpYoY": "2.5%（2026-06）",
     "gdpUsdBn": "约3470亿美元（2025-12）",
     "gdpPerCapitaUsd": "约22851美元（2025-12）·过12000成熟阈值",
@@ -2025,10 +2179,13 @@
     "debtToGdp": "政府债务/GDP约89.7%（2025-12）",
     "consumerConfidence": "约-22.6（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约2.26美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.218美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约10.4（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "IT": {
-    "asOf": "2026-08对照·TE意大利",
+    "asOf": "2026-08对照·TE意大利·汽油/电价续补",
     "gdpYoY": "1%（2026-06）",
     "gdpUsdBn": "约2.55万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约34716美元（2025-12）·过12000成熟阈值",
@@ -2051,10 +2208,13 @@
     "debtToGdp": "政府债务/GDP约137%（2025-12）",
     "consumerConfidence": "约94.2（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约2.35美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.427美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约5.5（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "SE": {
-    "asOf": "2026-08对照·TE瑞典",
+    "asOf": "2026-08对照·TE瑞典·汽油/电价续补",
     "gdpYoY": "2.8%（2026-06）",
     "gdpUsdBn": "约6690亿美元（2025-12）",
     "gdpPerCapitaUsd": "约55014美元（2025-12）·过12000成熟阈值",
@@ -2077,10 +2237,13 @@
     "debtToGdp": "政府债务/GDP约35.1%（2025-12）",
     "consumerConfidence": "约97.1（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.59美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.206美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约7.7（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "PL": {
-    "asOf": "2026-08对照·TE波兰",
+    "asOf": "2026-08对照·TE波兰·汽油/电价续补",
     "gdpYoY": "3.5%（2026-03）",
     "gdpUsdBn": "约1.03万亿美元（2025-12）",
     "gdpPerCapitaUsd": "约18707美元（2025-12）·过12000成熟阈值",
@@ -2103,10 +2266,13 @@
     "debtToGdp": "政府债务/GDP约59.7%（2025-12）",
     "consumerConfidence": "约-10.2（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.87美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.225美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约8.3（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "IE": {
-    "asOf": "2026-08对照·TE爱尔兰",
+    "asOf": "2026-08对照·TE爱尔兰·汽油/电价续补",
     "gdpYoY": "-1.6%（2026-06）",
     "gdpUsdBn": "约7220亿美元（2025-12）",
     "gdpPerCapitaUsd": "约104417美元（2025-12）·过12000成熟阈值",
@@ -2129,10 +2295,13 @@
     "debtToGdp": "政府债务/GDP约32.9%（2025-12）",
     "consumerConfidence": "约61.6（2026-07）",
     "creditNote": "信贷过热组：家庭债务/非银增速/NPL/多头以监管与征信续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值。准入先过牌照/利率上限与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约1.99美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.410美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约4.9（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "RU": {
-    "asOf": "2026-08对照·TE俄罗斯",
+    "asOf": "2026-08对照·TE俄罗斯·汽油/电价续补",
     "gdpYoY": "-0.2%（2026-03）；全年增长预期约0–1%（央行基线）",
     "gdpUsdBn": "约25610亿美元（2025-12）",
     "gdpPerCapitaUsd": "约17540美元（2025-12·名义GDP/人口粗算）·过12000成熟阈值",
@@ -2155,10 +2324,13 @@
     "debtToGdp": "政府债务/GDP约18.3%（2025-12）",
     "consumerConfidence": "约-13（2026-06）",
     "creditNote": "信贷过热组：家庭杠杆不高但政策利率高企；制裁/结算/合规与本地牌照续核；此处为TE可核验水位。",
-    "cashLoanVerdict": "人均GDP过成熟阈值，但高利率+制裁合规成本主导。准入先过本地牌照、结算通道与锁汇评估（对照总表预警）。"
+    "cashLoanVerdict": "人均GDP过成熟阈值，但高利率+制裁合规成本主导。准入先过本地牌照、结算通道与锁汇评估（对照总表预警）。",
+    "gasolineRetail": "约0.93美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.049美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约19.0（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   },
   "SG": {
-    "asOf": "2026-08对照·TE新加坡",
+    "asOf": "2026-08对照·TE新加坡·汽油/电价续补",
     "householdDebtToGdp": "约44%（2025-Q4）·家庭债务/GDP·BIS/TE Households Debt to GDP",
     "fxVolInYear": "±4.2%·年内高低相对均价粗算·Frankfurter SGD·2025-07..2026-08",
     "cashLoanVerdict": "人均高、牌照严、经常账户顺差厚。准入先过MAS非银信贷/银行合作路径；政府债务/GDP口径特殊勿误读。",
@@ -2181,6 +2353,9 @@
     "debtToGdp": "政府债务/GDP约171%（2025-12）·含MAS特殊结构·不宜简单对照新兴市场阈值",
     "privCreditOrConsumer": "私人部门信贷约742123SGD - 百万（2026-06）",
     "consumerConfidence": "约54.1（2026-07）",
-    "creditNote": "信贷过热组：家庭债务约44%GDP；非银增速/NPL/多头以MAS与征信续核；此处为TE可核验水位。"
+    "creditNote": "信贷过热组：家庭债务约44%GDP；非银增速/NPL/多头以MAS与征信续核；此处为TE可核验水位。",
+    "gasolineRetail": "约3.34美元/升（2026-07）·TE零售汽油〔1〕〔23〕",
+    "electricityResidential": "约0.240美元/kWh（2026-01）·GlobalPetrolPrices居民电价〔22〕",
+    "fuelToPowerRatio": "约13.9（1升汽油≈可购居民电kWh）·汽油÷电价·TE/GPP〔1〕〔22〕〔23〕"
   }
 }

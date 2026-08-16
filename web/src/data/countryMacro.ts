@@ -28,6 +28,15 @@ export type CountryMacroSnap = {
   debtToGdp?: string;
   householdDebtToGdp?: string;
   consumerConfidence?: string;
+  /** 零售汽油（泵价，优先 USD/升） */
+  gasolineRetail?: string;
+  /** 居民电价（含税，优先 USD/kWh） */
+  electricityResidential?: string;
+  /**
+   * 油电比 = 零售汽油(USD/升) ÷ 居民电价(USD/kWh)
+   * 含义：买 1 升汽油约等于可购多少 kWh 居民电；越高燃油相对电费越贵
+   */
+  fuelToPowerRatio?: string;
   creditNote?: string;
   cashLoanVerdict?: string;
 };
@@ -118,6 +127,15 @@ export function synthesizeCashLoanBrief(snap: CountryMacroSnap): string {
   const unemp = firstNumber(snap.unemployment);
   if (unemp != null && unemp >= 8) bits.push(`失业率约${fmtNum(unemp)}%（破8%）`);
 
+  const gas = firstNumber(snap.gasolineRetail);
+  if (gas != null && gas >= 2) bits.push(`零售汽油约${fmtNum(gas, 2)}美元/升（偏高）`);
+
+  const elec = firstNumber(snap.electricityResidential);
+  if (elec != null && elec >= 0.25) bits.push(`居民电价约${fmtNum(elec, 3)}美元/kWh（偏高）`);
+
+  const ftp = firstNumber(snap.fuelToPowerRatio);
+  if (ftp != null && ftp >= 20) bits.push(`油电比约${fmtNum(ftp, 1)}×（燃油相对电费偏贵）`);
+
   if (!bits.length) {
     const stored = snap.cashLoanVerdict?.trim();
     if (stored && !/准入先过牌照\/利率上限与锁汇评估/.test(stored)) return stored;
@@ -182,6 +200,9 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
   const hh = firstNumber(snap.householdDebtToGdp);
   const unemp = firstNumber(snap.unemployment);
   const gdpYoY = firstNumber(snap.gdpYoY);
+  const gas = firstNumber(snap.gasolineRetail);
+  const elec = firstNumber(snap.electricityResidential);
+  const ftp = firstNumber(snap.fuelToPowerRatio);
   const fxVol = firstNumber(snap.fxVolInYear?.replace("±", ""));
   const caM = (snap.currentAccount || "").match(/CA\/GDP约?\s*(-?\d+(?:\.\d+)?)\s*%/i);
   const ca = caM ? Number(caM[1]) : null;
@@ -194,6 +215,12 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
     hh != null && hh >= 55 ? "hot" : hh != null && hh >= 45 ? "watch" : hh != null ? "ok" : undefined;
   const gdpPcFlag: CashLoanMacroMetric["flag"] =
     gdpPc != null && gdpPc < 2000 ? "hot" : gdpPc != null && gdpPc >= 12000 ? "watch" : gdpPc != null ? "ok" : undefined;
+  const gasFlag: CashLoanMacroMetric["flag"] =
+    gas != null && gas >= 3 ? "hot" : gas != null && gas >= 2 ? "watch" : gas != null ? "ok" : undefined;
+  const elecFlag: CashLoanMacroMetric["flag"] =
+    elec != null && elec >= 0.3 ? "hot" : elec != null && elec >= 0.2 ? "watch" : elec != null ? "ok" : undefined;
+  const ftpFlag: CashLoanMacroMetric["flag"] =
+    ftp != null && ftp >= 25 ? "hot" : ftp != null && ftp >= 15 ? "watch" : ftp != null ? "ok" : undefined;
 
   const groups: CashLoanMacroGroup[] = [
     {
@@ -247,10 +274,13 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
       id: "stress",
       step: "⑤",
       title: "景气与定价压测",
-      soWhat: "定价锚与贷后压测：高息高通胀抬资金成本，GDP偏弱则vintage更易恶化。",
+      soWhat: "定价锚与贷后压测：高息高通胀抬资金成本，能源生活成本抬升伤还款现金流，GDP偏弱则vintage更易恶化。",
       metrics: [
         metric("GDP同比", "gdpYoY", snap.gdpYoY, pack, gdpYoY != null && gdpYoY < 1 ? "watch" : undefined),
         metric("通胀", "inflation", snap.inflation, pack, inflFlag),
+        metric("零售汽油", "gasolineRetail", snap.gasolineRetail, pack, gasFlag),
+        metric("居民电价", "electricityResidential", snap.electricityResidential, pack, elecFlag),
+        metric("油电比", "fuelToPowerRatio", snap.fuelToPowerRatio, pack, ftpFlag),
         metric("政策利率", "policyRate", snap.policyRate, pack, rate != null && rate >= 10 ? "hot" : undefined),
       ].filter(Boolean) as CashLoanMacroMetric[],
     },

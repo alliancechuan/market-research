@@ -1,6 +1,6 @@
 {
   "asOf": "2026-08-12",
-  "note": "情报库分两轨。一是专题研报/上市披露（含点点海外现金贷 2025 年报、2026 年报与 2026H1）；二是监管与信源包。不要把监管文件标成研报。点点 2026H2 尚未公开，仍挂 pending。历史点点专题以公开摘要+官网链接入库；完整 PDF 若后续粘贴可替换 localPath。 已吸收出海小黑板：拍拍贷/信也海外业务 2021–2023 财报解读系列 + 印尼千三日息上限短笺。",
+  "note": "情报库分两轨。一是专题研报/上市披露（含点点海外现金贷 2025 年报、2026 年报与 2026H1）；二是监管与信源包。不要把监管文件标成研报。点点《2026H1海外现金贷》已于2026-08公开；H2尚未发布，pending 保留 diandian-2026h2-overseas-cashloan。历史点点专题以公开摘要+官网链接入库；完整 PDF 若后续粘贴可替换 localPath。 已吸收出海小黑板：拍拍贷/信也海外业务 2021–2023 财报解读系列 + 印尼千三日息上限短笺。",
   "refresh": {
     "cadence": "季度主更 + 粘贴即入库",
     "nextDue": "2026-10-15",
@@ -176,7 +176,8 @@
         "diandian-2025-overseas-cashloan",
         "diandian-2026-annual-overseas-cashloan"
       ]
-    }
+    },
+    "note": "点点《2026H1海外现金贷》已于2026-08公开；H2尚未发布，pending 保留 diandian-2026h2-overseas-cashloan。"
   },
   "reports": [
     {
@@ -472,7 +473,65 @@
           ]
         }
       ],
-      "playerUpdates": [],
+      "playerUpdates": [
+        {
+          "nameZh": "AdaKami / 信也印尼",
+          "groupKeys": [
+            "AdaKami/FinVolution（信也·ID）",
+            "AdaKami｜AdaKami｜AdaKami（AdaKami·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "千三→千二→千一日息上限下，本地资金占比与持牌续存更关键（作者/后续交叉口径）。",
+          "cashLoanHint": "定价天花板下沉后，纯高价获客模型压力更大；优先看本地资金与合规催收。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Kredivo / FinAccel",
+          "groupKeys": [
+            "Kredivo/FinAccel（Kredivo·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "场景分期/持牌路径相对更抗利率上限；仍须按 SEOJK 阶梯重定价。",
+          "cashLoanHint": "上限压缩息差时，场景转化与低风险客群更值钱。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "Akulaku / Akulaku Finance",
+          "groupKeys": [
+            "Akulaku/Akulaku（阿卡拉克·SEA）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "电商分期+现金贷组合需按日息上限重测 APR/IRR；催收与紧急联系人规则同步收紧。",
+          "cashLoanHint": "产品页展示与合同算法须对齐 OJK 上限，避免营销 APR 口径冲突。",
+          "confidence": "中",
+          "applyToCrm": true
+        },
+        {
+          "nameZh": "GoTo / Gojek 生态信贷",
+          "groupKeys": [
+            "GoTo/Gojek（GoTo·ID）"
+          ],
+          "region": "se-asia",
+          "countries": [
+            "ID"
+          ],
+          "metric": "平台生态贷同样受个人消费贷日息上限阶梯约束；优势在场景与低获客成本。",
+          "cashLoanHint": "上限时代更吃场景与资金成本，而非只拼投放。",
+          "confidence": "中",
+          "applyToCrm": true
+        }
+      ],
       "analysis": {
         "verdict": "印尼现金贷定价天花板阶梯下降；持牌+低资金成本玩家更有优势。须与 OJK 原文交叉〔4〕。",
         "bullets": [
@@ -1434,7 +1493,43 @@
         ]
       },
       "docKind": "research_report",
-      "docKindLabel": "研报"
+      "docKindLabel": "研报",
+      "sources": [
+        {
+          "id": "diandian-h1-2026-local-pdf",
+          "type": "third_party_research",
+          "title": "2026海外现金贷市场研究报告 H1（本地 PDF）",
+          "url": "reports/2026-h1-overseas-cashloan-diandian.pdf",
+          "asOf": "2026-08-11",
+          "confidence": "中",
+          "bullets": [
+            "localPath 对照",
+            "下载/MAU/四国压力盘"
+          ]
+        },
+        {
+          "id": "diandian-h1-2026-html-summary",
+          "type": "third_party_research",
+          "title": "点点海外现金贷年更摘要页（本地 HTML）",
+          "url": "reports/diandian-2026-annual-overseas-cashloan-summary.html",
+          "asOf": "2026-08",
+          "confidence": "中",
+          "bullets": [
+            "与 H1 报告交叉"
+          ]
+        },
+        {
+          "id": "ojk-satgas-pasti-2026",
+          "type": "regulator_news",
+          "title": "Satgas PASTI 关停非法 pinjol（OJK）",
+          "url": "https://ojk.go.id/id/berita-dan-kegiatan/info-terkini/Pages/Satgas-PASTI-Hentikan-953-Entitas-Pinjol-Ilegal-dan-Penawaran-Investasi-Ilegal.aspx",
+          "asOf": "2026-04-29",
+          "confidence": "高",
+          "bullets": [
+            "报告政策段非法网贷关停交叉"
+          ]
+        }
+      ]
     },
     {
       "id": "diandian-2025-overseas-cashloan",
@@ -2170,7 +2265,13 @@
       "playerUpdates": [
         {
           "nameZh": "印度 NBFC/数字放贷入口",
-          "groupKeys": [],
+          "groupKeys": [
+            "Reserve Bank of India｜RBI｜印度央行（监管·IN）",
+            "Digital Lenders Association of India｜DLAI｜印度数字放贷协会（监管·IN）",
+            "KreditBee（KreditBee·IN）",
+            "One97/Paytm（Paytm·IN）",
+            "Bajaj Finance（·IN）"
+          ],
           "region": "south-asia",
           "countries": [
             "IN"
@@ -2624,7 +2725,12 @@
       "playerUpdates": [
         {
           "nameZh": "菲律宾 OLP 持牌放贷",
-          "groupKeys": [],
+          "groupKeys": [
+            "Securities and Exchange Commission｜SEC｜菲律宾证监会（监管·PH）",
+            "JuanHand/FinVolution（信也·PH）",
+            "Cashalo/Paloo（·PH）",
+            "Digido（·PH）"
+          ],
           "region": "se-asia",
           "countries": [
             "PH"
@@ -2790,7 +2896,11 @@
       "playerUpdates": [
         {
           "nameZh": "泰国个人贷/Nano 持牌非银",
-          "groupKeys": [],
+          "groupKeys": [
+            "Bank of Thailand｜BOT｜泰国央行（监管·TH）",
+            "Ascend Nano/Ascend（Ascend·TH）",
+            "Easy Buy（Easy Buy·TH）"
+          ],
           "region": "se-asia",
           "countries": [
             "TH"
@@ -2864,7 +2974,12 @@
       "playerUpdates": [
         {
           "nameZh": "香港数字银行",
-          "groupKeys": [],
+          "groupKeys": [
+            "Hong Kong Monetary Authority｜HKMA｜香港金管局（监管·HK）",
+            "Fusion Bank（Fusion Bank·HK）",
+            "Livi Bank（Livi·HK）",
+            "Airstar Bank（Airstar·HK）"
+          ],
           "region": "east-asia",
           "countries": [
             "HK"
@@ -3037,7 +3152,15 @@
       "playerUpdates": [
         {
           "nameZh": "墨西哥 Fintech/SOFOM 通道",
-          "groupKeys": [],
+          "groupKeys": [
+            "Comisión Nacional Bancaria y de Valores｜CNBV｜墨银监（监管·MX）",
+            "CONDUSEF｜Condusef｜墨金融用户保护（监管·MX）",
+            "Stori（Stori·MX）",
+            "Kueski（Kueski·MX）",
+            "Aplazo（Aplazo·MX）",
+            "DiDi Finanzas/DiDi（滴滴·MX）",
+            "Clip（Clip·MX）"
+          ],
           "region": "latam",
           "countries": [
             "MX"
@@ -3126,7 +3249,12 @@
       "playerUpdates": [
         {
           "nameZh": "印度 NBFC / 数字贷平台",
-          "groupKeys": [],
+          "groupKeys": [
+            "Reserve Bank of India｜RBI｜印度央行（监管·IN）",
+            "KreditBee（KreditBee·IN）",
+            "One97/Paytm（Paytm·IN）",
+            "Bajaj Finance（·IN）"
+          ],
           "region": "south-asia",
           "countries": [
             "IN"

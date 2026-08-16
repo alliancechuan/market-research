@@ -949,7 +949,7 @@ export function MapCountryMacroBrief({ code, dense = false }: { code: string; de
   }
 
   return (
-    <MapSection title="现金贷宏观" dense={dense}>
+    <MapSection title="信贷宏观" dense={dense}>
       {spark}
       <MapMacroKV k="对照时点" v={snap.asOf || "—"} dense={dense} />
       {!dense && formatCountryLanguageLine(code) ? (

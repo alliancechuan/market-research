@@ -3,7 +3,7 @@
  * 顶栏：合计；IMF/世行筛选在大屏第二行（ScreenImfWbFilterBar）
  * 展业国：深蓝描边 + 圆心数字（已投生产商数）
  */
-import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { geoGraticule10, geoNaturalEarth1, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
@@ -45,6 +45,8 @@ import {
 } from "./HeatMapChrome";
 import { heatColorGreen, heatColorInvestedForest, logHeatNorm } from "./heatMapTheme";
 import { useCanvasState, useHostTheme } from "./shims/cursor-canvas";
+import { PartnerHoldingsSection, useGuestMask } from "./PartnerHoldingsSection";
+import { SENSITIVE_MASK } from "./authAccess";
 
 type CountryProps = { name?: string };
 
@@ -250,7 +252,7 @@ function DetailPanel({
   onClose: () => void;
   overlay?: boolean;
 }) {
-  const { theme, c } = useMapChrome();
+  const { theme } = useMapChrome();
   const invested = INVESTED_BY_CODE[code];
   const zoom = COUNTRY_ZOOM_BY_CODE[code];
   const nbfc = summarizeNbfcForCountry(code);
@@ -272,29 +274,7 @@ function DetailPanel({
           <MapKV k="世行" v={imfWb.wbIncomeZh} dense={overlay} />
         </MapSection>
       ) : null}
-      {invested ? (
-        <MapSection title="已投生产商" dense={overlay}>
-          <MapKV k="基金投资合计" v={formatUsdCompact(invested.investment_usd)} dense={overlay} />
-          <MapKV k="热力在贷合计" v={formatUsdCompact(invested.outstanding_usd_for_heat)} dense={overlay} />
-          <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
-            {invested.producers.map((p) => (
-              <div
-                key={p.id}
-                style={{
-                  background: c.fillSoft,
-                  borderRadius: 6,
-                  border: `1px solid ${c.panelBorder}`,
-                  padding: "8px 10px",
-                  fontSize: 12,
-                }}
-              >
-                <div style={{ fontWeight: 600, color: c.accent }}>{p.name}</div>
-                <div style={{ color: c.textTertiary }}>{p.product_type}</div>
-              </div>
-            ))}
-          </div>
-        </MapSection>
-      ) : null}
+      <PartnerHoldingsSection invested={invested} dense={overlay} />
       <MapSection title="市场放贷" dense={overlay}>
         {nbfc ? (
           <>
@@ -341,6 +321,7 @@ export function FullMarketChoropleth({
   ecoTotalUnique,
   ecoLabel,
   mapCorner,
+  regionZoomCodes = null,
 }: {
   height?: number;
   fill?: boolean;
@@ -354,12 +335,15 @@ export function FullMarketChoropleth({
   ecoLabel?: string;
   /** 叠在地图框右上角（全屏按钮等） */
   mapCorner?: ReactNode;
+  /** 大屏区域缩放：ISO2 列表；空/null 为全球 */
+  regionZoomCodes?: string[] | null;
 }) {
   const { theme, c } = useMapChrome();
   const { aspect, focusRightFrac, focusMapMinFrac } = useMapViewport(fill);
   const width = mapFrameWidth(height, aspect);
   const bottomLegend = fill || legendPlacement === "bottom";
   const place: MapLegendPlacement = bottomLegend ? "bottom" : "side";
+  const { guest, maskUsd } = useGuestMask();
 
   const [imfFilter, setImfFilter] = useCanvasState<string>("screenImfFilter2", "all");
   const [wbFilter, setWbFilter] = useCanvasState<string>("screenWbFilter2", "all");
@@ -376,15 +360,27 @@ export function FullMarketChoropleth({
     capturing: boolean;
   } | null>(null);
 
+  const regionSet = useMemo(
+    () => (regionZoomCodes?.length ? new Set(regionZoomCodes) : null),
+    [regionZoomCodes],
+  );
+  const regionKey = regionZoomCodes?.slice().sort().join(",") ?? "";
+  useEffect(() => {
+    setFocus(null);
+    setYaw(0);
+    setHover(null);
+  }, [regionKey]);
+
   const lendingAll = useMemo(() => aggregateLendingUsdBn(), []);
   const lending = useMemo(() => {
     const out: Record<string, number> = {};
     for (const [code, bn] of Object.entries(lendingAll)) {
+      if (regionSet && !regionSet.has(code)) continue;
       if (!passesImfWbFilters(code, imfFilter, wbFilter)) continue;
       out[code] = bn;
     }
     return out;
-  }, [lendingAll, imfFilter, wbFilter]);
+  }, [lendingAll, imfFilter, wbFilter, regionSet]);
 
   const investedOutstanding = useMemo(() => {
     const out: Record<string, number> = {};
@@ -409,15 +405,19 @@ export function FullMarketChoropleth({
     if (ecoOn) {
       const out: Record<string, number> = {};
       for (const [code, n] of Object.entries(ecoMap)) {
-        if (n > 0 && passesImfWbFilters(code, imfFilter, wbFilter)) out[code] = n;
+        if (n > 0 && (!regionSet || regionSet.has(code)) && passesImfWbFilters(code, imfFilter, wbFilter)) {
+          out[code] = n;
+        }
       }
       return out;
     }
     if (marketOn || marketWithEco) return lending;
     return Object.fromEntries(
-      Object.entries(investedOutstanding).map(([k, v]) => [k, v / 1e9]),
+      Object.entries(investedOutstanding)
+        .filter(([k]) => !regionSet || regionSet.has(k))
+        .map(([k, v]) => [k, v / 1e9]),
     );
-  }, [ecoOn, marketOn, marketWithEco, lending, investedOutstanding, ecoMap, imfFilter, wbFilter]);
+  }, [ecoOn, marketOn, marketWithEco, lending, investedOutstanding, ecoMap, imfFilter, wbFilter, regionSet]);
 
   const fillVals = useMemo(() => Object.values(fillValues).filter((v) => v > 0), [fillValues]);
   const maxV = useMemo(() => Math.max(...fillVals, 1e-9), [fillVals]);
@@ -490,11 +490,15 @@ export function FullMarketChoropleth({
         high: formatUsdTn(maxV),
       };
     }
+    // 仅展业面填：色阶为热力在贷，访客不可见具体金额区间
+    if (guest) {
+      return { low: SENSITIVE_MASK, high: SENSITIVE_MASK };
+    }
     return {
       low: formatUsdCompact(minV * 1e9),
       high: formatUsdCompact(maxV * 1e9),
     };
-  }, [fillVals.length, ecoOn, marketOn, marketWithEco, minV, maxV]);
+  }, [fillVals.length, ecoOn, marketOn, marketWithEco, minV, maxV, guest]);
 
   const countries = useMemo(() => {
     const topo = worldTopology as {
@@ -522,6 +526,18 @@ export function FullMarketChoropleth({
     return null;
   }, [focus, countries]);
 
+  const regionFeature = useMemo(() => {
+    if (!regionZoomCodes?.length) return null;
+    const set = new Set(regionZoomCodes);
+    const feats = countries.features.filter((f) => {
+      const a2 = a2Of(f);
+      return a2 != null && set.has(a2);
+    });
+    return feats.length
+      ? ({ type: "FeatureCollection", features: feats } as FeatureCollection<Geometry, CountryProps>)
+      : null;
+  }, [regionZoomCodes, countries]);
+
   const { pathGen, outline, projection } = useMemo(() => {
     const proj = geoNaturalEarth1();
     if (focusFeature) {
@@ -532,6 +548,14 @@ export function FullMarketChoropleth({
           [Math.max(width - rightPad, width * focusMapMinFrac), height - 36],
         ],
         focusFeature,
+      );
+    } else if (regionFeature) {
+      proj.fitExtent(
+        [
+          [28, 68],
+          [width - 28, height - 28],
+        ],
+        regionFeature,
       );
     } else {
       proj.rotate([yaw, 0, 0]);
@@ -545,7 +569,7 @@ export function FullMarketChoropleth({
     }
     const path = geoPath(proj);
     return { pathGen: path, outline: path({ type: "Sphere" }) ?? "", projection: proj };
-  }, [focusFeature, width, height, bottomLegend, yaw, focusRightFrac, focusMapMinFrac]);
+  }, [focusFeature, regionFeature, width, height, bottomLegend, yaw, focusRightFrac, focusMapMinFrac]);
 
   const graticulePath = useMemo(() => pathGen(geoGraticule10()) ?? "", [pathGen]);
 
@@ -757,7 +781,11 @@ export function FullMarketChoropleth({
                     value={formatUsdTn(filteredSumBn)}
                   />
                   {both ? (
-                    <MapMetricBlock label="展业 · 在贷" value={formatUsdCompact(investedSumUsd)} accent />
+                    <MapMetricBlock
+                      label="展业 · 在贷"
+                      value={maskUsd(investedSumUsd)}
+                      accent
+                    />
                   ) : null}
                   {marketWithEco ? (
                     <MapMetricBlock label={`${ecoLabel ?? "机构"} · 样本`} value={`${ecoSum} 家`} accent />
@@ -777,7 +805,7 @@ export function FullMarketChoropleth({
                       ? `${ecoSum} 家`
                       : marketOn
                         ? formatUsdTn(filteredSumBn)
-                        : formatUsdCompact(investedSumUsd)
+                        : maskUsd(investedSumUsd)
                   }
                 />
               )}
@@ -795,7 +823,7 @@ export function FullMarketChoropleth({
                   ? `落点 ${Object.keys(fillValues).filter((k) => (fillValues[k] ?? 0) > 0).length} 国 · 样本去重 ${ecoSum} 家${filterActive ? ` · ${[imfLabel, wbLabel].filter((x) => x && !x.startsWith("全部")).join(" · ")}` : ""}`
                   : investedOn && !marketOn && !marketWithEco
                     ? `展业 ${investedCountryCount} 国 · 对照全市场 ${formatUsdTn(marketAllSumBn)}${
-                        marketVsInvestedPct != null ? ` · 约 ${marketVsInvestedPct.toFixed(2)}%` : ""
+                        !guest && marketVsInvestedPct != null ? ` · 约 ${marketVsInvestedPct.toFixed(2)}%` : ""
                       }`
                     : marketWithEco
                       ? `覆盖 ${coveredCountries} 国 · 有数据 ${dataCountries} 国 · ${ecoLabel ?? "机构"}落点 ${ecoCountryCount} 国 · 样本去重 ${ecoSum} 家${
@@ -805,7 +833,7 @@ export function FullMarketChoropleth({
                         }`
                       : both
                         ? `覆盖 ${coveredCountries} 国 · 有数据 ${dataCountries} 国 · 展业 ${investedCountryCount} 国${
-                            marketVsInvestedPct != null ? ` · 占比约 ${marketVsInvestedPct.toFixed(2)}%` : ""
+                            !guest && marketVsInvestedPct != null ? ` · 占比约 ${marketVsInvestedPct.toFixed(2)}%` : ""
                           }${filterActive ? ` · ${[imfFilter !== "all" ? imfLabel : "", wbFilter !== "all" ? wbLabel : ""].filter(Boolean).join(" · ")}` : ""}`
                         : `覆盖 ${coveredCountries} 国 · 有数据 ${dataCountries} 国${
                             filterActive
@@ -1015,14 +1043,14 @@ export function FullMarketChoropleth({
               </div>
             ) : null}
             {investedOn && hover.investedUsd > 0 ? (
-              <div style={{ color: c.accent }}>展业在贷 {formatUsdCompact(hover.investedUsd)}</div>
+              <div style={{ color: c.accent }}>展业在贷 {maskUsd(hover.investedUsd)}</div>
             ) : null}
             {investedOn && hover.investedInvestmentUsd > 0 ? (
               <div style={{ color: c.textTertiary }}>
-                基金投资 {formatUsdCompact(hover.investedInvestmentUsd)}
+                基金投资 {maskUsd(hover.investedInvestmentUsd)}
               </div>
             ) : null}
-            {investedOn && hover.investedUsd > 0 && hover.usdBn > 0 ? (
+            {investedOn && !guest && hover.investedUsd > 0 && hover.usdBn > 0 ? (
               <div style={{ color: c.textTertiary }}>
                 展业 / 全市场 ≈ {((hover.investedUsd / 1e9 / hover.usdBn) * 100).toFixed(2)}%
               </div>

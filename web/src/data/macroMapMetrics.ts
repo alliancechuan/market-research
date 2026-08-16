@@ -5,9 +5,13 @@ export type MacroMapFactorId =
   | "hhDebt"
   | "fxVol"
   | "gdpPc"
+  | "incomePc"
   | "inflation"
   | "policyRate"
-  | "unemployment";
+  | "unemployment"
+  | "gasoline"
+  | "electricity"
+  | "fuelToPower";
 
 export const MACRO_MAP_FACTORS: {
   id: MacroMapFactorId;
@@ -43,6 +47,14 @@ export const MACRO_MAP_FACTORS: {
     blurb: "现价人均GDP · 基本面组 · 信源侧重世行 / IMF",
   },
   {
+    id: "incomePc",
+    label: "人均收入",
+    unit: "USD PPP",
+    sense: "high_capacity",
+    field: "incomePerCapita",
+    blurb: "GNI/人 PPP（库内多数世行·OWID；少数 TE PPP）· 非住户可支配收入 · 基本面组〔10〕〔15〕",
+  },
+  {
     id: "inflation",
     label: "通胀",
     unit: "%",
@@ -66,13 +78,37 @@ export const MACRO_MAP_FACTORS: {
     field: "unemployment",
     blurb: "官方失业率（取首个%）· 人口就业组 · 信源侧重世行 / ILO",
   },
+  {
+    id: "gasoline",
+    label: "零售汽油",
+    unit: "USD/升",
+    sense: "high_risk",
+    field: "gasolineRetail",
+    blurb: "泵价 USD/升 · 基本面/生活成本 · TE Gasoline Prices〔1〕",
+  },
+  {
+    id: "electricity",
+    label: "居民电价",
+    unit: "USD/kWh",
+    sense: "high_risk",
+    field: "electricityResidential",
+    blurb: "居民用电含税 USD/kWh · 基本面/生活成本 · GlobalPetrolPrices〔22〕",
+  },
+  {
+    id: "fuelToPower",
+    label: "油电比",
+    unit: "×",
+    sense: "high_risk",
+    field: "fuelToPowerRatio",
+    blurb: "零售汽油÷居民电价 · 1升汽油约可购居民电kWh数 · 越高燃油相对电费越贵 · TE÷GPP〔1〕〔22〕",
+  },
 ];
 
 /** 从宏观快照文案中抽出第一个可比较数值 */
 export function parseMacroNumber(raw?: string): number | null {
   if (!raw) return null;
   const t = raw.trim();
-  if (!t || t === "—") return null;
+  if (!t || t === "—" || t.startsWith("—")) return null;
   // ±8% / ±2.5%
   const pm = t.match(/±\s*(\d+(?:\.\d+)?)\s*%?/);
   if (pm) return Number(pm[1]);
@@ -127,7 +163,12 @@ export function buildMacroMetric(id: MacroMapFactorId): MacroMetricSeries {
 
 export function formatMacroValue(id: MacroMapFactorId, n: number): string {
   if (id === "gdpPc") return `USD ${Math.round(n).toLocaleString()}`;
+  if (id === "incomePc") return `USD ${Math.round(n).toLocaleString()} PPP`;
   if (id === "fxVol") return `±${n}%`;
-  if (Number.isInteger(n)) return `${n}${id === "hhDebt" || id === "inflation" || id === "policyRate" || id === "unemployment" ? "%" : ""}`;
-  return `${n.toFixed(n >= 10 ? 1 : 2)}${id === "gdpPc" ? "" : "%"}`;
+  if (id === "gasoline") return n.toFixed(2);
+  if (id === "electricity") return n.toFixed(3);
+  if (id === "fuelToPower") return n.toFixed(1);
+  const pct = id === "hhDebt" || id === "inflation" || id === "policyRate" || id === "unemployment";
+  if (Number.isInteger(n)) return `${n}${pct ? "%" : ""}`;
+  return `${n.toFixed(n >= 10 ? 1 : 2)}${pct ? "%" : ""}`;
 }

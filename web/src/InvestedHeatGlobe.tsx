@@ -11,17 +11,13 @@ import {
   type InvestedCountry,
 } from "./data/producerHoldings";
 import {
-  MapSection,
-  MapKV,
   MapDetailShell,
   MapChip,
   MapSvgFrame,
   MapTooltip,
   SteppedLegend,
   MapSideLegend,
-  MapMuted,
   useMapChrome,
-  producerCardStyle,
   Button,
   MapCountryMacroBrief,
   RankBarList,
@@ -32,6 +28,8 @@ import {
 import { heatColorAdded } from "./heatMapTheme";
 import { formatCountryLanguageLine } from "./data/countryLanguage";
 import { aggregateLendingUsdBn } from "./LendingHeatGlobe";
+import { PartnerHoldingsSection, useGuestMask } from "./PartnerHoldingsSection";
+import { SENSITIVE_MASK } from "./authAccess";
 
 type CountryProps = { name?: string };
 
@@ -93,39 +91,18 @@ function CountryDetailPanel({
   onClose: () => void;
   overlay?: boolean;
 }) {
-  const { theme, c } = useMapChrome();
+  const { guest } = useGuestMask();
   const name = COUNTRY_LABEL_ZH[code] ?? invested?.country_zh ?? code;
   const langLine = formatCountryLanguageLine(code);
+  const sub = guest ? "合作机构（已脱敏）" : "已投生产商详情";
   return (
     <MapDetailShell
       title={`${name} · ${code}`}
-      subtitle={langLine ? `${langLine} · 已投生产商详情` : "已投生产商详情"}
+      subtitle={langLine ? `${langLine} · ${sub}` : sub}
       onClose={onClose}
       overlay={overlay}
     >
-      <MapSection title="已投生产商">
-        {invested ? (
-          <>
-            <MapKV k="基金投资合计" v={formatUsdCompact(invested.investment_usd)} />
-            <MapKV k="热力在贷合计" v={formatUsdCompact(invested.outstanding_usd_for_heat)} />
-            <MapKV k="平台数" v={String(invested.producers.length)} />
-            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
-              {invested.producers.map((p) => (
-                <div key={p.id} style={producerCardStyle(theme)}>
-                  <div style={{ fontWeight: 600, color: c.added, marginBottom: 4 }}>{p.name}</div>
-                  <div style={{ color: c.textTertiary, marginBottom: 6 }}>{p.product_type}</div>
-                  <MapKV k="基金投资" v={formatUsdCompact(p.investment_usd)} />
-                  <MapKV k="在贷余额" v={p.outstanding_display} />
-                  <MapKV k="服务客户数" v={p.customers_display} />
-                  {p.ranking_note ? <MapKV k="排名/定位" v={p.ranking_note} /> : null}
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <MapMuted>该国暂无已投生产商记录</MapMuted>
-        )}
-      </MapSection>
+      <PartnerHoldingsSection invested={invested} showEmpty dense={overlay} />
       <MapCountryMacroBrief code={code} />
     </MapDetailShell>
   );
@@ -145,6 +122,7 @@ export function InvestedHeatGlobe({
   const width = mapFrameWidth(height, aspect);
   const bottomLegend = fill || legendPlacement === "bottom";
   const place: MapLegendPlacement = bottomLegend ? "bottom" : "side";
+  const { guest, maskUsd } = useGuestMask();
   const outstanding = useMemo(() => aggregateInvestedOutstandingUsd(), []);
   const values = useMemo(() => Object.values(outstanding), [outstanding]);
   const maxUsd = useMemo(() => Math.max(...values, 1), [values]);
@@ -484,7 +462,7 @@ export function InvestedHeatGlobe({
                 const side = p.x > width * 0.55 ? -1 : 1;
                 const lx = p.x + side * (28 + i * 6);
                 const ly = Math.max(28, Math.min(height - 36, p.y - 22 - i * 10));
-                const label = `${COUNTRY_LABEL_ZH[p.a2] ?? p.a2} ${formatUsdCompact(p.outstandingUsd)}`;
+                const label = `${COUNTRY_LABEL_ZH[p.a2] ?? p.a2} ${maskUsd(p.outstandingUsd)}`;
                 const tw = Math.min(140, 12 + label.length * 6.4);
                 return (
                   <g key={`call-${p.a2}`} pointerEvents="none">
@@ -532,9 +510,9 @@ export function InvestedHeatGlobe({
             accent="added"
           >
             <div style={{ fontWeight: 600 }}>{hover.name}</div>
-            <div style={{ color: c.added }}>在贷(热力) {formatUsdCompact(hover.outstandingUsd)}</div>
+            <div style={{ color: c.added }}>在贷(热力) {maskUsd(hover.outstandingUsd)}</div>
             <div style={{ color: c.textSecondary }}>
-              基金 {formatUsdCompact(hover.investmentUsd)} · {hover.producerCount} 家平台
+              基金 {maskUsd(hover.investmentUsd)} · {hover.producerCount} 家平台
             </div>
           </MapTooltip>
         ) : null}
@@ -567,7 +545,8 @@ export function InvestedHeatGlobe({
               marginTop: bottomLegend ? 8 : 0,
             }}
           >
-            浅底透图 · 色点 {ranked.length} 国 · 基金合计 {formatUsdCompact(PRODUCER_HOLDINGS.total_investment_usd)}
+            浅底透图 · 色点 {ranked.length} 国 · 基金合计{" "}
+            {guest ? SENSITIVE_MASK : formatUsdCompact(PRODUCER_HOLDINGS.total_investment_usd)}
             · 墨细环=市场放贷对照 · 点击点/横条放大
           </div>
           <RankBarList
@@ -579,7 +558,7 @@ export function InvestedHeatGlobe({
               key: row.country_code,
               label: COUNTRY_LABEL_ZH[row.country_code] ?? row.country_zh,
               value: row.outstanding_usd_for_heat,
-              valueLabel: formatUsdCompact(row.outstanding_usd_for_heat),
+              valueLabel: guest ? SENSITIVE_MASK : formatUsdCompact(row.outstanding_usd_for_heat),
             }))}
           />
           {INVESTED_BY_CODE.HK && !mapCodes.has("HK") ? (

@@ -24,7 +24,15 @@ import {
   useCanvasState,
   useHostTheme,
 } from "./shims/cursor-canvas";
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { ScreenSegChip, ScreenSegTrack, ScreenStatusPills } from "./HeatMapChrome";
 import {
@@ -44,6 +52,7 @@ import {
 import { FullMarketChoropleth, ScreenImfWbFilterBar } from "./FullMarketChoropleth";
 import { MacroHeatGlobe } from "./MacroHeatGlobe";
 import { MACRO_MAP_FACTORS, type MacroMapFactorId } from "./data/macroMapMetrics";
+import { canViewSourceCite } from "./authAccess";
 import { VitalPyramid } from "./VitalPyramid";
 import { getVitalCountry } from "./data/vitalSeries";
 import { CreditDebtCharts, FxCaCharts, IncomeSectorCharts } from "./MacroFactorCharts";
@@ -3227,6 +3236,12 @@ type CountryMacroSnap = {
   /** 居民杠杆：家庭债务/GDP（居民杠杆率） */
   householdDebtToGdp?: string;
   consumerConfidence?: string;
+  /** 零售汽油（泵价，优先 USD/升；TE Gasoline Prices） */
+  gasolineRetail?: string;
+  /** 居民电价（含税，优先 USD/kWh；GlobalPetrolPrices） */
+  electricityResidential?: string;
+  /** 油电比 = 汽油USD/升 ÷ 电价USD/kWh（1升汽油≈可购居民电kWh数） */
+  fuelToPowerRatio?: string;
   creditNote?: string;
   /** 对照宏观阈值的简评（展示于国别卡片） */
   cashLoanVerdict?: string;
@@ -3240,7 +3255,7 @@ type CountryMacroSnap = {
 const CASH_LOAN_MACRO_FRAMEWORK = {
   purpose: "服务国别准入与各场景信贷资产池判断；宏观定风险中枢，不替代微观风控",
   groups: [
-    "经济基本面（GDP/人均GDP/收入/通胀/信心/三产）",
+    "经济基本面（GDP/人均GDP/收入/通胀/零售汽油/居民电价/油电比/信心/三产）",
     "人口与就业（总人口、18-45、就业率/非正式/青年失业）",
     "信贷过热（家庭债务/GDP、DTI、信贷缺口、非银增速、NPL、多头）",
     "外汇与跨境（经常账户、外储/短债、汇率波动、政策利率）",
@@ -6730,6 +6745,9 @@ const sceneCrmSeedTuples: [Exclude<Region, "all">, string, string, string][] = [
   ["east-asia", "Fusion Bank（Fusion Bank·HK）", "支付钱包+虚拟银行", "派生：腾讯系虚拟银行"],
   ["east-asia", "Livi Bank（Livi·HK）", "支付钱包+虚拟银行", "派生：中资虚拟银行"],
   ["east-asia", "Airstar Bank（Airstar·HK）", "支付钱包+虚拟银行", "派生：京东系虚拟银行"],
+  ["east-asia", "ZA Bank（ZA Bank·HK）", "支付钱包+虚拟银行", "派生：众安系虚拟银行"],
+  ["east-asia", "Mox Bank（Mox·HK）", "支付钱包+虚拟银行", "派生：渣打/京东系虚拟银行"],
+  ["east-asia", "WeLab Bank（WeLab·HK）", "支付钱包+虚拟银行", "派生：WeLab 虚拟银行"],
   ["west", "JPMorgan Chase（JPMorgan·US）", "支付钱包+银行", "派生：Chase 消费信贷"],
   ["west", "Ally（Ally·US）", "支付钱包+数字银行", "派生：线上消费/车贷"],
   ["west", "Starling Bank（Starling·GB）", "支付钱包+数字银行", "派生：零售/SME"],
@@ -14766,24 +14784,73 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     line: "agent",
     tier: "头部",
     group: "Collectius｜Collectius｜Collectius（回收机构·SEA）",
-    brands: "Collectius",
+    brands: "Collectius / Collectius Holdings",
     countries: "新加坡/马来/印尼/菲/泰/越/印度",
     languages: "英语/当地语",
-    licenses: "NPL收购与债收服务（分国牌照/许可路径）",
+    licenses: "NPL购买与债收服务（分国牌照/许可路径）",
     timing: "2016起运营",
     founded: "2016",
-    regulators: "分国金融/债收监管",
-    traffic: "购买不良组合+受托催收/重组",
-    volume: "公开叙事AUM约数十亿美元量级（时点以官网/新闻为准）",
-    users: "银行与持牌贷方委托；逾期借款人",
+    regulators: "分国金融/债收监管（SG公司注册+分国债收许可）",
+    traffic: "https://www.collectius.com/",
+    volume:
+      "公开叙事管理不良资产 AUM 约数十亿美元（历史披露曾报约 USD7–8B；区域覆盖 SG/MY/ID/PH/TH/VN/IN，时点以官网/新闻为准）",
+    users: "银行、多金融与持牌数字贷方委托；逾期借款人",
     employees: "约1100+（公开叙事）",
-    diandian: "官网/行业新闻",
-    note: "东南亚数字化债收与NPL投资龙头样本；IFC等合作叙事。分国催收合规与数据本地化待核。",
+    diandian: "官网/行业新闻/IFC 合作披露",
+    note:
+      "东南亚数字化债收与 NPL 投资龙头样本；IFC 等发展金融机构合作叙事。菲市场经收购 CJM（见 Collectius PH 分档）。展业看分国委外合同、数据本地化与催收行为监管，勿把集团官网当统一牌照。",
     institutionTypes: ["回收机构"],
-    verify: "仅流量",
-    licenseReg: "SEA/IN：债收与不良资产管理·分国主体待核",
+    verify: "仅监管",
+    licenseReg:
+      "SG：集团主体注册；PH/ID/MY/TH/VN/IN：分国债收/不良资管许可或合同路径（以当地执照清单为准，勿把集团官网当统一牌照）；PH 对照：CJM / Collectius PH",
     trafficRank: "B端",
     controller: "Collectius",
+  },
+  {
+    region: "se-asia",
+    line: "agent",
+    tier: "腰部",
+    group: "PPA｜印尼国有资产公司｜PPA（回收机构·ID）",
+    brands: "Perusahaan Pengelola Aset / PPA",
+    countries: "印尼",
+    languages: "印尼语/英语",
+    licenses: "国有不良资产与资产处置（财政部框架下国有企业）",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "印尼财政部 / 相关国资监管",
+    traffic: "https://www.ptppa.com/",
+    volume: "公开项目与处置规模以年报/财政部披露为准",
+    users: "银行/多金融不良出让方",
+    diandian: "官网/监管披露",
+    note: "印尼国有不良资产管理对照样本（NAMCO 叙事）；消费贷 NPL 出表/处置链路可对照，非民营催收公司。",
+    institutionTypes: ["回收机构"],
+    verify: "仅监管",
+    licenseReg: "ID：国有资产管理公司（不良/特殊资产处置）；https://www.ptppa.com/",
+    trafficRank: "B端",
+    controller: "PT Perusahaan Pengelola Aset",
+  },
+  {
+    region: "se-asia",
+    line: "agent",
+    tier: "腰部",
+    group: "CJM / Collectius PH｜CJM｜Collectius PH（回收机构·PH）",
+    brands: "CJM Strategic Management Solutions / Collectius Philippines",
+    countries: "菲律宾",
+    languages: "英语/菲律宾语",
+    licenses: "债收与 NPL 服务（当地商事/债收合规路径）",
+    timing: "Collectius 经收购 CJM 进入菲市场",
+    founded: "成立待核实",
+    regulators: "菲律宾当地商事与数据/债收相关规则；SEC 借贷平台规则另计",
+    traffic: "https://philippines.collectius.com/about",
+    volume: "并入 Collectius 区域 AUM 叙事（时点以集团披露为准）",
+    users: "银行、融资公司、数字贷方；逾期借款人",
+    diandian: "Collectius PH 官网",
+    note: "菲律宾本地债收主体对照：Collectius 公开称经收购 CJM 进入菲市场；展业看委外合同与数据合规。",
+    institutionTypes: ["回收机构"],
+    verify: "仅监管",
+    licenseReg: "PH：债收商事主体（非放贷牌）；集团许可分国核验",
+    trafficRank: "B端",
+    controller: "Collectius / CJM Strategic Management Solutions",
   },
   {
     region: "south-asia",
@@ -15791,6 +15858,52 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     trafficRank: "B端",
     controller: "Latham & Watkins",
   },
+  {
+    region: "se-asia",
+    line: "agent",
+    tier: "头部",
+    group: "SSEK｜SSEK Legal Consultants｜SSEK（律师事务所·ID）",
+    brands: "SSEK Legal Consultants",
+    countries: "印尼（雅加达；跨境事项另计）",
+    languages: "英语/印尼语",
+    licenses: "律师执业",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "印尼律协/司法行政相关",
+    traffic: "https://ssek.com/",
+    volume: "印尼精品国际所口径",
+    users: "跨国金融机构、Fintech、并购与监管项目方",
+    diandian: "官网/公开排名",
+    note: "雅加达精品所；银行/多金融/金融科技牌照、融资与争议解决对照样本。",
+    institutionTypes: ["律师事务所"],
+    verify: "仅监管",
+    licenseReg: "ID：律师事务所",
+    trafficRank: "B端",
+    controller: "SSEK Legal Consultants",
+  },
+  {
+    region: "se-asia",
+    line: "agent",
+    tier: "头部",
+    group: "ABNR｜Ali Budiardjo Nugroho Reksodiputro｜ABNR（律师事务所·ID）",
+    brands: "ABNR / Ali Budiardjo, Nugroho, Reksodiputro",
+    countries: "印尼（雅加达；跨境事项另计）",
+    languages: "英语/印尼语",
+    licenses: "律师执业",
+    timing: "运营中",
+    founded: "1967",
+    regulators: "印尼律协/司法行政相关",
+    traffic: "https://www.abnrlaw.com/",
+    volume: "印尼大型独立全服务所口径（约百余名法律专业人员公开叙事）",
+    users: "跨国金融机构、Fintech、并购与监管项目方",
+    diandian: "官网/公开排名",
+    note: "雅加达老牌独立全服务所；银行/多金融/金融科技牌照、融资与资本市场法律对照样本（与 SSEK 并列，勿并档）。",
+    institutionTypes: ["律师事务所"],
+    verify: "仅监管",
+    licenseReg: "ID：律师事务所",
+    trafficRank: "B端",
+    controller: "Ali Budiardjo, Nugroho, Reksodiputro (ABNR)",
+  },
   // —— 评级机构 ——
   {
     region: "west",
@@ -15836,6 +15949,52 @@ const ecoInstitutionSeeds: CreditDraft[] = [
     licenseReg: "信用评级机构",
     trafficRank: "B端",
     controller: "中诚信",
+  },
+  {
+    region: "se-asia",
+    line: "agent",
+    tier: "头部",
+    group: "PEFINDO｜PEFINDO｜PEFINDO（评级机构·ID）",
+    brands: "PEFINDO / PT Pemeringkat Efek Indonesia",
+    countries: "印尼",
+    languages: "印尼语/英语",
+    licenses: "信用评级机构",
+    timing: "运营中",
+    founded: "1993",
+    regulators: "OJK / 印尼资本市场相关",
+    traffic: "https://www.pefindo.com/",
+    volume: "印尼债市主流本地评级口径",
+    users: "发行人、机构投资者、多金融/银行债项",
+    diandian: "官网/监管可核验",
+    note: "印尼本地信用评级龙头；多金融/债券发行对照。与同集团征信臂（Biro Kredit）分档，勿并成单一主体。",
+    institutionTypes: ["评级机构"],
+    verify: "仅监管",
+    licenseReg: "ID：信用评级机构",
+    trafficRank: "B端",
+    controller: "PT Pemeringkat Efek Indonesia (PEFINDO)",
+  },
+  {
+    region: "se-asia",
+    line: "agent",
+    tier: "头部",
+    group: "TRIS｜TRIS Rating｜TRIS（评级机构·TH）",
+    brands: "TRIS Rating",
+    countries: "泰国",
+    languages: "泰语/英语",
+    licenses: "信用评级机构",
+    timing: "运营中",
+    founded: "成立待核实",
+    regulators: "泰国证券交易委员会 SEC / 相关资本市场规则",
+    traffic: "https://www.trisrating.com/",
+    volume: "泰国债市主流本地评级口径",
+    users: "发行人、机构投资者、消金/银行债项",
+    diandian: "官网/公开披露",
+    note: "泰国本地信用评级对照；AEONTS 等消金发债评级可交叉。",
+    institutionTypes: ["评级机构"],
+    verify: "仅监管",
+    licenseReg: "TH：信用评级机构",
+    trafficRank: "B端",
+    controller: "TRIS Rating Company Limited",
   },
 ];
 
@@ -17020,8 +17179,8 @@ function SourceCatalogPanel() {
   const focusNo = Number(focus) || 0;
   const theme = useHostTheme();
   const { hasReturn, label, goBack } = useSourceCiteReturn();
-  const core = catalog.filter((c) => c.no <= 21);
-  const research = catalog.filter((c) => c.no > 21 && !isListedStockCitation(c));
+  const core = catalog.filter((c) => c.no <= 23);
+  const research = catalog.filter((c) => c.no > 23 && !isListedStockCitation(c));
   const listed = catalog.filter((c) => isListedStockCitation(c));
   const listedFocused = listed.some((c) => c.no === focusNo);
   const researchFocused = research.some((c) => c.no === focusNo);
@@ -17064,12 +17223,12 @@ function SourceCatalogPanel() {
           </button>
         </Row>
         <Text size="small" tone="tertiary">
-          每条为统一词条：编号〔n〕· 名称 · 类型 · 原文。正文点〔n〕跳转本页并高亮。核心含 TE〔1〕、点点〔2〕、墨腾〔3〕、出海小黑板〔21〕等。
+          每条为统一词条：编号〔n〕· 名称 · 类型 · 原文。正文点〔n〕跳转本页并高亮。核心含 TE〔1〕、点点〔2〕、墨腾〔3〕、出海小黑板〔21〕、GlobalPetrolPrices〔22〕、TE零售汽油表〔23〕等。
         </Text>
       </Stack>
 
       <Stack gap={8}>
-        <Text weight="medium">核心信源 · 〔1〕–〔21〕</Text>
+        <Text weight="medium">核心信源 · 〔1〕–〔23〕</Text>
         {core.map((c) => (
           <SourceCiteEntryCard key={c.id} c={c} focusNo={focusNo} />
         ))}
@@ -20628,7 +20787,19 @@ function ResearchLibraryHomePanel() {
     );
   };
 
-  return <Stack gap={12}>{docs.map(renderTopic)}</Stack>;
+  return (
+    <Stack gap={0}>
+      <AtlasStickySub>
+        <HomeMeta>
+          研报 · {research.length} 篇专题
+          {officialPacks.length ? ` · 监管材料 ${officialPacks.length}` : ""}
+        </HomeMeta>
+      </AtlasStickySub>
+      <Stack gap={12} style={{ paddingTop: 12 }}>
+        {docs.map(renderTopic)}
+      </Stack>
+    </Stack>
+  );
 }
 
 /** 上市定期披露 KPI（T2 信源）；无槽位则不渲染 */
@@ -20979,6 +21150,24 @@ const MACRO_FACTOR_GROUPS: { id: string; title: string; note?: string; rows: Mac
         definition: "季度平均通胀",
         meaning: "侵蚀工薪购买力，易推高多头借贷",
         alert: "季度通胀高于12%属高风险；恶性通胀宜回避",
+      },
+      {
+        metric: "零售汽油价格",
+        definition: "泵价；优先 TE 国别 Gasoline Prices（USD/升）",
+        meaning: "交通与生活成本先行指标；补贴退坡/油价跳升直接挤压中低收入还款现金流；进口国常叠加经常账户与汇率压力",
+        alert: "单季显著上行或补贴取消窗口；绝对价＞2美元/升时对照补贴与税负结构（勿与产油国低价简单横比）",
+      },
+      {
+        metric: "居民电价",
+        definition: "居民用电含税均价；优先 GlobalPetrolPrices（USD/kWh）",
+        meaning: "生活与小微经营成本；补贴改革或旱季水电短缺时跳升，伤还款与商户贷现金流",
+        alert: "＞0.25美元/kWh 或补贴取消后跳升；补贴国账面低价≠真实负担（排队/断电成本另计）",
+      },
+      {
+        metric: "油电比",
+        definition: "零售汽油(USD/升) ÷ 居民电价(USD/kWh)；须两国读数齐全才测算",
+        meaning: "1升汽油约可购多少kWh居民电；越高燃油相对电费越贵，交通燃油对中低收入还款挤出更强（对照补贴/税负，勿跨国绝对横比）",
+        alert: "双端齐全且比值显著上行/补贴退坡窗口；缺汽油或电价任一端则不测算",
       },
       {
         metric: "消费者信心指数",
@@ -21998,10 +22187,16 @@ function GeoAndLicenseFilters({
       </SoftFold>
 
       {showLicenseKind ? (
-        <Stack gap={4}>
-          <Text size="small" weight="medium">
-            涉及金融牌照
-          </Text>
+        <SoftFold
+          title="涉及金融牌照"
+          hint={
+            licenseKind === "all"
+              ? "按银行/保险/支付/消金等粗类收窄"
+              : `已选 ${LICENSE_KIND_LABEL[licenseKind]}`
+          }
+          count={LICENSE_KIND_ORDER.length}
+          defaultOpen={licenseKind !== "all"}
+        >
           <Row gap={6} wrap>
             <FilterChip
               label="全部牌照粗类"
@@ -22017,7 +22212,7 @@ function GeoAndLicenseFilters({
               />
             ))}
           </Row>
-        </Stack>
+        </SoftFold>
       ) : null}
     </Stack>
   );
@@ -22274,7 +22469,7 @@ function SessionChrome() {
             {user.displayLocal}
           </Text>
           <Text size="small" tone="tertiary">
-            {admin ? "Admin" : "Member"}
+            {admin ? "Admin" : session === "guest" ? "Guest" : "Member"}
           </Text>
         </div>
         <Button
@@ -23348,16 +23543,122 @@ const CREDIT_L2_USER_BEHAVIOR: Partial<Record<Exclude<CreditProdL2, "all">, stri
   公务员贷: "面向公务人群的消费/周转借款",
 };
 
-/** 轻量折叠：语言区/国家/业态等默认收起，避免刷屏 */
+/** 顶栏冻结：会话 + 搜索 + 页签（在滚动区外，不随列表滚走） */
+const ATLAS_STICKY_H = "--atlas-sticky-h";
+
+function AtlasStickyChrome({ children }: { children?: ReactNode }) {
+  const theme = useHostTheme();
+  const ref = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const sync = () => {
+      document.documentElement.style.setProperty(ATLAS_STICKY_H, `${el.offsetHeight}px`);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty(ATLAS_STICKY_H);
+    };
+  }, []);
+  return (
+    <div
+      ref={ref}
+      style={{
+        flexShrink: 0,
+        zIndex: 40,
+        margin: "0 -16px",
+        padding: "0 16px 8px",
+        background: theme.bg.elevated,
+        /* 与下方 sticky 贴合，避免露底色白缝 */
+        borderBottom: "none",
+        boxShadow: `inset 0 -1px 0 ${theme.stroke.tertiary}`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** 页签内容区二级冻结（贴齐顶栏底边，盖住滚动内容） */
+function AtlasStickySub({
+  children,
+  compact,
+}: {
+  children?: ReactNode;
+  /** 更矮内边距，给滚动正文让位 */
+  compact?: boolean;
+}) {
+  const theme = useHostTheme();
+  return (
+    <div
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 35,
+        margin: "0 -16px",
+        padding: compact ? "6px 16px 6px" : "8px 16px 8px",
+        background: theme.bg.elevated,
+        borderBottom: `1px solid ${theme.stroke.tertiary}`,
+        boxShadow: `0 10px 0 0 ${theme.bg.elevated}`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** 主内容滚动区：顶栏以下滚动；信源/快讯/研报等共用 */
+function AtlasScrollBody({ children }: { children?: ReactNode }) {
+  return (
+    <div
+      data-atlas-scroll-body="1"
+      style={{
+        flex: 1,
+        minHeight: 0,
+        overflow: "auto",
+        overflowAnchor: "none",
+        scrollbarGutter: "stable",
+        paddingTop: 0,
+      }}
+      ref={(node) => {
+        if (!node || typeof window === "undefined") return;
+        const mem = getAtlasScrollMem();
+        mem.shell = node;
+        const mark = node as unknown as { __crmScrollInit?: boolean };
+        if (mark.__crmScrollInit) return;
+        mark.__crmScrollInit = true;
+        const y = mem.y;
+        if (y <= 8) return;
+        const cur = node.scrollTop;
+        if (cur >= 8) return;
+        mem.restoring = true;
+        node.scrollTop = y;
+        requestAnimationFrame(() => {
+          node.scrollTop = mem.y > 8 ? mem.y : y;
+          mem.restoring = false;
+        });
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 function SoftFold({
   title,
   hint,
+  summary,
   count,
   defaultOpen = false,
   children,
 }: {
   title: string;
   hint?: string;
+  /** 收起时内联展示已选项，避免多占一行 hint */
+  summary?: string;
   count?: number | string;
   defaultOpen?: boolean;
   children?: ReactNode;
@@ -23365,7 +23666,7 @@ function SoftFold({
   const theme = useHostTheme();
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <Stack gap={4}>
+    <Stack gap={2}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -23373,8 +23674,8 @@ function SoftFold({
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
-          gap: 8,
-          minHeight: 28,
+          gap: 6,
+          minHeight: 22,
           width: "100%",
           margin: 0,
           padding: 0,
@@ -23388,9 +23689,14 @@ function SoftFold({
       >
         <Text size="small" weight="medium" as="span" style={{ flex: 1, minWidth: 0 }}>
           {title}
-          <span style={{ marginLeft: 8, color: theme.text.tertiary, fontWeight: 400 }}>
+          <span style={{ marginLeft: 6, color: theme.text.tertiary, fontWeight: 400 }}>
             {open ? "收起" : "展开"}
           </span>
+          {!open && summary ? (
+            <span style={{ marginLeft: 6, color: theme.text.secondary, fontWeight: 400 }}>
+              · {summary}
+            </span>
+          ) : null}
         </Text>
         {count != null ? (
           <Pill size="sm" tone="neutral">
@@ -23398,12 +23704,12 @@ function SoftFold({
           </Pill>
         ) : null}
       </button>
-      {!open && hint ? (
+      {!open && hint && !summary ? (
         <Text size="small" tone="tertiary">
           {hint}
         </Text>
       ) : null}
-      {open ? <Stack gap={6}>{children}</Stack> : null}
+      {open ? <Stack gap={4}>{children}</Stack> : null}
     </Stack>
   );
 }
@@ -23601,27 +23907,24 @@ function PersistScrollShell({ children }: { children?: ReactNode }) {
   }, []);
   return (
     <div
-      style={{ minHeight: "100%", overflowAnchor: "none" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "calc(100dvh - 68px)",
+        maxHeight: "calc(100dvh - 68px)",
+        minHeight: 0,
+        overflow: "hidden",
+        overflowAnchor: "none",
+      }}
       ref={(node) => {
         if (!node || typeof window === "undefined") return;
         const mem = getAtlasScrollMem();
-        mem.shell = node;
-        const mark = node as unknown as { __crmScrollInit?: boolean };
-        if (mark.__crmScrollInit) return;
-        mark.__crmScrollInit = true;
-
-        const y = mem.y;
-        if (y <= 8) return;
-        const scroller = findAtlasScroller(node);
-        const cur = readScrollerY(scroller);
-        if (cur >= 8) return;
-
-        mem.restoring = true;
-        writeScrollerY(scroller, y);
-        requestAnimationFrame(() => {
-          writeScrollerY(scroller, mem.y > 8 ? mem.y : y);
-          mem.restoring = false;
-        });
+        // 优先用内部滚动体；尚无滚动体时先挂壳
+        if (!mem.shell || !node.contains(mem.shell)) {
+          const body = node.querySelector("[data-atlas-scroll-body='1']");
+          if (body instanceof HTMLElement) mem.shell = body;
+          else mem.shell = node;
+        }
       }}
     >
       {children}
@@ -23632,7 +23935,8 @@ function PersistScrollShell({ children }: { children?: ReactNode }) {
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
-            padding: "16px 0 28px",
+            flexShrink: 0,
+            padding: "12px 0 16px",
             color: theme.text.tertiary,
             fontSize: 12,
           }}
@@ -23658,9 +23962,7 @@ function PersistScrollShell({ children }: { children?: ReactNode }) {
           )}
           <style>{`@keyframes atlasTailSpin{to{transform:rotate(360deg)}}`}</style>
         </div>
-      ) : (
-        <div style={{ height: 12 }} aria-hidden />
-      )}
+      ) : null}
     </div>
   );
 }
@@ -23909,51 +24211,82 @@ function DigitalSceneAtlasBrowse() {
   );
 
   return (
-    <Stack gap={10}>
-      <Row gap={6} wrap>
-        {(
-          [
-            { id: "web2" as const, label: "Web2" },
-            { id: "web3" as const, label: "Web3" },
-            { id: "agent" as const, label: "Agent" },
-          ] as const
-        ).map((o) => (
-          <FilterChip
-            label={o.label}
-            active={layer === o.id}
-            onClick={() => {
-              setLayer(o.id);
-              if (o.id !== "web2") setWeb2Focus("all");
-              if (o.id !== "web3") setWeb3Focus("all");
-            }}
-          />
-        ))}
-      </Row>
-
-      {layer === "web2" ? (
+    <Stack gap={0}>
+      <AtlasStickySub>
         <Stack gap={10}>
+          <Stack gap={6}>
+            <H2>数字经济场景</H2>
+            <Text size="small" tone="tertiary">
+              Web2 / Web3 / Agent · 词条：名称 → 行为/目的 → 玩家名单
+            </Text>
+          </Stack>
           <Row gap={6} wrap>
-            <FilterChip
-              label="全部业态"
-              active={web2Focus === "all"}
-              onClick={() => setWeb2Focus("all")}
-            />
-            <FilterChip
-              label="金融"
-              active={web2Focus === "金融"}
-              clearable
-              onClick={() => setWeb2Focus(web2Focus === "金融" ? "all" : "金融")}
-            />
-            {web2IndustryTags.map((t) => (
+            {(
+              [
+                { id: "web2" as const, label: "Web2" },
+                { id: "web3" as const, label: "Web3" },
+                { id: "agent" as const, label: "Agent" },
+              ] as const
+            ).map((o) => (
               <FilterChip
-                label={SCENE_TAG_LABEL[t]}
-                active={web2Focus === t}
-                clearable
-                onClick={() => setWeb2Focus(web2Focus === t ? "all" : t)}
+                label={o.label}
+                active={layer === o.id}
+                onClick={() => {
+                  setLayer(o.id);
+                  if (o.id !== "web2") setWeb2Focus("all");
+                  if (o.id !== "web3") setWeb3Focus("all");
+                }}
               />
             ))}
           </Row>
 
+          {layer === "web2" ? (
+            <Row gap={6} wrap>
+              <FilterChip
+                label="全部业态"
+                active={web2Focus === "all"}
+                onClick={() => setWeb2Focus("all")}
+              />
+              <FilterChip
+                label="金融"
+                active={web2Focus === "金融"}
+                clearable
+                onClick={() => setWeb2Focus(web2Focus === "金融" ? "all" : "金融")}
+              />
+              {web2IndustryTags.map((t) => (
+                <FilterChip
+                  label={SCENE_TAG_LABEL[t]}
+                  active={web2Focus === t}
+                  clearable
+                  onClick={() => setWeb2Focus(web2Focus === t ? "all" : t)}
+                />
+              ))}
+            </Row>
+          ) : null}
+
+          {layer === "web3" ? (
+            <Row gap={6} wrap>
+              <FilterChip
+                label="全部子域"
+                active={web3Focus === "all"}
+                onClick={() => setWeb3Focus("all")}
+              />
+              {(["金融", "游戏", "艺术", "社交"] as const).map((bucket) => (
+                <FilterChip
+                  label={bucket}
+                  active={web3Focus === bucket}
+                  clearable
+                  onClick={() => setWeb3Focus(web3Focus === bucket ? "all" : bucket)}
+                />
+              ))}
+            </Row>
+          ) : null}
+        </Stack>
+      </AtlasStickySub>
+
+      <Stack gap={10} style={{ paddingTop: 8 }}>
+      {layer === "web2" ? (
+        <Stack gap={10}>
           {web2Focus === "all" ? (
             <Stack gap={8}>
               <button
@@ -24047,21 +24380,6 @@ function DigitalSceneAtlasBrowse() {
 
       {layer === "web3" ? (
         <Stack gap={10}>
-          <Row gap={6} wrap>
-            <FilterChip
-              label="全部子域"
-              active={web3Focus === "all"}
-              onClick={() => setWeb3Focus("all")}
-            />
-            {(["金融", "游戏", "艺术", "社交"] as const).map((bucket) => (
-              <FilterChip
-                label={bucket}
-                active={web3Focus === bucket}
-                clearable
-                onClick={() => setWeb3Focus(web3Focus === bucket ? "all" : bucket)}
-              />
-            ))}
-          </Row>
           {web3Focus === "all" ? (
             <Grid columns={2} gap={8} align="stretch">
               {(["金融", "游戏", "艺术", "社交"] as const).map((bucket) => (
@@ -24112,6 +24430,7 @@ function DigitalSceneAtlasBrowse() {
           {renderSceneEntryGrid(AGENT_SCENE_LEAVES)}
         </Stack>
       ) : null}
+      </Stack>
     </Stack>
   );
 }
@@ -25741,67 +26060,71 @@ function MorningBriefHome({
   );
 
   return (
-    <Stack gap={12}>
-      {briefMeta ? <HomeMeta>{briefMeta}</HomeMeta> : null}
+    <Stack gap={0}>
+      <AtlasStickySub>
+        <Stack gap={12}>
+          {briefMeta ? <HomeMeta>{briefMeta}</HomeMeta> : null}
 
-      <Stack gap={8}>
-        {(role === "boss" || role === "am") && bossVerdict ? (
-          <BossWatchBar
-            verdict={bossVerdict}
-            onOpenCountry={(nameZh) => {
-              const aliases: Record<string, string[]> = {
-                香港: ["中国香港", "香港"],
-                中国香港: ["中国香港", "香港"],
-                马来: ["马来西亚", "马来"],
-                澳洲: ["澳大利亚", "澳洲"],
-                澳大利亚: ["澳大利亚", "澳洲"],
-              };
-              const names = aliases[nameZh] || [nameZh];
-              const hit = focusMkts.find((m) => names.some((n) => m.nameZh.includes(n) || n.includes(m.nameZh)));
-              if (!hit) return;
-              setFilterMkt(hit.code);
-              if (!readMktSet.has(hit.code)) setReadMkts([...readMktSet, hit.code].join("|"));
-              const first = watchFeed.find((x) => x.marketCode === hit.code);
-              if (first) {
-                setOpenFlash(first.id);
-                if (!readFlashSet.has(first.id)) setReadFlash([...readFlashSet, first.id].join("|"));
-              } else {
-                setOpenFlash("");
-              }
-            }}
-          />
-        ) : null}
-        <FintechStockMonitorStrip onOpenAll={onOpenStocks} />
-      </Stack>
+          <Stack gap={8}>
+            {(role === "boss" || role === "am") && bossVerdict ? (
+              <BossWatchBar
+                verdict={bossVerdict}
+                onOpenCountry={(nameZh) => {
+                  const aliases: Record<string, string[]> = {
+                    香港: ["中国香港", "香港"],
+                    中国香港: ["中国香港", "香港"],
+                    马来: ["马来西亚", "马来"],
+                    澳洲: ["澳大利亚", "澳洲"],
+                    澳大利亚: ["澳大利亚", "澳洲"],
+                  };
+                  const names = aliases[nameZh] || [nameZh];
+                  const hit = focusMkts.find((m) => names.some((n) => m.nameZh.includes(n) || n.includes(m.nameZh)));
+                  if (!hit) return;
+                  setFilterMkt(hit.code);
+                  if (!readMktSet.has(hit.code)) setReadMkts([...readMktSet, hit.code].join("|"));
+                  const first = watchFeed.find((x) => x.marketCode === hit.code);
+                  if (first) {
+                    setOpenFlash(first.id);
+                    if (!readFlashSet.has(first.id)) setReadFlash([...readFlashSet, first.id].join("|"));
+                  } else {
+                    setOpenFlash("");
+                  }
+                }}
+              />
+            ) : null}
+            <FintechStockMonitorStrip onOpenAll={onOpenStocks} />
+          </Stack>
 
-      <Row gap={10} align="center" wrap>
-        {investedMkts.length ? (
-          <Row gap={5} align="center" wrap>
-            <HomeMeta>展业国</HomeMeta>
-            {investedMkts.map(countryChip)}
+          <Row gap={10} align="center" wrap>
+            {investedMkts.length ? (
+              <Row gap={5} align="center" wrap>
+                <HomeMeta>展业国</HomeMeta>
+                {investedMkts.map(countryChip)}
+              </Row>
+            ) : null}
+            {investedMkts.length && hotMkts.length ? (
+              <span
+                aria-hidden
+                style={{
+                  width: 1,
+                  alignSelf: "stretch",
+                  minHeight: 16,
+                  background: theme.stroke.tertiary,
+                  flexShrink: 0,
+                }}
+              />
+            ) : null}
+            {hotMkts.length ? (
+              <Row gap={5} align="center" wrap>
+                <HomeMeta>热点国</HomeMeta>
+                {hotMkts.map(countryChip)}
+              </Row>
+            ) : null}
           </Row>
-        ) : null}
-        {investedMkts.length && hotMkts.length ? (
-          <span
-            aria-hidden
-            style={{
-              width: 1,
-              alignSelf: "stretch",
-              minHeight: 16,
-              background: theme.stroke.tertiary,
-              flexShrink: 0,
-            }}
-          />
-        ) : null}
-        {hotMkts.length ? (
-          <Row gap={5} align="center" wrap>
-            <HomeMeta>热点国</HomeMeta>
-            {hotMkts.map(countryChip)}
-          </Row>
-        ) : null}
-      </Row>
+        </Stack>
+      </AtlasStickySub>
 
-      <Stack gap={0}>
+      <Stack gap={0} style={{ paddingTop: 8 }}>
         {filterMkt ? (
           <div style={{ marginBottom: 4 }}>
             <HomeMeta>
@@ -26476,7 +26799,19 @@ function mapFullscreenCorner(
   ) : null;
 }
 
-/** 大屏：市场 × 展业 / 其他机构（绿色面填，无点阵；IMF/世行筛选） */
+/** 大屏地图区域芯片（与 Pages gh-pages 对齐） */
+const BIG_SCREEN_MAP_REGIONS: { id: Exclude<Region, "all">; label: string }[] = [
+  { id: "se-asia", label: "东南亚" },
+  { id: "latam", label: "中南美" },
+  { id: "central-asia", label: "中亚" },
+  { id: "africa", label: "非洲" },
+  { id: "south-asia", label: "南亚" },
+];
+
+type ScreenMacroSub = "loanBook" | MacroMapFactorId;
+type ScreenTab = "macro" | "eco" | "roster";
+
+/** 大屏：市场在贷面填 × 展业徽章 / 机构样本（绿色面填；可区域缩放） */
 function BigScreenOverlay({
   height = 560,
   bare = false,
@@ -26486,6 +26821,7 @@ function BigScreenOverlay({
   showMarket = true,
   showInvested = true,
   ecoType,
+  mapRegion = "",
 }: {
   height?: number;
   bare?: boolean;
@@ -26495,6 +26831,7 @@ function BigScreenOverlay({
   showMarket?: boolean;
   showInvested?: boolean;
   ecoType?: InstitutionType | "";
+  mapRegion?: "" | Exclude<Region, "all">;
 }) {
   const ecoOn = Boolean(ecoType);
   const ecoCounts = useMemo(
@@ -26509,6 +26846,7 @@ function BigScreenOverlay({
     }
     return n;
   }, [ecoType]);
+  const regionZoomCodes = mapRegion ? COUNTRIES_BY_REGION[mapRegion] : null;
 
   const corner = mapFullscreenCorner(present, onPresent, onExit);
   const globe = (
@@ -26523,6 +26861,7 @@ function BigScreenOverlay({
       ecoTotalUnique={ecoTotalUnique}
       ecoLabel={ecoType ? INSTITUTION_TYPE_LABEL[ecoType] : undefined}
       mapCorner={corner}
+      regionZoomCodes={regionZoomCodes}
     />
   );
 
@@ -26547,7 +26886,7 @@ function BigScreenOverlay({
   return staged;
 }
 
-/** 大屏：宏观因子地域分布（可叠展业徽章） */
+/** 大屏：宏观因子地域分布（可叠展业徽章 + 区域缩放） */
 function BigScreenMacro({
   height = 520,
   bare = false,
@@ -26556,6 +26895,7 @@ function BigScreenMacro({
   present = false,
   onPresent,
   onExit,
+  mapRegion = "",
 }: {
   height?: number;
   bare?: boolean;
@@ -26564,8 +26904,10 @@ function BigScreenMacro({
   present?: boolean;
   onPresent?: () => void;
   onExit?: () => void;
+  mapRegion?: "" | Exclude<Region, "all">;
 }) {
   const corner = mapFullscreenCorner(present, onPresent, onExit);
+  const regionZoomCodes = mapRegion ? COUNTRIES_BY_REGION[mapRegion] : null;
   const map = bare ? (
     <MacroHeatGlobe
       height={height}
@@ -26574,6 +26916,7 @@ function BigScreenMacro({
       legendPlacement="bottom"
       showInvested={showInvested}
       mapCorner={corner}
+      regionZoomCodes={regionZoomCodes}
     />
   ) : (
     <MapPanel>
@@ -26583,6 +26926,7 @@ function BigScreenMacro({
         legendPlacement="bottom"
         showInvested={showInvested}
         mapCorner={corner}
+        regionZoomCodes={regionZoomCodes}
       />
     </MapPanel>
   );
@@ -26597,28 +26941,43 @@ function BigScreenMacro({
   return staged;
 }
 
+/** 大屏主控：宏观（在贷余额/因子）· 机构 · 非银名单 — 对齐 gh-pages */
 function BigScreen() {
   const theme = useHostTheme();
-  const [showMarket, setShowMarket] = useCanvasState<boolean>("screenMkt2", true);
-  const [showInvested, setShowInvested] = useCanvasState<boolean>("screenInv2", true);
-  const [showMacro, setShowMacro] = useCanvasState<boolean>("screenMacro1", false);
-  const [macroFactor, setMacroFactor] = useCanvasState<MacroMapFactorId>("screenMacroFactor2", "gdpPc");
-  const [showRoster, setShowRoster] = useCanvasState<boolean>("screenRoster2", false);
-  const [ecoType, setEcoType] = useCanvasState<InstitutionType | "">("screenEcoType1", "");
-  const [ecoPickerOpen, setEcoPickerOpen] = useCanvasState<boolean>("screenEcoOpen1", false);
-  /** 宏观与机构可同时点亮时，底图焦点：macro | eco | market */
-  const [mapFocus, setMapFocus] = useCanvasState<"market" | "macro" | "eco">("screenMapFocus1", "market");
+  const [screenTab, setScreenTab] = useCanvasState<ScreenTab>("screenTab4", "macro");
+  const [macroSub, setMacroSub] = useCanvasState<ScreenMacroSub>("screenMacroSub2", "loanBook");
+  const [ecoType, setEcoType] = useCanvasState<InstitutionType | "">("screenEcoType2", "");
+  const [ecoPickerOpen, setEcoPickerOpen] = useCanvasState<boolean>("screenEcoOpen2", false);
   const [present, setPresent] = useCanvasState<boolean>("screenPresent1", false);
+  const [mapRegion, setMapRegion] = useCanvasState<"" | Exclude<Region, "all">>("screenMapReg2", "");
+  const [, setImfFilter] = useCanvasState<string>("screenImfFilter2", "all");
+  const [, setWbFilter] = useCanvasState<string>("screenWbFilter2", "all");
   const [vh, setVh] = useState(800);
   const [vw, setVw] = useState(1200);
   const [paneH, setPaneH] = useState(560);
   const mapPaneRef = useRef<HTMLDivElement | null>(null);
+
+  const isRoster = screenTab === "roster";
+  const isMacro = screenTab === "macro";
+  const isEco = screenTab === "eco";
+  const ecoMode = isEco;
 
   const countEcoType = (t: InstitutionType) => {
     const nCredit = credits.filter((r) => r.institutionTypes.includes(t)).length;
     if (t !== "玩家") return nCredit;
     return nCredit + scenes.filter((r) => r.institutionTypes.includes("玩家")).length;
   };
+
+  // 进入大屏默认：宏观 · 在贷余额 × 展业 · 全球（与 Pages 一致）
+  useEffect(() => {
+    setScreenTab("macro");
+    setMacroSub("loanBook");
+    setMapRegion("");
+    setEcoType("");
+    setEcoPickerOpen(false);
+    setImfFilter("all");
+    setWbFilter("all");
+  }, [setScreenTab, setMacroSub, setMapRegion, setEcoType, setEcoPickerOpen, setImfFilter, setWbFilter]);
 
   useEffect(() => {
     const sync = () => {
@@ -26646,7 +27005,7 @@ function BigScreen() {
     const ro = new ResizeObserver(apply);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [present, vh, showRoster]);
+  }, [present, vh, isRoster]);
 
   useEffect(() => {
     if (!present) return;
@@ -26682,168 +27041,66 @@ function BigScreen() {
     }
   };
 
-  const leaveSpecial = () => {
-    setShowRoster(false);
-  };
-
   const clearEco = () => {
     setEcoType("");
     setEcoPickerOpen(false);
   };
 
-  const restoreDefaultMap = () => {
-    if (!showMarket && !showInvested && !ecoType && !showMacro) {
-      setShowMarket(true);
-      setShowInvested(true);
-    }
-  };
-
-  const toggleMarket = () => {
-    if (showRoster) {
-      leaveSpecial();
-      clearEco();
-      setShowMacro(false);
-      setShowMarket(true);
-      setMapFocus("market");
-      return;
-    }
-    if (showMacro) {
-      // 市场与宏观可并存：点市场时切回市场底图，宏观芯片保持可再点回
-      setShowMacro(false);
-      setShowMarket(true);
-      setMapFocus("market");
-      return;
-    }
-    if (ecoType) {
-      // 市场与机构可并存；仅切到底图焦点
-      setMapFocus("market");
-    }
-    if (showMarket) {
-      if (!showInvested && !ecoType) return;
-      setShowMarket(false);
-      return;
-    }
-    setShowMarket(true);
-    setMapFocus("market");
-  };
-
-  const toggleInvested = () => {
-    if (showRoster) {
-      leaveSpecial();
-      clearEco();
-      setShowMacro(false);
-      setShowInvested(true);
-      setMapFocus("market");
-      return;
-    }
-    // 宏观底图上可叠展业锚点，不再因点展业而关掉宏观
-    if (ecoType && !showMacro) {
-      // 机构面填时展业点阵互斥（同 FullMarketChoropleth）
-      clearEco();
-    }
-    if (showInvested) {
-      if (!showMarket && !showMacro && !ecoType) setShowMarket(true);
-      setShowInvested(false);
-      return;
-    }
-    setShowInvested(true);
-    if (showMacro) setMapFocus("macro");
-    else setMapFocus("market");
-  };
-
-  const toggleMacro = () => {
-    if (showMacro && mapFocus === "macro") {
-      setShowMacro(false);
-      if (!showMarket && !ecoType) setShowMarket(true);
-      setMapFocus(ecoType ? "eco" : "market");
-      restoreDefaultMap();
-      return;
-    }
-    if (showMacro && mapFocus !== "macro") {
-      // 已开宏观但焦点在机构：切回宏观底图（两芯片保持点亮）
-      setMapFocus("macro");
-      setShowRoster(false);
-      return;
-    }
-    setShowRoster(false);
-    setShowMacro(true);
-    setMapFocus("macro");
-    // 保留展业/机构状态，便于同时点亮
-  };
-
-  const toggleRoster = () => {
-    if (showRoster) {
-      setShowRoster(false);
-      restoreDefaultMap();
-      return;
-    }
+  const goMacro = () => {
     clearEco();
-    setShowMacro(false);
-    setShowRoster(true);
+    setScreenTab("macro");
+  };
+
+  const goRoster = () => {
+    clearEco();
+    setScreenTab("roster");
   };
 
   const toggleEcoMode = () => {
-    if (ecoType || ecoPickerOpen) {
-      if (mapFocus === "eco" && showMacro) {
-        // 机构已开时再点：若宏观也开着，先把焦点切回宏观而不清机构
-        setMapFocus("macro");
-        return;
-      }
+    if (screenTab === "eco") {
       clearEco();
-      setMapFocus(showMacro ? "macro" : "market");
-      restoreDefaultMap();
+      setScreenTab("macro");
       return;
     }
-    setShowRoster(false);
+    setScreenTab("eco");
     setEcoPickerOpen(true);
-    setMapFocus("eco");
-    if (!showMarket && !showMacro) setShowMarket(true);
   };
 
   const selectEcoType = (t: InstitutionType) => {
-    setShowRoster(false);
     if (ecoType === t) {
       clearEco();
-      setMapFocus(showMacro ? "macro" : "market");
-      restoreDefaultMap();
+      setScreenTab("macro");
       return;
     }
+    setScreenTab("eco");
     setEcoType(t);
     setEcoPickerOpen(true);
-    setMapFocus("eco");
-    // 机构面填与展业点阵互斥；宏观可与机构同时点亮（焦点在机构图）
-    setShowInvested(false);
-    if (!showMarket && !showMacro) setShowMarket(true);
   };
 
   const compactMap = vw < 1100;
-  /** 小屏：按视口拉高嵌入地图；宽屏保持原画幅量级 */
   const normalMapH = compactMap
     ? Math.round(Math.min(Math.max(vh * 0.58, 560), 780))
     : 680;
-  /** 全屏画幅取容器实测高度，图层切换不改 height 算法 */
   const mapH = present ? Math.max(400, paneH) : normalMapH;
-  const ecoMode = Boolean(ecoType || ecoPickerOpen);
-  const showMacroMap = showMacro && mapFocus === "macro";
-  const showEcoMap = ecoMode && mapFocus === "eco";
 
-  const modeStatus = showRoster
+  const showLoanBook = isMacro && macroSub === "loanBook";
+  const showMacroFactor = isMacro && macroSub !== "loanBook";
+  const factorLabel =
+    macroSub === "loanBook"
+      ? "在贷余额"
+      : (MACRO_MAP_FACTORS.find((f) => f.id === macroSub)?.label ?? "");
+  const regionLabel =
+    mapRegion
+      ? (BIG_SCREEN_MAP_REGIONS.find((r) => r.id === mapRegion)?.label ?? "")
+      : "全球";
+
+  const modeStatus = isRoster
     ? "非银名单"
-    : showMacroMap
-      ? `宏观 · ${MACRO_MAP_FACTORS.find((f) => f.id === macroFactor)?.label ?? ""}${
-          showInvested ? " × 展业" : ""
-        }${ecoMode ? " · 机构开" : ""}`
-      : showEcoMap
-        ? `${showMacro ? "宏观×" : ""}机构 · ${
-            ecoType ? INSTITUTION_TYPE_LABEL[ecoType] : "选类型"
-          }`
-        : showMarket && showInvested
-          ? "市场 × 展业"
-          : showMarket
-            ? "全市场"
-            : showInvested
-              ? "展业"
-              : "地图";
+    : isMacro
+      ? `宏观 · ${factorLabel} × 展业 · ${regionLabel}`
+      : isEco
+        ? `机构 · ${ecoType ? INSTITUTION_TYPE_LABEL[ecoType] : "选类型"} · ${regionLabel}`
+        : "地图";
 
   const layerTabs = (
     <div
@@ -26857,24 +27114,14 @@ function BigScreen() {
       }}
     >
       <ScreenSegTrack>
-        <ScreenSegChip
-          label="市场"
-          active={showMarket && !showRoster && mapFocus === "market"}
-          onClick={toggleMarket}
-        />
-        <ScreenSegChip
-          label="展业"
-          active={showInvested && !showRoster && !(showEcoMap && Boolean(ecoType))}
-          onClick={toggleInvested}
-        />
-        <ScreenSegChip label="宏观" active={showMacro && !showRoster} onClick={toggleMacro} />
+        <ScreenSegChip label="宏观" active={isMacro} onClick={goMacro} />
         <ScreenSegChip
           label={ecoType ? INSTITUTION_TYPE_LABEL[ecoType] : "机构"}
-          active={ecoMode && !showRoster}
+          active={ecoMode}
           clearable={ecoMode}
           onClick={toggleEcoMode}
         />
-        <ScreenSegChip label="非银名单" active={showRoster} onClick={toggleRoster} />
+        <ScreenSegChip label="非银名单" active={isRoster} onClick={goRoster} />
       </ScreenSegTrack>
       <ScreenStatusPills
         items={[
@@ -26886,29 +27133,54 @@ function BigScreen() {
     </div>
   );
 
-  /** 第二行：宏观=因子；机构=类型；可与宏观同时开时按焦点切换；否则 IMF/世行 */
-  const mapSubChrome = !showRoster ? (
+  const regionChips = (
+    <ScreenSegTrack>
+      <ScreenSegChip label="全球" active={mapRegion === ""} onClick={() => setMapRegion("")} />
+      {BIG_SCREEN_MAP_REGIONS.map((r) => (
+        <ScreenSegChip
+          key={r.id}
+          label={r.label}
+          active={mapRegion === r.id}
+          clearable={mapRegion === r.id}
+          onClick={() => setMapRegion(mapRegion === r.id ? "" : r.id)}
+        />
+      ))}
+    </ScreenSegTrack>
+  );
+
+  const mapSubChrome = !isRoster ? (
     <div
       style={{
         minHeight: 36,
         display: "flex",
+        flexDirection: "column",
+        gap: 8,
         alignItems: "flex-start",
         width: "100%",
         position: "relative",
       }}
     >
-      {showMacroMap ? (
-        <ScreenSegTrack>
-          {MACRO_MAP_FACTORS.map((f) => (
+      {regionChips}
+      {isMacro ? (
+        <>
+          <ScreenSegTrack>
             <ScreenSegChip
-              key={f.id}
-              label={f.label}
-              active={macroFactor === f.id}
-              onClick={() => setMacroFactor(f.id)}
+              label="在贷余额"
+              active={macroSub === "loanBook"}
+              onClick={() => setMacroSub("loanBook")}
             />
-          ))}
-        </ScreenSegTrack>
-      ) : showEcoMap ? (
+            {MACRO_MAP_FACTORS.map((f) => (
+              <ScreenSegChip
+                key={f.id}
+                label={f.label}
+                active={macroSub === f.id}
+                onClick={() => setMacroSub(f.id)}
+              />
+            ))}
+          </ScreenSegTrack>
+          <ScreenImfWbFilterBar />
+        </>
+      ) : isEco ? (
         <div style={{ width: "100%", maxHeight: 96, overflow: "auto" }}>
           <ScreenSegTrack style={{ width: "100%", overflow: "visible" }}>
             {INST_BUCKET_ORDER.flatMap((bucket) =>
@@ -26924,34 +27196,34 @@ function BigScreen() {
             )}
           </ScreenSegTrack>
         </div>
-      ) : showMarket ? (
-        <ScreenImfWbFilterBar />
       ) : null}
     </div>
   ) : null;
 
-  const mapPane = showRoster ? null : showMacroMap ? (
+  const mapPane = isRoster ? null : showMacroFactor ? (
     <BigScreenMacro
-      key={`macro-${macroFactor}`}
+      key={`macro-${macroSub}-${mapRegion || "world"}`}
       height={mapH}
       bare={present}
-      factor={macroFactor}
-      showInvested={showInvested}
+      factor={macroSub as MacroMapFactorId}
+      showInvested
       present={present}
       onPresent={enterPresent}
       onExit={exitPresent}
+      mapRegion={mapRegion}
     />
   ) : (
     <BigScreenOverlay
-      key={`mkt-${showMarket ? 1 : 0}-${showInvested ? 1 : 0}-${ecoType || "none"}`}
+      key={`mkt-${showLoanBook ? 1 : 0}-1-${isEco ? ecoType || "eco" : "none"}-${mapRegion || "world"}`}
       height={mapH}
       bare={present}
       present={present}
       onPresent={enterPresent}
       onExit={exitPresent}
-      showMarket={showMarket}
-      showInvested={showInvested}
-      ecoType={showEcoMap ? ecoType : ""}
+      showMarket={showLoanBook}
+      showInvested
+      ecoType={isEco ? ecoType : ""}
+      mapRegion={mapRegion}
     />
   );
 
@@ -27001,7 +27273,7 @@ function BigScreen() {
           {layerTabs}
           {mapSubChrome}
         </div>
-        {showRoster ? (
+        {isRoster ? (
           <div style={{ flex: 1, overflow: "auto", padding: "12px 16px 16px", position: "relative", zIndex: 1 }}>
             <NbfcStatsSubpage />
           </div>
@@ -27040,7 +27312,7 @@ function BigScreen() {
         {layerTabs}
         {mapSubChrome}
       </Stack>
-      {showRoster ? (
+      {isRoster ? (
         <NbfcStatsSubpage />
       ) : (
         <div
@@ -27055,6 +27327,7 @@ function BigScreen() {
     </Stack>
   );
 }
+
 
 
 
@@ -27439,6 +27712,17 @@ export default function Canvas() {
   }
 
   const [authSession] = useCanvasState("authSession1", "");
+  const guestNoCite = !canViewSourceCite(authSession);
+
+  useEffect(() => {
+    if (!guestNoCite) return;
+    if (hub === "sources") {
+      setHub("home");
+      setSourceReturnHub("");
+      setSourceFocus("");
+    }
+  }, [guestNoCite, hub, setHub, setSourceReturnHub, setSourceFocus]);
+
   if (!authSession) {
     return (
       <PersistScrollShell>
@@ -27463,7 +27747,8 @@ export default function Canvas() {
 
   return (
     <PersistScrollShell>
-    <Stack gap={16} style={{ scrollbarGutter: "stable", overflowAnchor: "none" }}>
+      <AtlasStickyChrome>
+      <Stack gap={16}>
       <SessionChrome />
 
       <Row gap={8} align="start">
@@ -27481,26 +27766,28 @@ export default function Canvas() {
                   icon={<IconCompare />}
                   onClick={() => setHub(hub === "compare" ? "home" : "compare")}
                 />
-                <SideHubButton
-                  active={hub === "sources"}
-                  title="信源"
-                  label="信源"
-                  icon={<IconSourceCite />}
-                  onClick={() => {
-                    if (hub === "sources") {
-                      const target =
-                        sourceReturnHub && sourceReturnHub !== "sources"
-                          ? (sourceReturnHub as AtlasHub)
-                          : "home";
-                      setHub(target);
-                      setSourceReturnHub("");
-                      setSourceFocus("");
-                    } else {
-                      setSourceReturnHub(hub);
-                      setHub("sources");
-                    }
-                  }}
-                />
+                {!guestNoCite ? (
+                  <SideHubButton
+                    active={hub === "sources"}
+                    title="信源"
+                    label="信源"
+                    icon={<IconSourceCite />}
+                    onClick={() => {
+                      if (hub === "sources") {
+                        const target =
+                          sourceReturnHub && sourceReturnHub !== "sources"
+                            ? (sourceReturnHub as AtlasHub)
+                            : "home";
+                        setHub(target);
+                        setSourceReturnHub("");
+                        setSourceFocus("");
+                      } else {
+                        setSourceReturnHub(hub);
+                        setHub("sources");
+                      }
+                    }}
+                  />
+                ) : null}
               </>
             }
             onSubmit={({ text, attachments }) => {
@@ -27600,13 +27887,23 @@ export default function Canvas() {
           />
         </Row>
         {ecoNavExpanded ? (
-          <Stack gap={8}>
+          <Stack gap={6}>
             {INST_BUCKET_ORDER.map((bucket) => (
-              <Stack key={bucket} gap={4}>
-                <Text size="small" tone="tertiary" weight="medium">
+              <Row key={bucket} gap={8} align="center" wrap>
+                <Text
+                  size="small"
+                  tone="tertiary"
+                  weight="medium"
+                  style={{
+                    flex: "0 0 auto",
+                    minWidth: 72,
+                    maxWidth: 108,
+                    lineHeight: 1.2,
+                  }}
+                >
                   {INST_BUCKET_LABEL[bucket]}
                 </Text>
-                <Row gap={6} wrap>
+                <Row gap={6} wrap style={{ flex: 1, minWidth: 0 }}>
                   {INST_BUCKET_TYPES[bucket].map((t) => (
                     <FilterChip
                       key={t}
@@ -27617,14 +27914,19 @@ export default function Canvas() {
                     />
                   ))}
                 </Row>
-              </Stack>
+              </Row>
             ))}
           </Stack>
         ) : null}
       </Stack>
+      </Stack>
+      </AtlasStickyChrome>
+
+      <AtlasScrollBody>
+      <Stack gap={0} style={{ overflowAnchor: "none" }}>
 
       {hub === "home" ? (
-        <Stack gap={16}>
+        <Stack gap={16} style={{ paddingTop: kw || ecoNavExpanded ? 12 : 0 }}>
           {kw ? (
             <Stack gap={12}>
               <H2>搜索结果 · {searchHitCount}</H2>
@@ -27716,100 +28018,95 @@ export default function Canvas() {
         </Stack>
       ) : null}
 
-      {hub === "sources" ? (
-        <Stack gap={16}>
+      {hub === "sources" && !guestNoCite ? (
+        <Stack gap={16} style={{ paddingTop: 12 }}>
           <SourceCatalogPanel />
         </Stack>
       ) : null}
 
-      {hub === "scenes" ? (
-        <Stack gap={16}>
-          <H2>数字经济场景</H2>
-          <Text size="small" tone="tertiary">
-            Web2 / Web3 / Agent · 词条：名称 → 行为/目的 → 玩家名单
-          </Text>
-          <DigitalSceneAtlasBrowse />
-        </Stack>
-      ) : null}
+      {hub === "scenes" ? <DigitalSceneAtlasBrowse /> : null}
 
       {hub === "macro" ? (
-        <Stack gap={16}>
-          <H2>国别宏观因子</H2>
-          <Text size="small" tone="tertiary">
-            {CASH_LOAN_MACRO_FRAMEWORK.purpose} · 先选属地，再看单国快照
-          </Text>
-          <Stack gap={10}>
+        <Stack gap={0}>
+          <AtlasStickySub compact>
             <Stack gap={4}>
-              <Text size="small" weight="medium">
-                涉足洲际
-              </Text>
-              <Row gap={6} wrap>
-                {(Object.keys(REGION_LABEL) as Region[]).map((k) => (
-                  <FilterChip
-                    label={REGION_LABEL[k]}
-                    active={region === k}
-                    clearable={k !== "all"}
-                    onClick={() => {
-                      const next = region === k && k !== "all" ? "all" : k;
-                      setRegion(next);
-                      if (!countryInRegion(country, next)) setCountry("all");
-                      if (!langZoneInRegion(langZone, next)) setLangZone("all");
-                    }}
-                  />
-                ))}
+              <Row gap={6} align="center" wrap>
+                <Text size="small" weight="medium" style={{ flex: "0 0 auto" }}>
+                  国别宏观
+                </Text>
+                <Row gap={4} wrap style={{ flex: 1, minWidth: 0 }}>
+                  {(Object.keys(REGION_LABEL) as Region[]).map((k) => (
+                    <FilterChip
+                      label={REGION_LABEL[k]}
+                      active={region === k}
+                      clearable={k !== "all"}
+                      onClick={() => {
+                        const next = region === k && k !== "all" ? "all" : k;
+                        setRegion(next);
+                        if (!countryInRegion(country, next)) setCountry("all");
+                        if (!langZoneInRegion(langZone, next)) setLangZone("all");
+                      }}
+                    />
+                  ))}
+                </Row>
+              </Row>
+              <Row gap={12} align="start" wrap>
+                <div style={{ flex: "1 1 140px", minWidth: 120 }}>
+                  <SoftFold
+                    title="语言区"
+                    summary={langZone === "all" ? undefined : langZone}
+                    count={languageZonesForRegion(region).length}
+                    defaultOpen={false}
+                  >
+                    <Row gap={4} wrap>
+                      <FilterChip
+                        label="全部语言区"
+                        active={langZone === "all"}
+                        onClick={() => setLangZone("all")}
+                      />
+                      {languageZonesForRegion(region).map((z) => (
+                        <FilterChip
+                          label={z}
+                          active={langZone === z}
+                          clearable
+                          onClick={() => {
+                            const next = langZone === z ? "all" : z;
+                            setLangZone(next);
+                            if (next !== "all") {
+                              const allow = new Set(countriesInLanguageZone(next));
+                              if (country !== "all" && !allow.has(country as string)) setCountry("all");
+                            }
+                          }}
+                        />
+                      ))}
+                    </Row>
+                  </SoftFold>
+                </div>
+                <div style={{ flex: "1 1 180px", minWidth: 140 }}>
+                  <SoftFold
+                    title="国家/地区"
+                    summary={country === "all" ? undefined : COUNTRY_LABEL[country]}
+                    count={Math.max(0, countriesForRegionAndLang(region, langZone).length - 1)}
+                    defaultOpen={false}
+                  >
+                    <Row gap={4} wrap>
+                      {countriesForRegionAndLang(region, langZone).map((k) => (
+                        <FilterChip
+                          label={COUNTRY_LABEL[k]}
+                          active={country === k}
+                          clearable={k !== "all"}
+                          onClick={() => setCountry(country === k && k !== "all" ? "all" : k)}
+                        />
+                      ))}
+                    </Row>
+                  </SoftFold>
+                </div>
               </Row>
             </Stack>
-            <SoftFold
-              title="语言区"
-              hint="按展业语言区收窄；选项随洲际变化。默认收起。"
-              count={languageZonesForRegion(region).length}
-              defaultOpen={langZone !== "all"}
-            >
-              <Text size="small" tone="tertiary">
-                按展业语言区收窄；选项随洲际变化
-              </Text>
-              <Row gap={6} wrap>
-                <FilterChip
-                  label="全部语言区"
-                  active={langZone === "all"}
-                  onClick={() => setLangZone("all")}
-                />
-                {languageZonesForRegion(region).map((z) => (
-                  <FilterChip
-                    label={z}
-                    active={langZone === z}
-                    clearable
-                    onClick={() => {
-                      const next = langZone === z ? "all" : z;
-                      setLangZone(next);
-                      if (next !== "all") {
-                        const allow = new Set(countriesInLanguageZone(next));
-                        if (country !== "all" && !allow.has(country as string)) setCountry("all");
-                      }
-                    }}
-                  />
-                ))}
-              </Row>
-            </SoftFold>
-            <SoftFold
-              title="涉足国家/地区"
-              hint="默认收起；展开后点选单国看宏观快照。"
-              count={Math.max(0, countriesForRegionAndLang(region, langZone).length - 1)}
-              defaultOpen={country !== "all"}
-            >
-              <Row gap={6} wrap>
-                {countriesForRegionAndLang(region, langZone).map((k) => (
-                  <FilterChip
-                    label={COUNTRY_LABEL[k]}
-                    active={country === k}
-                    clearable={k !== "all"}
-                    onClick={() => setCountry(country === k && k !== "all" ? "all" : k)}
-                  />
-                ))}
-              </Row>
-            </SoftFold>
+          </AtlasStickySub>
+          <Stack gap={16} style={{ paddingTop: 8 }}>
             <CountryMacroPanel country={country} />
-            <MacroFactorFrameworkOverview />
+            {country === "all" ? <MacroFactorFrameworkOverview /> : null}
           </Stack>
         </Stack>
       ) : null}
@@ -27855,10 +28152,12 @@ export default function Canvas() {
               </Row>
             </Stack>
 
-            <Stack gap={4}>
-              <Text size="small" weight="medium">
-                语言区
-              </Text>
+            <SoftFold
+              title="语言区"
+              hint={langZone === "all" ? "按展业语言区收窄；选项随洲际变化" : `已选 ${langZone}`}
+              count={languageZonesForRegion(region).length}
+              defaultOpen={langZone !== "all"}
+            >
               <Text size="small" tone="tertiary">
                 按展业语言区收窄；选项随洲际变化
               </Text>
@@ -27884,12 +28183,14 @@ export default function Canvas() {
                   />
                 ))}
               </Row>
-            </Stack>
+            </SoftFold>
 
-            <Stack gap={4}>
-              <Text size="small" weight="medium">
-                涉足国家/地区
-              </Text>
+            <SoftFold
+              title="涉足国家/地区"
+              hint={country === "all" ? "点选收窄；再点同一国取消" : `已选 ${COUNTRY_LABEL[country]}`}
+              count={countriesForRegionAndLang(region, langZone).length}
+              defaultOpen={country !== "all"}
+            >
               <Row gap={6} wrap>
                 {countriesForRegionAndLang(region, langZone).map((k) => (
                   <FilterChip
@@ -27900,14 +28201,19 @@ export default function Canvas() {
                   />
                 ))}
               </Row>
-            </Stack>
+            </SoftFold>
 
-            <CountryMacroPanel country={country} />
-
-            <Stack gap={4}>
-              <Text size="small" weight="medium">
-                原生路径
-              </Text>
+            <SoftFold
+              title="原生路径"
+              hint={
+                primary === "all"
+                  ? "选择「场景原生」或「信贷原生」后展开对应筛选项"
+                  : primary === "scene"
+                    ? "已选 场景原生"
+                    : "已选 信贷原生"
+              }
+              defaultOpen={primary !== "all"}
+            >
               <Row gap={6} wrap>
                 {(
                   [
@@ -27943,7 +28249,7 @@ export default function Canvas() {
                   选择「场景原生」或「信贷原生」后，将展开对应的涉足场景 / 信贷产品筛选项
                 </Text>
               ) : null}
-            </Stack>
+            </SoftFold>
 
             {primary === "scene" ? (
               <Stack gap={4}>
@@ -28100,10 +28406,16 @@ export default function Canvas() {
               </Stack>
             ) : null}
 
-            <Stack gap={4}>
-              <Text size="small" weight="medium">
-                涉及金融牌照
-              </Text>
+            <SoftFold
+              title="涉及金融牌照"
+              hint={
+                licenseKind === "all"
+                  ? "按银行/保险/支付/消金等粗类收窄"
+                  : `已选 ${LICENSE_KIND_LABEL[licenseKind]}`
+              }
+              count={LICENSE_KIND_ORDER.length}
+              defaultOpen={licenseKind !== "all"}
+            >
               <Row gap={6} wrap>
                 <FilterChip
                   label="全部牌照粗类"
@@ -28119,7 +28431,7 @@ export default function Canvas() {
                   />
                 ))}
               </Row>
-            </Stack>
+            </SoftFold>
 
             {primary === "credit" && storeRankCountry ? (
               <Stack gap={6} style={{ minWidth: 240, maxWidth: 520 }}>
@@ -28745,7 +29057,8 @@ export default function Canvas() {
           )}
         </Stack>
       ) : null}
-    </Stack>
+      </Stack>
+      </AtlasScrollBody>
     </PersistScrollShell>
   );
 }

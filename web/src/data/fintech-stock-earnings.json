@@ -1,12 +1,12 @@
 {
-  "asOf": "2026-08-12 15:24",
+  "asOf": "2026-08-12 23:50",
   "note": "最近一期财报/业绩 KPI 缓存；主源 T2 listed-player-disclosure，可手工续写。",
   "stats": {
-    "total": 40,
+    "total": 51,
     "fromDisclosure": 12,
-    "watchlist": 80,
-    "coverage": 0.5,
-    "withFundamentals": 33
+    "watchlist": 95,
+    "coverage": 0.537,
+    "withFundamentals": 51
   },
   "items": [
     {
@@ -39,13 +39,15 @@
           "value": "₹1.10 万亿"
         }
       ],
-      "irUrl": "https://www.business-standard.com/markets/capital-market-news/bajaj-finance-q1-pat-climbs-27-yoy-to-rs-5-986-cr-aum-tops-rs-5-46-lakh-crore-126073000969_1.html",
-      "sourceNote": "业绩新闻/IR",
+      "irUrl": "https://www.bajajfinserv.in/finance/investor-relations",
+      "sourceNote": "公司/交易所交叉·FY26 权益与年收入 + Q1 FY27 AUM；折美元约 INR87；收入=FY26 单体经营收入约数",
       "cashLoanHint": "展业国 IN 资产质量与个贷锚",
-      "confidence": "高",
+      "confidence": "中",
       "source": "listed-player-disclosure",
       "fundamentals": {
-        "creditAum": "$629 亿"
+        "creditAum": "$629 亿",
+        "equity": "$131 亿",
+        "revenue": "$80.3 亿"
       }
     },
     {
@@ -137,7 +139,13 @@
       "sourceNote": "公司 IR·Q2 2026 Shareholder Letter",
       "cashLoanHint": "Cash App / Square Loans 消费贷入口",
       "confidence": "高",
-      "source": "manualIr"
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "营收约66.2亿美元（2026Q2）",
+        "equity": "股东权益约171.5亿美元（2026-06-30）",
+        "cashLike": "—",
+        "ebitda": "Adjusted EBITDA约11.7亿美元量级（对照股东信）"
+      }
     },
     {
       "id": "ma",
@@ -226,13 +234,14 @@
         }
       ],
       "irUrl": "https://www.gotocompany.com/en/investors",
-      "sourceNote": "公司业绩会摘要（Quartr 等转述）；待替换官方 PDF",
+      "sourceNote": "公司 IR/财务报表交叉·2026Q1 末权益约 IDR28.8 万亿 + Q2 业绩摘要；折美元约 IDR16000；收入/EBITDA 为季口径",
       "cashLoanHint": "印尼出行+电商+金融；金融臂收入/EBITDA 增速关键",
       "confidence": "中",
       "source": "manualIr",
       "fundamentals": {
         "revenue": "$3.52 亿",
-        "ebitda": ">$0.62 亿"
+        "ebitda": ">$0.62 亿",
+        "equity": "$18.0 亿"
       }
     },
     {
@@ -470,10 +479,11 @@
       ],
       "fundamentals": {
         "revenue": "$2.81 亿",
-        "ebitda": "$0.23 亿"
+        "ebitda": "$0.23 亿",
+        "cashLike": "$15.6 亿"
       },
       "irUrl": "https://paytm.com/document/ir/financial-results/Paytm_Earning-Release_Q1-FY-2027.pdf",
-      "sourceNote": "公司 IR·Q1 FY27；金额已按约 INR87 折美元",
+      "sourceNote": "公司 IR·Q1 FY27；折美元约 INR87；准现金=Cash balance ₹13529 亿卢比；权益待资产负债表核验留空",
       "cashLoanHint": "印支付+金融；看经营收入与 EBITDA",
       "confidence": "高",
       "source": "manualIr"
@@ -593,11 +603,17 @@
           "value": "3.11%"
         }
       ],
-      "irUrl": "https://www.prnewswire.com/news-releases/finvolution-group-reports-first-quarter-2026-unaudited-financial-results-302781329.html",
-      "sourceNote": "公司新闻稿/IR",
+      "irUrl": "https://www.sec.gov/Archives/edgar/data/1691445/000149315226025134/ex99-1.htm",
+      "sourceNote": "公司新闻稿/IR；6-K/新闻稿 2026Q1；海外收入约9.49亿RMB/+34.5% YoY·SEC〔17〕",
       "cashLoanHint": "海外量增；对照当地牌照",
       "confidence": "高",
-      "source": "listed-player-disclosure"
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "revenue": "净收入约32.1亿RMB（2026Q1）",
+        "equity": "股东权益约165.5亿RMB（2026-03-31）",
+        "cashLike": "—",
+        "creditAum": "在贷余额约677亿RMB（海外约26亿）"
+      }
     },
     {
       "id": "jfin",
@@ -710,10 +726,15 @@
         }
       ],
       "irUrl": "https://ir.yiren.com/2026-06-25-Yiren-Digital-Reports-First-Quarter-2026-Unaudited-Financial-Results",
-      "sourceNote": "公司 IR",
+      "sourceNote": "公司 IR；IR 2026Q1·净利亏约4.95亿RMB〔17〕",
       "cashLoanHint": null,
       "confidence": "高",
-      "source": "listed-player-disclosure"
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "revenue": "净收入约9.15亿RMB（2026Q1，-41% YoY）",
+        "equity": "股东权益约87.66亿RMB（2026-03-31）",
+        "creditAum": "促成交易额约89亿RMB（kpi对照）"
+      }
     },
     {
       "id": "grab",
@@ -792,12 +813,14 @@
         }
       ],
       "irUrl": "https://international.nubank.com.br/company/nu-holdings-ltd-reports-first-quarter-2026-financial-results/",
-      "sourceNote": "公司 IR",
+      "sourceNote": "公司 IR / SEC 6-K·Q1’26；收入=IFRS Total revenue（季）；权益=Total equity",
       "cashLoanHint": "展业国 MX 对照；信用卡为主、无抵押贷增速快",
       "confidence": "高",
       "source": "listed-player-disclosure",
       "fundamentals": {
-        "creditAum": "$372 亿"
+        "creditAum": "$372 亿",
+        "equity": "$126 亿",
+        "revenue": "$49.7 亿"
       }
     },
     {
@@ -880,10 +903,15 @@
         }
       ],
       "irUrl": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0427/2026042702728.pdf",
-      "sourceNote": "港交所披露 / 公司业绩",
+      "sourceNote": "港交所披露 / 公司业绩；FY2025收入/净亏约21亿；Q1运营更新港交所",
       "cashLoanHint": "总在贷收缩，消金子公司仍扩表",
       "confidence": "高",
-      "source": "manual_ir"
+      "source": "manual_ir",
+      "fundamentals": {
+        "revenue": "FY2025总收入约271.3亿RMB（+10.7%）·Q1运营更新未给单季收入",
+        "equity": "—·Q1仅运营要点",
+        "creditAum": "在贷约1725亿RMB（消金约594亿，2026-03-31）"
+      }
     },
     {
       "id": "afrm",
@@ -1093,7 +1121,13 @@
       "sourceNote": "公司业绩稿",
       "cashLoanHint": "美零售分期/私标卡；资产质量锚定",
       "confidence": "高",
-      "source": "listed-player-disclosure"
+      "source": "listed-player-disclosure",
+      "fundamentals": {
+        "revenue": "净利息收入约46.4亿美元（2026Q1）",
+        "equity": "BVPS约45.29美元（2026Q1）·股东权益见10-Q",
+        "creditAum": "贷款应收约1001亿美元（持平）",
+        "cashLike": "—"
+      }
     },
     {
       "id": "pags",
@@ -1312,7 +1346,13 @@
       "sourceNote": "公司 1Q26 Results PDF",
       "cashLoanHint": "中亚超级App；放款流稳、组合久期拉长",
       "confidence": "高",
-      "source": "manual_ir"
+      "source": "manual_ir",
+      "fundamentals": {
+        "revenue": "收入约11千亿KZT / 约23亿美元（2026Q1，+31%）",
+        "equity": "—·见1Q26 PDF",
+        "creditAum": "平均净贷款约151亿美元（+23%）",
+        "ebitda": "Adjusted EBITDA约7.68亿美元（+9%）"
+      }
     },
     {
       "id": "inter-br",
@@ -1355,7 +1395,13 @@
       "sourceNote": "公司 1Q26 Earnings Release",
       "cashLoanHint": "巴西数字银行；约 70% 抵押/担保，私银工资贷亮点",
       "confidence": "高",
-      "source": "manual_ir"
+      "source": "manual_ir",
+      "fundamentals": {
+        "revenue": "净收入约24.4亿BRL（2026Q1，+32.8%）",
+        "equity": "股东权益约104亿BRL（2026-03-31）",
+        "creditAum": "贷款组合约498亿BRL（毛）/净贷款约465亿BRL",
+        "cashLike": "现金等价物约43亿BRL"
+      }
     },
     {
       "id": "nubank-br",
@@ -1521,7 +1567,7 @@
         "creditAum": "$65.4 亿"
       },
       "irUrl": "https://www.sbicard.com/sbi-card-en/assets/docs/pdf/who-we-are/notices/Disclosure-under-Regulation-30-Investor-Presentation.pdf",
-      "sourceNote": "公司投资者材料·FY26；折美元约 INR87；信贷=Receivables",
+      "sourceNote": "公司投资者材料·FY26；折美元约 INR87；信贷=Receivables；权益字段待年报核验留空",
       "cashLoanHint": "印信用卡在贷；看 receivables 与 spend",
       "confidence": "高",
       "source": "manualIr"
@@ -1696,6 +1742,481 @@
       "fundamentals": {
         "revenue": "$40.6 亿"
       }
+    },
+    {
+      "id": "gentera",
+      "nameZh": "Gentera",
+      "ticker": "GENTERA.MX",
+      "period": "FY2025",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026-02-25",
+      "kpis": [
+        {
+          "id": "portfolio",
+          "label": "信贷组合",
+          "value": "MXN 936 亿",
+          "yoy": "+13.1%"
+        },
+        {
+          "id": "equity",
+          "label": "股东权益",
+          "value": "MXN 360 亿"
+        },
+        {
+          "id": "totalAssets",
+          "label": "总资产",
+          "value": "MXN 1205 亿"
+        },
+        {
+          "id": "capitalAssets",
+          "label": "资本/资产",
+          "value": "29.9%"
+        },
+        {
+          "id": "cashInv",
+          "label": "现金与投资",
+          "value": "MXN 177 亿"
+        },
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "MXN 85.2 亿",
+          "yoy": "+31.8%"
+        },
+        {
+          "id": "npl",
+          "label": "NPL",
+          "value": "3.83%"
+        },
+        {
+          "id": "roe",
+          "label": "ROE",
+          "value": "约 24.9%"
+        }
+      ],
+      "fundamentals": {
+        "equity": "$18 亿",
+        "revenue": "$24.2 亿",
+        "cashLike": "$8.9 亿",
+        "creditAum": "$47 亿",
+        "debtRatio": "70.1%"
+      },
+      "irUrl": "https://www.gentera.com.mx/wcm/connect/f4e9034d-b5e5-487a-8bf7-af1b071c7ef0/Gentera+4Q25.pdf?MOD=AJPERES",
+      "sourceNote": "Gentera 4Q25 IR；折美元约 MXN20；权益=YE Total stockholders' equity Ps.36,028m；信贷=Loan portfolio Ps.93,599m；准现金=Cash and investments Ps.17,736m；收入=FY2025 Interest income Ps.48,393m；负债率=Total liabilities/Total assets",
+      "cashLoanHint": "展业国 MX 小微/消费贷在位对照；资产质量与 ROE 锚",
+      "confidence": "高",
+      "source": "company-ir"
+    },
+    {
+      "id": "aeonts",
+      "nameZh": "AEON Thana（泰消费金融）",
+      "ticker": "AEONTS.BK",
+      "period": "FY2025",
+      "periodEnd": "2026-02-28",
+      "reportedAt": "2026-04-07",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "营业收入",
+          "value": "THB217.75亿",
+          "yoy": "-1.5%"
+        },
+        {
+          "id": "netProfit",
+          "label": "归母净利",
+          "value": "THB30.94亿",
+          "yoy": "+8.2%"
+        },
+        {
+          "id": "eps",
+          "label": "EPS",
+          "value": "12.44 THB"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "约217.75亿THB",
+        "equity": "$7.7 亿"
+      },
+      "irUrl": "https://aeonts.listedcompany.com/misc/MDNA/20260407-aeonts-mdna-fy2025-en.pdf",
+      "sourceNote": "AEONTS MD&A FY2025（截止2026-02-28）·官网PDF",
+      "cashLoanHint": "TH 消金/卡分期；收入略降净利靠费用控制——利率上限下看息差",
+      "confidence": "高",
+      "source": "company-ir"
+    },
+    {
+      "id": "adira",
+      "nameZh": "Adira Finance",
+      "ticker": "ADMF.JK",
+      "period": "FY2025",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026-02-19",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "营业收入",
+          "value": "IDR12.13万亿",
+          "yoy": "+2.9%"
+        },
+        {
+          "id": "netProfit",
+          "label": "归母净利",
+          "value": "IDR1.54万亿",
+          "yoy": "-14.7%"
+        },
+        {
+          "id": "equity",
+          "label": "权益",
+          "value": "IDR15.03万亿",
+          "yoy": "+3.3%"
+        },
+        {
+          "id": "assets",
+          "label": "总资产",
+          "value": "IDR38.53万亿"
+        }
+      ],
+      "fundamentals": {
+        "equity": "约15.03万亿IDR",
+        "revenue": "约12.13万亿IDR",
+        "ebitda": "约2.28万亿IDR",
+        "debtRatio": "D/E约1.56"
+      },
+      "irUrl": "https://www.adira.co.id/id/investor",
+      "sourceNote": "IDX/媒体转述 FY2025；收入+2.9%、净利-14.7%（费用上行）·对照 2026-02",
+      "cashLoanHint": "ID 持牌多金；收入稳净利承压，展业侧盯费用与资产质量",
+      "confidence": "中",
+      "source": "company-ir"
+    },
+    {
+      "id": "bfi",
+      "nameZh": "BFI Finance",
+      "ticker": "BFIN.JK",
+      "period": "FY2025",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026-02",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "营业收入",
+          "value": "IDR6.75万亿",
+          "yoy": "+6.5%"
+        },
+        {
+          "id": "netProfit",
+          "label": "归母净利",
+          "value": "IDR1.58万亿",
+          "yoy": "+1.1%"
+        },
+        {
+          "id": "equity",
+          "label": "权益",
+          "value": "IDR10.65万亿"
+        },
+        {
+          "id": "ebitda",
+          "label": "EBITDA",
+          "value": "IDR2.18万亿"
+        }
+      ],
+      "fundamentals": {
+        "equity": "约10.65万亿IDR",
+        "revenue": "约6.75万亿IDR",
+        "ebitda": "约2.18万亿IDR",
+        "debtRatio": "D/E约1.39"
+      },
+      "irUrl": "https://digital-bucket.prod.bfi.co.id/assets/pdf/pdf_terbaru/10.%20Siaran%20Pers/English/2025/BFI%20Finance%20-%20Media%20Release%20-%202024%20Financial%20Performance%20-%20Fin%20%28Eng%29.pdf",
+      "sourceNote": "IDX/Ipot FY2025·对照2026-02",
+      "cashLoanHint": "ID 消金龙头之一；盈利稳，可作资产质量对照锚",
+      "confidence": "高",
+      "source": "company-ir"
+    },
+    {
+      "id": "wom-finance",
+      "nameZh": "WOM Finance",
+      "ticker": "WOMF.JK",
+      "period": "FY2025",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026-02-24",
+      "kpis": [
+        {
+          "id": "newFinancing",
+          "label": "新投放",
+          "value": "IDR5.94万亿",
+          "yoy": "+9.35%"
+        },
+        {
+          "id": "revenue",
+          "label": "营业收入",
+          "value": "IDR2.16万亿",
+          "yoy": "+0.12%"
+        },
+        {
+          "id": "netProfit",
+          "label": "归母净利",
+          "value": "IDR1426亿",
+          "yoy": "-45.8%"
+        },
+        {
+          "id": "equity",
+          "label": "权益",
+          "value": "IDR1.98万亿"
+        },
+        {
+          "id": "npfGross",
+          "label": "毛NPF",
+          "value": "2.17%"
+        }
+      ],
+      "fundamentals": {
+        "equity": "约1.98万亿IDR",
+        "revenue": "约2.16万亿IDR",
+        "creditAum": "新投放约5.94万亿IDR"
+      },
+      "irUrl": "https://www.wom.co.id/",
+      "sourceNote": "IDX/媒体 FY2025；新投放+9%、净利因拨备大降·对照2026-02/03",
+      "cashLoanHint": "摩托分期主力；投放增但拨备吃利润——现金贷对照资产质量信号",
+      "confidence": "中",
+      "source": "exchange-filing"
+    },
+    {
+      "id": "true-th",
+      "nameZh": "True（TrueMoney）",
+      "ticker": "TRUE.BK",
+      "period": "FY2025",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026",
+      "kpis": [
+        {
+          "id": "totalRev",
+          "label": "总收入",
+          "value": "THB1957亿"
+        },
+        {
+          "id": "mobileRev",
+          "label": "移动收入",
+          "value": "THB1614亿"
+        },
+        {
+          "id": "broadband",
+          "label": "宽带收入",
+          "value": "THB252亿"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "约1957亿THB"
+      },
+      "irUrl": "https://investor.truecorp.co.th/misc/AR/true-ar2025-en.pdf",
+      "sourceNote": "True Corp AR2025·服务/移动收入结构·对照2026",
+      "cashLoanHint": "TH 电信入口；非现金贷本体，作场景/支付入口对照",
+      "confidence": "高",
+      "source": "company-ir"
+    },
+    {
+      "id": "globe-ph",
+      "nameZh": "Globe（GCash）",
+      "ticker": "GLO.PS",
+      "period": "FY2025",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026-02-04",
+      "kpis": [
+        {
+          "id": "netIncome",
+          "label": "净利",
+          "value": "PHP233亿",
+          "yoy": "-4.1%"
+        },
+        {
+          "id": "serviceRev",
+          "label": "服务收入",
+          "value": "PHP1651亿",
+          "yoy": "纪录高"
+        },
+        {
+          "id": "myntEquity",
+          "label": "Mynt/GCash权益贡献",
+          "value": "PHP61亿",
+          "yoy": "约+61%（对上年38亿）"
+        },
+        {
+          "id": "myntShare",
+          "label": "占税前利润",
+          "value": "约22%"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "服务收入约1651亿PHP",
+        "equity": "—·合并层见AFS"
+      },
+      "irUrl": "https://www.globe.com.ph/about-us/investor-relations",
+      "sourceNote": "Globe FY2025披露/媒体；Mynt权益贡献61亿PHP（GCash）·网赌监管拖累Q4·对照2026-02",
+      "cashLoanHint": "PH GCash/Mynt 入口；权益贡献升但Q4受网赌脱钩与贷费会计影响——钱包信贷臂须分拆看",
+      "confidence": "高",
+      "source": "company-ir"
+    },
+    {
+      "id": "telkom-id",
+      "nameZh": "Telkom ID（LinkAja）",
+      "ticker": "TLKM.JK",
+      "period": "FY2025",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "营业收入",
+          "value": "IDR146.7万亿",
+          "yoy": "-2.1%"
+        },
+        {
+          "id": "netIncomeAttr",
+          "label": "归母净利",
+          "value": "IDR17.81万亿",
+          "yoy": "-20.5%"
+        },
+        {
+          "id": "ebitda",
+          "label": "EBITDA",
+          "value": "IDR72.2万亿"
+        },
+        {
+          "id": "opProfit",
+          "label": "营业利润",
+          "value": "IDR34.6万亿"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "约146.7万亿IDR",
+        "ebitda": "约72.2万亿IDR"
+      },
+      "irUrl": "https://www.telkom.co.id/minio/show/data/lampiran/1778544447359_original_LK-Konsolidasian-Telkom-Tahun-2025-Audited-Eng.pdf",
+      "sourceNote": "Telkom ID FY2025 AFS/6-K；合并口径，LinkAja 未单列·对照2026",
+      "cashLoanHint": "ID 电信母体/LinkAja 入口；合并利润承压，钱包信贷须另核",
+      "confidence": "中",
+      "source": "company-ir"
+    },
+    {
+      "id": "cholafín",
+      "nameZh": "Cholamandalam",
+      "ticker": "CHOLAFIN.NS",
+      "period": "FY2025",
+      "periodEnd": "2025-03-31",
+      "reportedAt": "2025-04",
+      "kpis": [
+        {
+          "id": "aum",
+          "label": "AUM",
+          "value": "₹1.999 万亿",
+          "yoy": "+30%"
+        },
+        {
+          "id": "disbursement",
+          "label": "年放款",
+          "value": "₹1.009 万亿",
+          "yoy": "+14%"
+        },
+        {
+          "id": "totalIncome",
+          "label": "总收入",
+          "value": "₹26055 亿",
+          "yoy": "+36%"
+        },
+        {
+          "id": "pat",
+          "label": "PAT",
+          "value": "₹4259 亿",
+          "yoy": "+24%"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "$29.9 亿",
+        "creditAum": "$230 亿"
+      },
+      "irUrl": "https://files.cholamandalam.com/Press_Release_Chola_Q4_FY_25_72e0c07ec2.pdf",
+      "sourceNote": "公司新闻稿·FY25（至2025-03-31）；折美元约 INR87；信贷=AUM",
+      "cashLoanHint": "印度车辆/住房/SME NBFC 对照；金贷新业务 2025 起观察",
+      "confidence": "高",
+      "source": "company-ir"
+    },
+    {
+      "id": "muthoot",
+      "nameZh": "Muthoot Finance",
+      "ticker": "MUTHOOTFIN.NS",
+      "period": "FY27Q1",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07",
+      "kpis": [
+        {
+          "id": "aum",
+          "label": "合并贷款 AUM",
+          "value": "₹1.915 万亿",
+          "yoy": "+43%"
+        },
+        {
+          "id": "pat",
+          "label": "合并 PAT",
+          "value": "₹2825 亿",
+          "yoy": "+43%"
+        },
+        {
+          "id": "standaloneAum",
+          "label": "单体 AUM",
+          "value": "₹1.721 万亿",
+          "yoy": "+43%"
+        }
+      ],
+      "fundamentals": {
+        "creditAum": "$220 亿"
+      },
+      "irUrl": "https://www.muthootfinance.com/investor-presentation",
+      "sourceNote": "公司业绩/媒体交叉·Q1 FY27；折美元约 INR87；信贷=合并贷款 AUM；收入/权益待季报 PDF 核验留空",
+      "cashLoanHint": "印度黄金贷龙头；线上化与跨品类交叉销售对照",
+      "confidence": "中",
+      "source": "company-ir"
+    },
+    {
+      "id": "axiata",
+      "nameZh": "Axiata（Boost）",
+      "ticker": "AXIATA.KL",
+      "period": "FY2025",
+      "periodEnd": "2025-12-31",
+      "reportedAt": "2026-02-26",
+      "kpis": [
+        {
+          "id": "patReported",
+          "label": "报告净利",
+          "value": "MYR3.65亿"
+        },
+        {
+          "id": "patExOneOff",
+          "label": "剔除非经常",
+          "value": "MYR7.62亿"
+        },
+        {
+          "id": "underlyingPatami",
+          "label": "底层PATAMI",
+          "value": "MYR5.37亿",
+          "yoy": "+36.3%"
+        },
+        {
+          "id": "boostLoss",
+          "label": "Boost亏损收窄至",
+          "value": "MYR1.26亿"
+        },
+        {
+          "id": "boostLoanBook",
+          "label": "Boost贷款账面",
+          "value": "约MYR3.10亿（季末，QoQ+32.7%）"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "—·集团收入未在本条单列",
+        "equity": "—"
+      },
+      "irUrl": "https://www.axiata.com/media/news/2026/axiata-posts-rm365-million-in-profits-for-fy25",
+      "sourceNote": "Axiata FY2025新闻稿；Boost 放贷账面扩张、亏损收窄·对照2026-02",
+      "cashLoanHint": "MY Boost 数字金融臂；母体财报仅给亏损/贷款账面，展业须再核牌照与投放质量",
+      "confidence": "中",
+      "source": "company-ir"
     }
   ]
 }

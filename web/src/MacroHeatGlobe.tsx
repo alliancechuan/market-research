@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { geoGraticule10, geoNaturalEarth1, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
@@ -36,8 +36,10 @@ import { summarizeNbfcForCountry } from "./data/countryZoomDetails";
 import {
   INVESTED_BY_CODE,
   PRODUCER_HOLDINGS,
-  formatUsdCompact,
 } from "./data/producerHoldings";
+import { PartnerHoldingsBrief } from "./PartnerHoldingsSection";
+import { passesImfWbFilters } from "./data/countryImfWb";
+import { useCanvasState } from "./shims/cursor-canvas";
 
 /** 与全市场图对齐的顶栏占位，避免图层切换画幅跳动 */
 const MAP_TOP_CHROME = 64;
@@ -216,12 +218,7 @@ function MacroDetailPanel({
         />
       </MapSection>
       <MapCountryMacroBrief code={code} dense={overlay} />
-      {invested ? (
-        <MapSection title="已投对照" dense={overlay}>
-          <MapKV k="基金投资" v={formatUsdCompact(invested.investment_usd)} dense={overlay} />
-          <MapKV k="热力在贷" v={formatUsdCompact(invested.outstanding_usd_for_heat)} dense={overlay} />
-        </MapSection>
-      ) : null}
+      <PartnerHoldingsBrief invested={invested} dense={overlay} />
       {nbfc && nbfc.lendingUsdBn > 0 ? (
         <MapSection title="市场放贷" dense={overlay}>
           <MapKV
@@ -247,6 +244,7 @@ export function MacroHeatGlobe({
   legendPlacement = "side",
   showInvested = false,
   mapCorner,
+  regionZoomCodes = null,
 }: {
   height?: number;
   factor?: MacroMapFactorId;
@@ -256,13 +254,37 @@ export function MacroHeatGlobe({
   showInvested?: boolean;
   /** 叠在地图框右上角（全屏按钮等） */
   mapCorner?: ReactNode;
+  /** 大屏区域缩放：ISO2 列表；空/null 为全球 */
+  regionZoomCodes?: string[] | null;
 }) {
   const { theme, c } = useMapChrome();
   const { aspect, focusRightFrac, focusMapMinFrac, compact } = useMapViewport(fill);
   const width = mapFrameWidth(height, aspect);
   const bottomLegend = fill || legendPlacement === "bottom";
   const place: MapLegendPlacement = bottomLegend ? "bottom" : "side";
-  const metric = useMemo(() => buildMacroMetric(factor), [factor]);
+  const [imfFilter] = useCanvasState<string>("screenImfFilter2", "all");
+  const [wbFilter] = useCanvasState<string>("screenWbFilter2", "all");
+  const regionSet = useMemo(
+    () => (regionZoomCodes?.length ? new Set(regionZoomCodes) : null),
+    [regionZoomCodes],
+  );
+  const metricBase = useMemo(() => buildMacroMetric(factor), [factor]);
+  const metric = useMemo(() => {
+    const byCode: Record<string, number> = {};
+    for (const [code, n] of Object.entries(metricBase.byCode)) {
+      if (regionSet && !regionSet.has(code)) continue;
+      if (!passesImfWbFilters(code, imfFilter, wbFilter)) continue;
+      byCode[code] = n;
+    }
+    const vals = Object.values(byCode);
+    return {
+      ...metricBase,
+      byCode,
+      count: vals.length,
+      min: vals.length ? Math.min(...vals) : 0,
+      max: vals.length ? Math.max(...vals) : 1,
+    };
+  }, [metricBase, regionSet, imfFilter, wbFilter]);
   const vals = useMemo(() => Object.values(metric.byCode), [metric]);
   const minV = useMemo(() => (vals.length ? Math.min(...vals) : 0), [vals]);
   const maxV = useMemo(() => (vals.length ? Math.max(...vals) : 1), [vals]);
@@ -295,6 +317,12 @@ export function MacroHeatGlobe({
     moved: boolean;
     capturing: boolean;
   } | null>(null);
+  const regionKey = regionZoomCodes?.slice().sort().join(",") ?? "";
+  useEffect(() => {
+    setFocus(null);
+    setYaw(0);
+    setHover(null);
+  }, [regionKey]);
 
   function a2Of(f: Feature<Geometry, CountryProps>): string | null {
     const n3 = String(f.id);
@@ -307,6 +335,18 @@ export function MacroHeatGlobe({
     return countries.features.find((f) => a2Of(f) === focus) ?? null;
   }, [focus, countries]);
 
+  const regionFeature = useMemo(() => {
+    if (!regionZoomCodes?.length) return null;
+    const set = new Set(regionZoomCodes);
+    const feats = countries.features.filter((f) => {
+      const a2 = a2Of(f);
+      return a2 != null && set.has(a2);
+    });
+    return feats.length
+      ? ({ type: "FeatureCollection", features: feats } as FeatureCollection<Geometry, CountryProps>)
+      : null;
+  }, [regionZoomCodes, countries]);
+
   const { pathGen, outline, graticulePath, projection } = useMemo(() => {
     const proj = geoNaturalEarth1();
     if (focusFeature) {
@@ -317,6 +357,14 @@ export function MacroHeatGlobe({
           [Math.max(width - rightPad, width * focusMapMinFrac), height - 24],
         ],
         focusFeature,
+      );
+    } else if (regionFeature) {
+      proj.fitExtent(
+        [
+          [28, 68],
+          [width - 28, height - 28],
+        ],
+        regionFeature,
       );
     } else {
       proj.rotate([yaw, 0, 0]);
@@ -335,13 +383,14 @@ export function MacroHeatGlobe({
       graticulePath: path(geoGraticule10()) ?? "",
       projection: proj,
     };
-  }, [focusFeature, width, height, yaw, bottomLegend, compact, focusRightFrac, focusMapMinFrac]);
+  }, [focusFeature, regionFeature, width, height, yaw, bottomLegend, compact, focusRightFrac, focusMapMinFrac]);
 
   const investedBadges = useMemo(() => {
     if (!showInvested) return [] as { a2: string; x: number; y: number; n: number }[];
     const out: { a2: string; x: number; y: number; n: number }[] = [];
     for (const country of PRODUCER_HOLDINGS.countries) {
       const a2 = country.country_code;
+      if (regionSet && !regionSet.has(a2)) continue;
       const n = country.producers.length;
       if (n <= 0) continue;
       const ll = INVESTED_BADGE_LL[a2];
@@ -352,7 +401,7 @@ export function MacroHeatGlobe({
       out.push({ a2, x: p[0], y: p[1], n });
     }
     return out;
-  }, [showInvested, projection, width, height]);
+  }, [showInvested, projection, width, height, regionSet]);
 
   const landFill = (t: number) => (warmRisk ? heatColorWarm(t) : heatColorGreen(t));
 

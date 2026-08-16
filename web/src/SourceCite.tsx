@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Link, useCanvasState, useHostTheme } from "cursor/canvas";
+import { canViewSourceCite } from "./authAccess";
 import {
   SOURCE_CITE_RE,
   citeMark,
@@ -16,13 +17,25 @@ const HUB_RETURN_LABEL: Record<string, string> = {
   sources: "信源",
 };
 
+function useCanCite() {
+  const [session] = useCanvasState("authSession1", "");
+  return canViewSourceCite(session);
+}
+
+/** 去掉正文中的 〔n〕 标记（访客展示用） */
+function stripCiteMarks(text: string): string {
+  return text.replace(new RegExp(SOURCE_CITE_RE.source, "g"), "").replace(/\s{2,}/g, " ").trim();
+}
+
 /** 点 〔n〕 / 本卡信源：记下当前 hub 再进信源，便于回退 */
 export function useGoToSourceCite() {
   const [hub, setHub] = useCanvasState<string>("hub7", "home");
   const [, setFocus] = useCanvasState<string>("sourceCiteFocus", "");
   const [, setReturnHub] = useCanvasState<string>("sourceCiteReturnHub", "");
+  const canCite = useCanCite();
 
   return (no: number) => {
+    if (!canCite) return;
     if (hub && hub !== "sources") {
       setReturnHub(hub);
     }
@@ -55,7 +68,7 @@ export function useSourceCiteReturn() {
   };
 }
 
-/** 正文中的 〔12〕 可点，跳转信源编号目录 */
+/** 正文中的 〔12〕 可点，跳转信源编号目录；访客去掉编号、不可点 */
 export function CitedText({
   text,
   size = "small",
@@ -69,7 +82,17 @@ export function CitedText({
 }) {
   const theme = useHostTheme();
   const goCite = useGoToSourceCite();
+  const canCite = useCanCite();
   if (!text) return null;
+  const color =
+    tone === "tertiary" ? theme.text.tertiary : tone === "secondary" ? theme.text.secondary : theme.text.primary;
+  const fontSize = dense ? 11 : size === "small" ? 12 : 14;
+
+  if (!canCite) {
+    const plain = stripCiteMarks(text) || text;
+    return <span style={{ fontSize, lineHeight: 1.5, color }}>{plain}</span>;
+  }
+
   const parts: Array<string | number> = [];
   let last = 0;
   const re = new RegExp(SOURCE_CITE_RE.source, "g");
@@ -81,16 +104,10 @@ export function CitedText({
   }
   if (last < text.length) parts.push(text.slice(last));
   if (parts.length === 1 && typeof parts[0] === "string" && !parseCiteNos(text).length) {
-    const color =
-      tone === "tertiary" ? theme.text.tertiary : tone === "secondary" ? theme.text.secondary : theme.text.primary;
-    return (
-      <span style={{ fontSize: dense ? 11 : size === "small" ? 12 : 14, lineHeight: 1.5, color }}>{text}</span>
-    );
+    return <span style={{ fontSize, lineHeight: 1.5, color }}>{text}</span>;
   }
-  const color =
-    tone === "tertiary" ? theme.text.tertiary : tone === "secondary" ? theme.text.secondary : theme.text.primary;
   return (
-    <span style={{ fontSize: dense ? 11 : size === "small" ? 12 : 14, lineHeight: 1.5, color }}>
+    <span style={{ fontSize, lineHeight: 1.5, color }}>
       {parts.map((p, i) =>
         typeof p === "number" ? (
           <button
@@ -146,7 +163,7 @@ export function MacroAsOfLine({
   );
 }
 
-/** 宏观卡底部：本卡用到的信源编号，点号进统一目录 */
+/** 宏观卡底部：本卡用到的信源编号，点号进统一目录；访客不展示 */
 export function MacroSourcesBlock({
   citeNos,
   dense,
@@ -160,7 +177,8 @@ export function MacroSourcesBlock({
 }) {
   const theme = useHostTheme();
   const goCite = useGoToSourceCite();
-  if (!citeNos.length) return null;
+  const canCite = useCanCite();
+  if (!canCite || !citeNos.length) return null;
   return (
     <div
       style={{
@@ -272,6 +290,10 @@ export function MapMacroKV({
 }
 
 export function MacroSourcesLinkHint({ children }: { children?: ReactNode }) {
+  const canCite = useCanCite();
+  if (!canCite) {
+    return children ? <span>{children}</span> : null;
+  }
   return (
     <span>
       {children}

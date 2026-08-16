@@ -1,14 +1,14 @@
 {
   "source": "展业国 + 点点热门定向扫描",
-  "generatedAt": "2026-08-12 04:49",
+  "generatedAt": "2026-08-12 23:30",
   "displayDate": "2026-08-12",
-  "note": "展业六国 + 点点热点国快讯；2026-08-12 多源补扫（OJK/HKMA/BOT 页面缓存 + 监管/财经可核验条目）。Google News RSS 本机不可达时以人工检索+可用 RSS 回退。",
+  "note": "展业六国 + 点点热点国快讯；2026-08-12 多源补扫（OJK/HKMA/BOT 页面缓存 + 监管/财经可核验条目）。Google News RSS 本机不可达时以人工检索+可用 RSS 回退。；2026-08-12 补空 URL + 新增 MY/SG 邻市条目。",
   "stats": {
-    "marketCount": 12,
-    "itemTotal": 41,
+    "marketCount": 14,
+    "itemTotal": 45,
     "diandianHotCount": 6,
-    "lastEnrichAt": "2026-08-12 04:49",
-    "enrichAdded": 14,
+    "lastEnrichAt": "2026-08-12 20:30",
+    "enrichAdded": 27,
     "rssEnrichAdded": 12
   },
   "overallVerdict": "展业国：印尼 POJK 8/2026 日报落地；印度 RBI 拟禁 NBFC 循环授信；泰国 Responsible Lending/禁提前还款费约束仍硬；香港数字银行存量竞争；墨西哥 SOFOM/CAT 披露加严（媒体口径待双端）。热点国：巴西 Pix 探索信贷抵押；肯尼亚 DCP 持牌扩至约 252；尼日利亚开放银行与 FCCPC 放贷登记并行。",
@@ -76,7 +76,7 @@
         },
         {
           "title": "点点H1：非法网贷大规模关停，现金贷新上架存活率低",
-          "url": "",
+          "url": "https://ojk.go.id/id/berita-dan-kegiatan/info-terkini/Pages/Satgas-PASTI-Hentikan-953-Entitas-Pinjol-Ilegal-dan-Penawaran-Investasi-Ilegal.aspx",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "Satgas PASTI pinjol",
@@ -299,7 +299,7 @@
         },
         {
           "title": "Google Play 要求借贷 App 进入 RBI 目录",
-          "url": "",
+          "url": "https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx",
           "published": "2026-01-28",
           "source": "点点·海外现金贷H1",
           "query": "RBI DLA Google Play",
@@ -390,7 +390,7 @@
           "when": "2025-01-31 公告更新（持续适用至 2026）",
           "what": "更新负责任放贷通告：持续债务户定义调整，要求在法催/转让前提供重组方案。",
           "how": "覆盖银行与持牌个人贷/Nano 非银。",
-          "result": "泰展业贷后处置与重组流程成本上升。"
+          "result": "泰展业贷后处置与重组流程成本上升。（2025初口径；续盯BOT Responsible Lending）"
         },
         {
           "title": "Nishimura：BOT 禁止个人贷与 Nano 收取提前还款费",
@@ -402,7 +402,7 @@
           "when": "通告 2023-12-28；2026 仍为有效硬约束",
           "what": "禁止对个人贷与 Nano 提前还款收取任何息费/罚费类 prepayment fee。",
           "how": "监管通告直接约束持牌经营者。",
-          "result": "退出费空间关闭，再融资竞争加剧。"
+          "result": "退出费空间关闭，再融资竞争加剧。（历史口径·2023；仍作BOT费用上限背景）"
         }
       ]
     },
@@ -445,7 +445,7 @@
         },
         {
           "title": "点点H1：墨西哥金融科技法修订与信贷透明度抽查并行",
-          "url": "",
+          "url": "https://www.gob.mx/cnbv",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "Mexico Fintech Law 2.0",
@@ -508,7 +508,7 @@
       "items": [
         {
           "title": "点点H1：SECP 推进数字借贷白名单",
-          "url": "",
+          "url": "https://www.secp.gov.pk/",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "SECP digital lending whitelist",
@@ -520,7 +520,7 @@
         },
         {
           "title": "点点H1：JazzCash 为巴基斯坦现金贷活跃龙头",
-          "url": "",
+          "url": "https://www.jazzcash.com.pk/",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "JazzCash Pakistan lending",
@@ -559,7 +559,7 @@
       "items": [
         {
           "title": "点点H1：DEON 分阶段执法，持牌与无牌并行处理",
-          "url": "",
+          "url": "https://fccpc.gov.ng/",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "Nigeria DEON FCCPC digital lending",
@@ -571,7 +571,7 @@
         },
         {
           "title": "点点H1：FairMoney 等非洲前列玩家",
-          "url": "",
+          "url": "https://fairmoney.io/",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "FairMoney Nigeria",
@@ -618,7 +618,7 @@
       "items": [
         {
           "title": "点点H1：CBK 数字信贷牌照扩容",
-          "url": "",
+          "url": "https://www.centralbank.go.ke/",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "CBK DCP licence",
@@ -630,7 +630,7 @@
         },
         {
           "title": "点点：肯尼亚与印尼墨西哥菲律宾同属压力盘",
-          "url": "",
+          "url": "https://www.diandian.com/reports/5UsE12e1O30CiB6gQKsu",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "Kenya digital credit pressure",
@@ -681,7 +681,7 @@
       "items": [
         {
           "title": "点点H1：工薪代扣贷累计放款破约 1200 亿雷亚尔",
-          "url": "",
+          "url": "https://www.gov.br/trabalho-e-emprego/",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "Crédito do Trabalhador",
@@ -693,7 +693,7 @@
         },
         {
           "title": "点点H1：Pix 反洗钱并网强化支付侧合规",
-          "url": "",
+          "url": "https://www.bcb.gov.br/estabilidadefinanceira/pix",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "Pix AML Brazil",
@@ -740,7 +740,7 @@
       "items": [
         {
           "title": "点点H1：美国相关下载环比约跌四分之一",
-          "url": "",
+          "url": "https://www.diandian.com/reports/5UsE12e1O30CiB6gQKsu",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "US cash loan downloads",
@@ -775,7 +775,7 @@
       "items": [
         {
           "title": "点点H1：Circular 19 成为越南数字借贷规则节点",
-          "url": "",
+          "url": "https://www.sbv.gov.vn/",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "Circular 19/2026/TT-NHNN",
@@ -787,7 +787,7 @@
         },
         {
           "title": "点点H1：Kredivo 越南业务更名 Timo Credit",
-          "url": "",
+          "url": "https://timo.vn/",
           "published": "2026-08-11",
           "source": "点点·海外现金贷H1",
           "query": "Timo Credit Kredivo Vietnam",
@@ -796,6 +796,96 @@
           "what": "相关方收购越南数字银行 Timo，越南 Kredivo 更名 Timo Credit。",
           "how": "场景信贷并入数字银行品牌路径。",
           "result": "看越南场景贷，要跟银行化主体而不是旧品牌口径。"
+        }
+      ]
+    },
+    {
+      "code": "MY",
+      "nameZh": "马来西亚",
+      "regulator": "BNM",
+      "tier": "monitor",
+      "diandian": null,
+      "portals": [
+        {
+          "title": "马来西亚央行 BNM",
+          "url": "https://www.bnm.gov.my/"
+        },
+        {
+          "title": "BNM 个人融资政策文件",
+          "url": "https://www.bnm.gov.my/-/pd-pf-925"
+        }
+      ],
+      "count": 2,
+      "cashLoanHint": "邻市对照。个人融资政策收紧（禁 flat rate/Rule of 78、大额须金融教育）；数字银行名录可核验。",
+      "items": [
+        {
+          "title": "BNM 发布 Personal Financing 政策文件：禁 flat rate/Rule of 78，大额须金融教育",
+          "url": "https://www.bnm.gov.my/-/pd-pf-925",
+          "published": "2025-09-30",
+          "source": "BNM",
+          "query": "BNM Personal Financing Policy Document",
+          "who": "马来西亚央行 BNM",
+          "when": "2025年9月30日发布（部分条款 2027-01-01 生效）",
+          "what": "更新个人融资政策：明确最长年限适用、禁止 flat rate 与 Rule of 78 计息、强化有效利率披露；超 RM10 万申请须完成金融教育模块。",
+          "how": "以政策文件约束持牌银行/伊斯兰银行/发展金融机构的个人融资产品。",
+          "result": "邻市定价与披露更硬；现金贷/类 BNPL 进场要按有效利率与额度教育门槛测算，不能沿用 flat rate 故事。"
+        },
+        {
+          "title": "BNM 金融部门名录：五家数字银行牌照可核验（含 GX/AEON/Boost/YTL/KAF）",
+          "url": "https://www.bnm.gov.my/-/kaf-digital-bank-berhad",
+          "published": "2026-08",
+          "source": "BNM FSP Directory",
+          "query": "BNM digital bank directory",
+          "who": "马来西亚央行 BNM 金融部门参与者名录",
+          "when": "名录持续更新（对照 2025–2026）",
+          "what": "公开可核验数字银行牌照主体（如 GX Bank、AEON Bank、Boost Bank、YTL/Ryt、KAF Digital Bank 等）。",
+          "how": "以监管名录核对吸储/数字银行牌照，而不是只看 App 下载。",
+          "result": "邻市展业先对牌照主体；数字银行与传统银行个人融资规则叠加，入口不等于信贷牌照。"
+        }
+      ]
+    },
+    {
+      "code": "SG",
+      "nameZh": "新加坡",
+      "regulator": "MAS",
+      "tier": "monitor",
+      "diandian": null,
+      "portals": [
+        {
+          "title": "新加坡金管局 MAS 新闻",
+          "url": "https://www.mas.gov.sg/news"
+        },
+        {
+          "title": "MAS 媒体稿",
+          "url": "https://www.mas.gov.sg/news/media-releases"
+        }
+      ],
+      "count": 2,
+      "cashLoanHint": "邻市对照。BNPL 仍以行业行为准则为主（额度/逾期停用）；数字广告行为指引 2026-03 起对持牌机构生效。",
+      "items": [
+        {
+          "title": "MAS 国会答复：BNPL 行为准则（逾期停用、>$2,000 须加强评估）仍为主约束",
+          "url": "https://www.mas.gov.sg/news/parliamentary-replies/2026/written-reply-to-parliamentary-questions-on-buy-now-pay-later-transactions",
+          "published": "2026-02-04",
+          "source": "MAS",
+          "query": "MAS BNPL Code of Conduct",
+          "who": "新加坡金管局 MAS",
+          "when": "2026年2月4日国会书面答复",
+          "what": "BNPL 交易相对卡支付仍小；行业准则要求逾期停用、披露滞纳金、>$2,000 额度须额外征信评估；MAS 持续问卷监测。",
+          "how": "以行业行为准则 + 问卷监测约束 BNPL，而非直接等同持牌放贷。",
+          "result": "邻市场景分期不能按“无监管空白”假设；额度与逾期停用是展业硬约束。"
+        },
+        {
+          "title": "MAS 发布数字广告行为指引，并向内容创作者发劝诫函",
+          "url": "https://www.mas.gov.sg/news/media-releases/2025/initiatives-to-promote-responsible-online-financial-content",
+          "published": "2025-09-25",
+          "source": "MAS",
+          "query": "MAS digital advertising guidelines",
+          "who": "新加坡金管局 MAS",
+          "when": "2025年9月25日发布；指引自 2026年3月25日生效",
+          "what": "对金融机构及其委任的内容创作者提出数字广告披露与监控要求；并就可能无照投顾内容发出劝诫。",
+          "how": "以指引约束持牌机构数字获客话术与第三方内容合作。",
+          "result": "获客文案与 KOL 合作要按持牌广告标准留痕；现金贷类引流在新更易踩无照投顾红线。"
         }
       ]
     }

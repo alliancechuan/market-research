@@ -28,7 +28,6 @@ import {
   MapMuted,
   MapExtLink,
   useMapChrome,
-  producerCardStyle,
   Button,
   heatColorAdded,
   MapCountryMacroBrief,
@@ -39,6 +38,8 @@ import {
 } from "./HeatMapChrome";
 import { heatColorWarm } from "./heatMapTheme";
 import { formatCountryLanguageLine } from "./data/countryLanguage";
+import { PartnerHoldingsSection, useGuestMask } from "./PartnerHoldingsSection";
+import { SENSITIVE_MASK } from "./authAccess";
 
 type CountryProps = { name?: string };
 
@@ -137,7 +138,6 @@ function DetailPanel({
   onClose: () => void;
   overlay?: boolean;
 }) {
-  const { theme, c } = useMapChrome();
   const invested = INVESTED_BY_CODE[code];
   const zoom = COUNTRY_ZOOM_BY_CODE[code];
   const nbfc = summarizeNbfcForCountry(code);
@@ -155,24 +155,7 @@ function DetailPanel({
       onClose={onClose}
       overlay={overlay}
     >
-      {invested ? (
-        <MapSection title="已投生产商">
-          <MapKV k="基金投资合计" v={formatUsdCompact(invested.investment_usd)} />
-          <MapKV k="热力在贷合计" v={formatUsdCompact(invested.outstanding_usd_for_heat)} />
-          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 10 }}>
-            {invested.producers.map((p) => (
-              <div key={p.id} style={producerCardStyle(theme)}>
-                <div style={{ fontWeight: 600, color: c.accent, marginBottom: 4 }}>{p.name}</div>
-                <div style={{ color: c.textTertiary, marginBottom: 6 }}>{p.product_type}</div>
-                <MapKV k="基金投资" v={formatUsdCompact(p.investment_usd)} />
-                <MapKV k="在贷余额" v={p.outstanding_display} />
-                <MapKV k="服务客户数" v={p.customers_display} />
-                {p.ranking_note ? <MapKV k="排名/定位" v={p.ranking_note} /> : null}
-              </div>
-            ))}
-          </div>
-        </MapSection>
-      ) : null}
+      <PartnerHoldingsSection invested={invested} dense={overlay} />
 
       <MapSection title="市场放贷">
         {nbfc ? (
@@ -236,6 +219,7 @@ export function CombinedHeatGlobe({
   const width = mapFrameWidth(height, aspect);
   const bottomLegend = fill || legendPlacement === "bottom";
   const place: MapLegendPlacement = bottomLegend ? "bottom" : "side";
+  const { guest, maskUsd } = useGuestMask();
   const marketOn = showMarket;
   const investedOn = showInvested && !showEco;
   const ecoOn = Boolean(showEco && ecoCounts);
@@ -876,8 +860,7 @@ export function CombinedHeatGlobe({
             ) : null}
             {investedOn && hover.invested ? (
               <div style={{ color: c.added }}>
-                展业在贷 {formatUsdCompact(hover.outstandingUsd)} · 基金{" "}
-                {formatUsdCompact(hover.investmentUsd)}
+                展业在贷 {maskUsd(hover.outstandingUsd)} · 基金 {maskUsd(hover.investmentUsd)}
               </div>
             ) : null}
             {ecoOn && hover.ecoCount > 0 ? (
@@ -949,8 +932,9 @@ export function CombinedHeatGlobe({
           ) : investedOn ? (
             <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 8, lineHeight: 1.45 }}>
               浅底透图 · 展业 {investedRanked.length} 国 · 在贷热力合计{" "}
-              {formatUsdCompact(TOTAL_OUTSTANDING_HEAT_USD)} · 基金合计{" "}
-              {formatUsdCompact(PRODUCER_HOLDINGS.total_investment_usd)} · 点击点/横条放大
+              {guest ? SENSITIVE_MASK : formatUsdCompact(TOTAL_OUTSTANDING_HEAT_USD)} · 基金合计{" "}
+              {guest ? SENSITIVE_MASK : formatUsdCompact(PRODUCER_HOLDINGS.total_investment_usd)} ·
+              点击点/横条放大
             </div>
           ) : (
             <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 8 }}>
@@ -982,8 +966,11 @@ export function CombinedHeatGlobe({
                   }))
                 : investedOn
                   ? investedRanked.map((row) => {
-                      const fundBit = `基金 ${formatUsdCompact(row.investment_usd)}`;
-                      const proxyBit = row.outstanding_known === false ? "在贷暂用基金近似" : null;
+                      const fundBit = guest
+                        ? `基金 ${SENSITIVE_MASK}`
+                        : `基金 ${formatUsdCompact(row.investment_usd)}`;
+                      const proxyBit =
+                        !guest && row.outstanding_known === false ? "在贷暂用基金近似" : null;
                       const mkt =
                         bothOn && lending[row.country_code]
                           ? `市场约 USD ${lending[row.country_code].toFixed(1)} bn`
@@ -992,7 +979,9 @@ export function CombinedHeatGlobe({
                         key: row.country_code,
                         label: COUNTRY_LABEL_ZH[row.country_code] ?? row.country_zh,
                         value: row.outstanding_usd_for_heat,
-                        valueLabel: formatUsdCompact(row.outstanding_usd_for_heat),
+                        valueLabel: guest
+                          ? SENSITIVE_MASK
+                          : formatUsdCompact(row.outstanding_usd_for_heat),
                         secondaryLabel: [fundBit, proxyBit, mkt].filter(Boolean).join(" · "),
                       };
                     })

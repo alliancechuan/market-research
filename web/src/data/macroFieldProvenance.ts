@@ -23,6 +23,9 @@ const FIELD_DEFAULT_CITES: Record<string, number[]> = {
   employedToPop: [10],
   employmentNote: [1],
   ageStructure: [8],
+  gasolineRetail: [1, 23],
+  electricityResidential: [22],
+  fuelToPowerRatio: [1, 22, 23],
   creditNote: [],
 };
 

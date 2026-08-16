@@ -32,7 +32,8 @@ export const CORE_SOURCE_CITATIONS: SourceCitation[] = [
     title: "Trading Economics（宏观聚合）",
     kind: "macro",
     url: "https://zh.tradingeconomics.com/",
-    note: "国别指标默认出处；二级读数亦常经此聚合",
+    note: "国别指标默认出处；零售汽油见 Gasoline Prices 国别表（USD/升）；二级读数亦常经此聚合",
+    asOf: "2026-08",
   },
   {
     no: 2,
@@ -185,6 +186,24 @@ export const CORE_SOURCE_CITATIONS: SourceCitation[] = [
     kind: "research",
     url: "https://mp.weixin.qq.com/s/YiR4UKOwOg4cnIiLRj4yOA",
     note: "微信公众号；FinVolution 海外业务解读与印尼利率短笺等；置信中，须与 IR/OJK 原文交叉",
+  },
+  {
+    no: 22,
+    id: "global-petrol-prices",
+    title: "GlobalPetrolPrices（居民电价）",
+    kind: "macro",
+    url: "https://www.globalpetrolprices.com/electricity_prices/",
+    note: "居民/工商业电价 USD/kWh（含税）；与 TE 零售汽油〔1〕分轨；油电比=汽油÷电价；补贴国读数易低估实际负担",
+    asOf: "2026-01",
+  },
+  {
+    no: 23,
+    id: "te-gasoline",
+    title: "Trading Economics · 零售汽油国别表",
+    kind: "macro",
+    url: "https://tradingeconomics.com/country-list/gasoline-prices?continent=world",
+    note: "泵价 Gasoline Prices（USD/Liter）；地图宏观「零售汽油」主尺；与〔1〕同系，专链国别对照表",
+    asOf: "2026-07",
   },
 ];
 

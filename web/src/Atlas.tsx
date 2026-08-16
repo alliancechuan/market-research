@@ -26799,13 +26799,16 @@ function mapFullscreenCorner(
   ) : null;
 }
 
-/** 大屏地图区域芯片（与 Pages gh-pages 对齐） */
+/** 大屏地图区域芯片（对齐 CRM 洲际名册） */
 const BIG_SCREEN_MAP_REGIONS: { id: Exclude<Region, "all">; label: string }[] = [
+  { id: "east-asia", label: "东亚" },
   { id: "se-asia", label: "东南亚" },
-  { id: "latam", label: "中南美" },
-  { id: "central-asia", label: "中亚" },
-  { id: "africa", label: "非洲" },
   { id: "south-asia", label: "南亚" },
+  { id: "central-asia", label: "中亚" },
+  { id: "mena", label: "中东与北非" },
+  { id: "africa", label: "非洲" },
+  { id: "latam", label: "拉丁美洲" },
+  { id: "west", label: "欧美" },
 ];
 
 type ScreenMacroSub = "loanBook" | MacroMapFactorId;

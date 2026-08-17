@@ -58,6 +58,11 @@ import { getVitalCountry } from "./data/vitalSeries";
 import { CreditDebtCharts, FxCaCharts, IncomeSectorCharts, StressPricingCharts } from "./MacroFactorCharts";
 import { MORNING_BRIEF_36KR } from "./data/morningBrief36kr";
 import { CC_WATCH_DIGEST, diandianBucketLabel } from "./data/ccWatchDigest";
+import {
+  DISASTER_WATCH_DIGEST,
+  disasterCountForCountry,
+  disasterKindLabel,
+} from "./data/disasterWatchDigest";
 import { CC_SOURCE_TIERS } from "./data/ccSourceTiers";
 import {
   ensureFlashChinese,
@@ -26042,6 +26047,9 @@ type FlashFeedItem = {
   source?: string;
   marketCode?: string;
   marketName?: string;
+  /** credit=消费贷/监管；disaster=天灾人祸 */
+  topic?: "credit" | "disaster";
+  kindZh?: string;
   lane: "watch" | "media";
   sortKey: string;
 };
@@ -26061,7 +26069,18 @@ function flashDisplayTitle(item: FlashFeedItem): string {
     fromEn !== "金融诈骗警示" &&
     fromEn !== "美联储动态" &&
     fromEn !== "新获牌照动态";
-  const title = softenBriefText(preferEn ? fromEn : item.title);
+  let title = softenBriefText(preferEn ? fromEn : item.title);
+  if (item.topic === "disaster") {
+    const tag = item.kindZh || "灾害";
+    // 标题已含国别/灾种（如「菲律宾…地震」）时不再套「地震：」前缀，避免看起来像复制粘贴
+    if (
+      !title.includes(tag) &&
+      !/地震|洪涝|林火|火灾|台风|干旱|火山|灾害/.test(title) &&
+      !/^灾害/.test(title)
+    ) {
+      title = `${tag}：${title}`;
+    }
+  }
   const mkt = (item.marketName || "").trim();
   if (!mkt) return title;
   if (title.includes(mkt)) return title;
@@ -26213,6 +26232,7 @@ function MorningBriefHome({
   const theme = useHostTheme();
   const dayKey = watch.displayDate || brief.displayDate || brief.coverageDate || "na";
   const [filterMkt, setFilterMkt] = useCanvasState<string>(`ccWatchMkt_${dayKey}`, "");
+  const [filterTopic, setFilterTopic] = useCanvasState<string>(`ccWatchTopic_${dayKey}`, "");
   const [readMkts, setReadMkts] = useCanvasState<string>(`ccWatchRead_${dayKey}`, "");
   const [openFlash, setOpenFlash] = useCanvasState<string>(`flashOpen_${dayKey}`, "");
   const [readFlash, setReadFlash] = useCanvasState<string>(`flashRead_${dayKey}`, "");
@@ -26222,13 +26242,16 @@ function MorningBriefHome({
   const investedMkts = watch.markets.filter((m) => (m.tier ?? "invested") === "invested");
   const hotMkts = watch.markets.filter((m) => m.tier === "diandian_hot");
   const focusMkts = [...investedMkts, ...hotMkts];
-  const watchTotal = focusMkts.reduce((n, m) => n + (m.count || 0), 0);
+  const disasterItems = DISASTER_WATCH_DIGEST.items || [];
+  const disasterTotal = disasterItems.length;
+  const watchTotal = focusMkts.reduce((n, m) => n + (m.count || 0), 0) + disasterTotal;
   const unreadMktTotal = focusMkts.reduce(
     (n, m) => n + (readMktSet.has(m.code) ? 0 : m.count || 0),
     0,
   );
   const bossVerdict = watch.overallVerdict || brief.overallVerdict || "";
-  const dateLabel = watch.displayDate || brief.displayDate || "";
+  const dateLabel =
+    watch.displayDate || brief.displayDate || DISASTER_WATCH_DIGEST.displayDate || "";
 
   /** 本周读法 → 挂到国别 chip 的 title，避免再铺一套展业国/热点国卡片 */
   const verdictTipByCode = (() => {
@@ -26250,7 +26273,7 @@ function MorningBriefHome({
   })();
 
   const watchFeed: FlashFeedItem[] = (() => {
-    const rows = focusMkts.flatMap((m) =>
+    const creditRows = focusMkts.flatMap((m) =>
       (m.items || []).map((s, i) => {
         const id = `w:${m.code}:${i}:${(s.titleEn || s.title).slice(0, 24)}`;
         const timeRaw = s.published || "";
@@ -26264,17 +26287,43 @@ function MorningBriefHome({
           source: s.source,
           marketCode: m.code,
           marketName: m.nameZh,
+          topic: "credit" as const,
           lane: "watch" as const,
           sortKey: `${flashSortKey(s.published)}|${m.code}|${String(i).padStart(2, "0")}`,
         };
       }),
     );
+    const disasterRows: FlashFeedItem[] = disasterItems.map((s, i) => ({
+      id: `d:${s.id || i}`,
+      timeLabel: flashClock(s.published || ""),
+      title: s.title,
+      titleEn: s.titleEn,
+      body: storyToProse({
+        what: s.what,
+        how: s.how,
+        result: s.result || s.cashLoanHint,
+        title: s.title,
+        titleEn: s.titleEn,
+        source: s.source,
+        published: s.published,
+        cashLoanHint: s.cashLoanHint,
+      }),
+      url: s.url,
+      source: s.source,
+      marketCode: s.country,
+      marketName: s.nameZh,
+      topic: "disaster" as const,
+      kindZh: s.kindZh || disasterKindLabel(s.kind),
+      lane: "watch" as const,
+      sortKey: `${flashSortKey(s.published)}|d|${s.country}|${String(i).padStart(2, "0")}`,
+    }));
+    const rows = [...creditRows, ...disasterRows];
     // 同国同标题去重（保留最新一条）；有原文标题时按原文区分
     const seen = new Set<string>();
     const deduped: FlashFeedItem[] = [];
     for (const row of [...rows].sort((a, b) => (a.sortKey < b.sortKey ? 1 : a.sortKey > b.sortKey ? -1 : 0))) {
-      const key = `${row.marketCode}|${row.title}|${row.url || row.id}`;
-      const loose = `${row.marketCode}|${row.title}`;
+      const key = `${row.marketCode}|${row.topic || ""}|${row.title}|${row.url || row.id}`;
+      const loose = `${row.marketCode}|${row.topic || ""}|${row.title}`;
       if (seen.has(key) || seen.has(loose)) continue;
       seen.add(key);
       seen.add(loose);
@@ -26283,9 +26332,12 @@ function MorningBriefHome({
     return deduped;
   })();
 
-  const visibleWatch = filterMkt
-    ? watchFeed.filter((x) => x.marketCode === filterMkt)
-    : watchFeed;
+  const visibleWatch = watchFeed.filter((x) => {
+    if (filterMkt && x.marketCode !== filterMkt) return false;
+    if (filterTopic === "disaster" && x.topic !== "disaster") return false;
+    if (filterTopic === "credit" && x.topic === "disaster") return false;
+    return true;
+  });
 
   function selectMarket(code: string) {
     const next = filterMkt === code ? "" : code;
@@ -26293,6 +26345,10 @@ function MorningBriefHome({
     if (next && !readMktSet.has(next)) {
       setReadMkts([...readMktSet, next].join("|"));
     }
+  }
+
+  function selectTopic(topic: string) {
+    setFilterTopic(filterTopic === topic ? "" : topic);
   }
 
   function toggleFlash(id: string, marketCode?: string) {
@@ -26310,11 +26366,12 @@ function MorningBriefHome({
     const unread = readMktSet.has(m.code) ? 0 : m.count;
     const active = filterMkt === m.code;
     const tip = verdictTipByCode.get(m.code);
+    const dCount = disasterCountForCountry(m.code);
     return (
       <button
         key={m.code}
         type="button"
-        title={tip || undefined}
+        title={[tip, dCount ? `灾害 ${dCount} 条` : ""].filter(Boolean).join(" · ") || undefined}
         onClick={() => selectMarket(m.code)}
         style={{
           position: "relative",
@@ -26340,6 +26397,57 @@ function MorningBriefHome({
         {!unread ? (
           <span style={{ color: theme.text.tertiary, fontWeight: 400 }}>{m.count}</span>
         ) : null}
+        {dCount ? (
+          <span
+            title={`灾害 ${dCount}`}
+            style={{
+              marginLeft: 2,
+              minWidth: 14,
+              height: 14,
+              padding: "0 4px",
+              borderRadius: 4,
+              background: "rgba(180, 83, 9, 0.14)",
+              color: "#92400e",
+              fontSize: 10,
+              fontWeight: 600,
+              lineHeight: "14px",
+              textAlign: "center",
+            }}
+          >
+            灾{dCount}
+          </span>
+        ) : null}
+      </button>
+    );
+  };
+
+  const topicChip = (topic: string, label: string, count: number) => {
+    const active = filterTopic === topic;
+    return (
+      <button
+        key={topic}
+        type="button"
+        onClick={() => selectTopic(topic)}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 4,
+          height: 24,
+          padding: "0 8px",
+          borderRadius: 6,
+          border: `1px solid ${active ? theme.stroke.secondary : theme.stroke.tertiary}`,
+          background: active ? theme.fill.secondary : theme.bg.elevated,
+          color: theme.text.primary,
+          cursor: "pointer",
+          font: "inherit",
+          fontSize: 11,
+          fontWeight: active ? 600 : 500,
+          lineHeight: 1,
+          boxSizing: "border-box",
+        }}
+      >
+        {label}
+        <span style={{ color: theme.text.tertiary, fontWeight: 400 }}>{count}</span>
       </button>
     );
   };
@@ -26348,6 +26456,7 @@ function MorningBriefHome({
     [
       "本周关注",
       watchTotal ? `${watchTotal} 条` : "",
+      disasterTotal ? `灾害 ${disasterTotal}` : "",
       unreadMktTotal ? `未读 ${unreadMktTotal}` : "",
       dateLabel ? `更新至 ${dateLabel}` : "",
     ]
@@ -26392,6 +26501,23 @@ function MorningBriefHome({
           </Stack>
 
           <Row gap={10} align="center" wrap>
+            <Row gap={5} align="center" wrap>
+              <HomeMeta>主题</HomeMeta>
+              {topicChip("credit", "信贷/监管", watchFeed.filter((x) => x.topic !== "disaster").length)}
+              {topicChip("disaster", "灾害", disasterTotal)}
+            </Row>
+            {investedMkts.length ? (
+              <span
+                aria-hidden
+                style={{
+                  width: 1,
+                  alignSelf: "stretch",
+                  minHeight: 16,
+                  background: theme.stroke.tertiary,
+                  flexShrink: 0,
+                }}
+              />
+            ) : null}
             {investedMkts.length ? (
               <Row gap={5} align="center" wrap>
                 <HomeMeta>展业国</HomeMeta>
@@ -26421,12 +26547,19 @@ function MorningBriefHome({
       </AtlasStickySub>
 
       <Stack gap={0} style={{ paddingTop: 8 }}>
-        {filterMkt ? (
+        {filterMkt || filterTopic ? (
           <div style={{ marginBottom: 4 }}>
             <HomeMeta>
-              {focusMkts.find((m) => m.code === filterMkt)?.nameZh || filterMkt}
-              {visibleWatch.length ? ` · ${visibleWatch.length} 条` : ""}
-              {verdictTipByCode.get(filterMkt) ? ` · ${verdictTipByCode.get(filterMkt)}` : ""}
+              {[
+                filterMkt
+                  ? focusMkts.find((m) => m.code === filterMkt)?.nameZh || filterMkt
+                  : "",
+                filterTopic === "disaster" ? "灾害" : filterTopic === "credit" ? "信贷/监管" : "",
+                visibleWatch.length ? `${visibleWatch.length} 条` : "",
+                filterMkt ? verdictTipByCode.get(filterMkt) || "" : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </HomeMeta>
           </div>
         ) : null}
@@ -26441,7 +26574,7 @@ function MorningBriefHome({
             />
           ))
         ) : (
-          <HomeMeta>该国暂无快讯条目</HomeMeta>
+          <HomeMeta>{filterTopic === "disaster" ? "暂无灾害快讯" : "该国暂无快讯条目"}</HomeMeta>
         )}
       </Stack>
     </Stack>

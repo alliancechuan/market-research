@@ -44,7 +44,9 @@ KEEP = re.compile(
     r"Bank of Thailand|monetary policy|policy rate|Baht|"
     r"ธนาคารแห่งประเทศไทย|สินเชื่อ|ดอกเบี้ย|"
     r"Federal Reserve|\bCBN\b|\bFX\b|Peso|\bNIM\b|\bGST\b|\bARC\b|\bBEI\b|demutualisasi|"
-    r"literasi|inklusi|\bbank\b|banco|crédito|credito|tasa|Banxico",
+    r"literasi|inklusi|\bbank\b|banco|crédito|credito|tasa|Banxico|"
+    r"earthquake|flood|typhoon|cyclone|hurricane|wildfire|volcano|drought|"
+    r"地震|洪涝|洪水|台风|气旋|飓风|火灾|山火|火山|干旱|灾害|disaster",
     re.I,
 )
 DROP = re.compile(

@@ -26,26 +26,67 @@ const FIELD_DEFAULT_CITES: Record<string, number[]> = {
   gasolineRetail: [1, 23],
   electricityResidential: [22],
   fuelToPowerRatio: [1, 22, 23],
+  nevImportTariff: [24],
+  nevLocalVat: [24],
+  nevTaxGap: [24],
   creditNote: [],
 };
 
-/** 从读数文案抽时点/时段 */
+/** 把宏观文案里的时点解析成可比较键（越大越新） */
+function macroDateSortKey(token: string): number {
+  const t = token.trim();
+  const q = t.match(/^((?:19|20)\d{2})[-–/.]?Q([1-4])$/i);
+  if (q) return Number(q[1]) * 100 + Number(q[2]) * 3;
+  const ym = t.match(/^((?:19|20)\d{2})[-–/.](\d{1,2})$/);
+  if (ym) return Number(ym[1]) * 100 + Number(ym[2]);
+  const y = t.match(/^((?:19|20)\d{2})$/);
+  if (y) return Number(y[1]) * 100 + 12; // 裸年按年末
+  return 0;
+}
+
+/** 从读数文案抽时点/时段；多时点并存时取最新（避免经常账户「CA/GDP 旧年」盖住「近季」） */
 export function extractMacroAsOf(text?: string): string | undefined {
   if (!text) return undefined;
   const t = text.trim();
+  const found: string[] = [];
+  const add = (s?: string) => {
+    if (s && !found.includes(s)) found.push(s);
+  };
   // （2026-06）/（2025-Q4）/（2025）
-  const paren = t.match(/（((?:19|20)\d{2}(?:[-–/.](?:Q[1-4]|\d{1,2})?)?)）/);
-  if (paren) return paren[1];
+  for (const m of t.matchAll(/（((?:19|20)\d{2}(?:[-–/.](?:Q[1-4]|\d{1,2})?)?)）/g)) add(m[1]);
+  // ·2026-08· / TE货币·2026-08
+  for (const m of t.matchAll(/(?:^|[·・\s])((?:19|20)\d{2}(?:[-–/.](?:Q[1-4]|\d{1,2})?))(?=[·・\s）)]|$)/g)) {
+    add(m[1]);
+  }
+  if (found.length) {
+    found.sort((a, b) => macroDateSortKey(a) - macroDateSortKey(b));
+    return found[found.length - 1];
+  }
   // 2024–2025 / 2025-07..2026-08
   const range = t.match(/((?:19|20)\d{2})\s*[–\-/.]{1,2}\s*((?:19|20)\d{2}(?:[-–/.]\d{1,2})?)/);
   if (range) return `${range[1]}–${range[2]}`;
-  // ·2026-08· / TE货币·2026-08
-  const dot = t.match(/(?:^|[·・\s])((?:19|20)\d{2}(?:[-–/.](?:Q[1-4]|\d{1,2})?))(?=[·・\s）)]|$)/);
-  if (dot) return dot[1];
   // 裸年
   const year = t.match(/\b((?:19|20)\d{2})\b/);
   if (year) return year[1];
   return undefined;
+}
+
+/**
+ * 经常账户展示：近季流量优先，CA/GDP 年度占比作结构辅读。
+ * 库内常见「CA/GDP（旧年）；近季（更新）」会显得时效差。
+ */
+export function preferFreshCurrentAccount(raw?: string): string | undefined {
+  if (!raw?.trim()) return raw;
+  const s = raw.trim();
+  const parts = s.split(/[；;]+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return s;
+  const isNear = (p: string) => /近季|季度|当季|流量/.test(p);
+  const isRatio = (p: string) => /CA\s*\/\s*GDP|经常账户\s*\/\s*GDP|占GDP/i.test(p);
+  const near = parts.filter(isNear);
+  const ratio = parts.filter(isRatio);
+  const other = parts.filter((p) => !isNear(p) && !isRatio(p));
+  if (!near.length) return s;
+  return [...near, ...ratio, ...other].join("；");
 }
 
 /** 文案关键词 → 信源编号 */
@@ -72,6 +113,7 @@ export function scanMacroCiteHints(text?: string): number[] {
   if (/\bBIS\b|WS_TC/i.test(s) && !/无BIS/.test(s)) add(14);
   if (/\bOWID\b|Our\s*World\s*in\s*Data/i.test(s)) add(15);
   if (/ILO/i.test(s)) add(10);
+  if (/海关|关税|税则|LIVA|GST|IVA|PPN|LIGIE|CVD|反补贴|EVIDA|DOF|CAMEX|PMK/i.test(s)) add(24);
   return out;
 }
 

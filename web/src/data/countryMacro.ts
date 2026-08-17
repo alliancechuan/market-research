@@ -3,6 +3,7 @@ import {
   collectMacroCiteNos,
   citeNosFromSnapAsOf,
   enrichMacroField,
+  preferFreshCurrentAccount,
 } from "./macroFieldProvenance";
 
 export type CountryMacroSnap = {
@@ -37,6 +38,21 @@ export type CountryMacroSnap = {
    * 含义：买 1 升汽油约等于可购多少 kWh 居民电；越高燃油相对电费越贵
    */
   fuelToPowerRatio?: string;
+  /**
+   * 新能源整车（优先 BEV CBU）进口关税/附加关税合计示意（%）
+   * 文案首个数字供地图色阶；激励/FTA/厂商分化写在 · 后备注
+   */
+  nevImportTariff?: string;
+  /**
+   * 本地出厂/首次销售新能源车适用的增值税（或等价 GST/IVA/SST）一般税率（%）
+   * 不含购置税/消费税/首次登记税等另计税种，除非文案明示
+   */
+  nevLocalVat?: string;
+  /**
+   * 新能源税差（衍生）= 进口关税% − 出厂增值税%（百分点）
+   * 正值=进口关税高于本地出厂增值税，CBU 相对本地出厂税负更重；双端齐全才测算
+   */
+  nevTaxGap?: string;
   creditNote?: string;
   cashLoanVerdict?: string;
 };
@@ -75,6 +91,30 @@ function fmtNum(n: number, digits = 1): string {
   if (Math.abs(n) >= 100) return String(Math.round(n));
   const t = n.toFixed(digits);
   return t.replace(/\.0$/, "");
+}
+
+/**
+ * 新能源税差 = 进口关税% − 出厂增值税%（百分点）。
+ * 正值：进口关税高于本地出厂增值税，CBU 相对本地出厂的「税差」更大。
+ * 双端齐全才测算；不替代关税/增值税原文。
+ */
+export function deriveNevTaxGap(
+  snap: Pick<CountryMacroSnap, "nevImportTariff" | "nevLocalVat" | "nevTaxGap">,
+): { n: number; raw: string } | null {
+  const stored = snap.nevTaxGap?.trim();
+  if (stored) {
+    const n = firstNumber(stored);
+    if (n != null) return { n, raw: stored };
+  }
+  const tariff = firstNumber(snap.nevImportTariff);
+  const vat = firstNumber(snap.nevLocalVat);
+  if (tariff == null || vat == null) return null;
+  const n = Math.round((tariff - vat) * 10) / 10;
+  const sign = n > 0 ? "+" : "";
+  return {
+    n,
+    raw: `${sign}${fmtNum(n)}个百分点＝进口关税${fmtNum(tariff)}%−出厂增值税${fmtNum(vat)}%（越高进口相对越吃亏）〔24〕`,
+  };
 }
 
 /**
@@ -135,6 +175,15 @@ export function synthesizeCashLoanBrief(snap: CountryMacroSnap): string {
 
   const ftp = firstNumber(snap.fuelToPowerRatio);
   if (ftp != null && ftp >= 20) bits.push(`油电比约${fmtNum(ftp, 1)}×（燃油相对电费偏贵）`);
+
+  const nevTariff = firstNumber(snap.nevImportTariff);
+  if (nevTariff != null && nevTariff >= 35) bits.push(`新能源整车进口关税约${fmtNum(nevTariff)}%（偏高）`);
+
+  const nevVat = firstNumber(snap.nevLocalVat);
+  if (nevVat != null && nevVat >= 16) bits.push(`本地出厂新能源车增值税约${fmtNum(nevVat)}%`);
+
+  const gap = deriveNevTaxGap(snap);
+  if (gap != null && gap.n >= 25) bits.push(`新能源税差约${fmtNum(gap.n)}个百分点（进口相对出厂偏重）`);
 
   if (!bits.length) {
     const stored = snap.cashLoanVerdict?.trim();
@@ -203,6 +252,8 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
   const gas = firstNumber(snap.gasolineRetail);
   const elec = firstNumber(snap.electricityResidential);
   const ftp = firstNumber(snap.fuelToPowerRatio);
+  const nevTariff = firstNumber(snap.nevImportTariff);
+  const nevVat = firstNumber(snap.nevLocalVat);
   const fxVol = firstNumber(snap.fxVolInYear?.replace("±", ""));
   const caM = (snap.currentAccount || "").match(/CA\/GDP约?\s*(-?\d+(?:\.\d+)?)\s*%/i);
   const ca = caM ? Number(caM[1]) : null;
@@ -210,7 +261,13 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
   const fxFlag: CashLoanMacroMetric["flag"] =
     fxVol != null && fxVol >= 12 ? "hot" : fxVol != null && fxVol >= 6 ? "watch" : fxVol != null ? "ok" : undefined;
   const inflFlag: CashLoanMacroMetric["flag"] =
-    infl != null && infl >= 12 ? "hot" : infl != null && infl >= 6 ? "watch" : infl != null ? "ok" : undefined;
+    infl != null && infl >= 12
+      ? "hot"
+      : infl != null && (infl >= 6 || infl < 0)
+        ? "watch"
+        : infl != null
+          ? "ok"
+          : undefined;
   const hhFlag: CashLoanMacroMetric["flag"] =
     hh != null && hh >= 55 ? "hot" : hh != null && hh >= 45 ? "watch" : hh != null ? "ok" : undefined;
   const gdpPcFlag: CashLoanMacroMetric["flag"] =
@@ -221,6 +278,25 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
     elec != null && elec >= 0.3 ? "hot" : elec != null && elec >= 0.2 ? "watch" : elec != null ? "ok" : undefined;
   const ftpFlag: CashLoanMacroMetric["flag"] =
     ftp != null && ftp >= 25 ? "hot" : ftp != null && ftp >= 15 ? "watch" : ftp != null ? "ok" : undefined;
+  const nevTariffFlag: CashLoanMacroMetric["flag"] =
+    nevTariff != null && nevTariff >= 50
+      ? "hot"
+      : nevTariff != null && nevTariff >= 25
+        ? "watch"
+        : nevTariff != null
+          ? "ok"
+          : undefined;
+  const nevVatFlag: CashLoanMacroMetric["flag"] =
+    nevVat != null && nevVat >= 20 ? "watch" : nevVat != null ? "ok" : undefined;
+  const nevGap = deriveNevTaxGap(snap);
+  const nevGapFlag: CashLoanMacroMetric["flag"] =
+    nevGap != null && nevGap.n >= 40
+      ? "hot"
+      : nevGap != null && nevGap.n >= 20
+        ? "watch"
+        : nevGap != null
+          ? "ok"
+          : undefined;
 
   const groups: CashLoanMacroGroup[] = [
     {
@@ -233,7 +309,7 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
         metric(
           "经常账户",
           "currentAccount",
-          snap.currentAccount,
+          preferFreshCurrentAccount(snap.currentAccount),
           pack,
           ca != null && ca <= -5 ? "hot" : ca != null && ca < 0 ? "watch" : ca != null ? "ok" : undefined,
         ),
@@ -282,6 +358,17 @@ export function buildCashLoanMacroGroups(snap: CountryMacroSnap): CashLoanMacroG
         metric("居民电价", "electricityResidential", snap.electricityResidential, pack, elecFlag),
         metric("油电比", "fuelToPowerRatio", snap.fuelToPowerRatio, pack, ftpFlag),
         metric("政策利率", "policyRate", snap.policyRate, pack, rate != null && rate >= 10 ? "hot" : undefined),
+      ].filter(Boolean) as CashLoanMacroMetric[],
+    },
+    {
+      id: "nev_tax",
+      step: "①+",
+      title: "新能源车税负",
+      soWhat: "整车进口关税与本地出厂增值税决定落地成本；税差衡量 CBU 相对本地出厂的额外税负楔子，影响车贷/融资租赁定价与组装 vs 进口选择。",
+      metrics: [
+        metric("新能源整车进口关税", "nevImportTariff", snap.nevImportTariff, pack, nevTariffFlag),
+        metric("本地出厂新能源车增值税", "nevLocalVat", snap.nevLocalVat, pack, nevVatFlag),
+        metric("新能源税差", "nevTaxGap", nevGap?.raw, pack, nevGapFlag),
       ].filter(Boolean) as CashLoanMacroMetric[],
     },
   ];

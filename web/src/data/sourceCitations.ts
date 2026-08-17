@@ -205,6 +205,14 @@ export const CORE_SOURCE_CITATIONS: SourceCitation[] = [
     note: "泵价 Gasoline Prices（USD/Liter）；地图宏观「零售汽油」主尺；与〔1〕同系，专链国别对照表",
     asOf: "2026-07",
   },
+  {
+    no: 24,
+    id: "nev-tariff-vat",
+    title: "新能源整车关税 / 本地增值税（海关税则与税法）",
+    kind: "regulator",
+    note: "国别 BEV/CBU 进口关税（含对华附加税合计示意）与本地出厂 VAT·GST·IVA；优先官方税则/财政法令，新闻辅证标「待双端」；不含购置税/首次登记税除非文案明示",
+    asOf: "2026-08",
+  },
 ];
 
 const KIND_LABEL: Record<string, string> = {

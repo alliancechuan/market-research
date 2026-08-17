@@ -10,6 +10,7 @@ import {
   heatStopsRemoved,
   heatStopsWarm,
   heatStopsGreen,
+  heatStopsCool,
   mapChrome,
   heatColorAdded,
   heatColorRemoved,
@@ -535,7 +536,7 @@ export function SteppedLegend({
   high,
 }: {
   label: string;
-  kind: "removed" | "added" | "gray" | "accent" | "warm" | "green";
+  kind: "removed" | "added" | "gray" | "accent" | "warm" | "green" | "cool";
   /** 底部/融入图例时更扁 */
   compact?: boolean;
   /** 色阶左端（低） */
@@ -550,9 +551,11 @@ export function SteppedLegend({
       ? heatStopsWarm()
       : kind === "green"
         ? heatStopsGreen()
-        : kind === "added" || kind === "accent"
-          ? heatStopsAdded(theme)
-          : heatStopsRemoved(theme);
+        : kind === "cool"
+          ? heatStopsCool()
+          : kind === "added" || kind === "accent"
+            ? heatStopsAdded(theme)
+            : heatStopsRemoved(theme);
   return (
     <div
       style={{

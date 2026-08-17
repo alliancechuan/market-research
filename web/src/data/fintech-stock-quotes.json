@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-08-16",
+  "asOf": "2026-08-17",
   "source": "腾讯行情为主（新鲜 55）+ Yahoo 回退；PE≈TTM",
   "note": "asOf 为行情快照日期；peRatio 为约 TTM；涨跌相对昨收。静态站非盘中流式。本地交易所未覆盖者可能仍为旧快照。",
   "stats": {
@@ -1274,10 +1274,10 @@
       "origin": "data-service",
       "groupKey": "Dun & Bradstreet｜D&B｜DNB（数据服务方·US）",
       "url": "https://finance.yahoo.com/quote/DNB",
-      "price": 9.15,
-      "previousClose": 9.15,
+      "price": 9.16,
+      "previousClose": 9.16,
       "changePct": 0.0,
-      "marketCapUsd": 4082631000.0,
+      "marketCapUsd": 4084861999.9999995,
       "marketCapLabel": "$4.1B",
       "peRatio": 22.0,
       "currency": "USD",

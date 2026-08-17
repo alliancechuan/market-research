@@ -1,9 +1,15 @@
-import { COUNTRY_MACRO, type CountryMacroSnap } from "./countryMacro";
+import { COUNTRY_MACRO, deriveNevTaxGap, type CountryMacroSnap } from "./countryMacro";
+import {
+  fxLocalStrengthChgPct,
+  resolveFxSeries,
+  sliceFxPointsByMonths,
+} from "./fxHistory";
 
 /** 大屏可切换的宏观色阶因子（与 CRM 宏观五组对齐的可量化子集） */
 export type MacroMapFactorId =
   | "hhDebt"
   | "fxVol"
+  | "fxChg"
   | "gdpPc"
   | "incomePc"
   | "inflation"
@@ -11,7 +17,10 @@ export type MacroMapFactorId =
   | "unemployment"
   | "gasoline"
   | "electricity"
-  | "fuelToPower";
+  | "fuelToPower"
+  | "nevTariff"
+  | "nevVat"
+  | "nevTaxGap";
 
 export const MACRO_MAP_FACTORS: {
   id: MacroMapFactorId;
@@ -19,7 +28,17 @@ export const MACRO_MAP_FACTORS: {
   unit: string;
   /** 色阶方向：high_risk=越高越深（风险向）；high_capacity=越高越深（容量向） */
   sense: "high_risk" | "high_capacity";
-  field: keyof CountryMacroSnap;
+  /**
+   * 色阶映射：linear=全局 min→max；
+   * diverging0=以 0 为中轴，负/正各自归一（负值不再被大额正值压扁）
+   */
+  scale?: "linear" | "diverging0";
+  /** diverging0 负侧色：green=税差「进口轻」；cool=通胀通缩等 */
+  divergeNegTone?: "green" | "cool";
+  /** diverging0 图例文案 */
+  divergeLegend?: { neg: string; pos: string };
+  /** 宏观卡字段；派生指标可空 */
+  field: keyof CountryMacroSnap | null;
   blurb: string;
 }[] = [
   {
@@ -37,6 +56,18 @@ export const MACRO_MAP_FACTORS: {
     sense: "high_risk",
     field: "fxVolInYear",
     blurb: "约一年内高低相对均价（波幅，非累计贬值）· 外汇跨境组 · Frankfurter 等市价序列",
+  },
+  {
+    id: "fxChg",
+    label: "年内汇率涨跌",
+    unit: "%",
+    sense: "high_risk",
+    scale: "diverging0",
+    divergeNegTone: "cool",
+    divergeLegend: { neg: "负 · 本币升值", pos: "正 · 本币贬值" },
+    field: null,
+    blurb:
+      "近1年本币对美元强弱（地图：蓝=升值、琥珀=贬值；数值为正表示本币贬值）· 外汇跨境组 · 市价序列首末",
   },
   {
     id: "gdpPc",
@@ -59,8 +90,12 @@ export const MACRO_MAP_FACTORS: {
     label: "通胀",
     unit: "%",
     sense: "high_risk",
+    scale: "diverging0",
+    divergeNegTone: "cool",
+    divergeLegend: { neg: "负 · 通缩", pos: "正 · 通胀" },
     field: "inflation",
-    blurb: "最新通胀读数 · 基本面组 · TE / 统计局对照",
+    blurb:
+      "最新通胀读数 · 地图以 0 分轴：蓝=通缩、琥珀=通胀；两侧各自拉满色阶 · TE / 统计局对照",
   },
   {
     id: "policyRate",
@@ -102,6 +137,34 @@ export const MACRO_MAP_FACTORS: {
     field: "fuelToPowerRatio",
     blurb: "零售汽油÷居民电价 · 1升汽油约可购居民电kWh数 · 越高燃油相对电费越贵 · TE÷GPP〔1〕〔22〕",
   },
+  {
+    id: "nevTariff",
+    label: "新能源进口关税",
+    unit: "%",
+    sense: "high_risk",
+    field: "nevImportTariff",
+    blurb: "新能源整车（BEV/CBU）进口关税（含对华附加税合计示意）· 基建监管/产业政策 · 海关税则〔24〕",
+  },
+  {
+    id: "nevVat",
+    label: "新能源出厂增值税",
+    unit: "%",
+    sense: "high_risk",
+    field: "nevLocalVat",
+    blurb: "本地出厂/首次销售新能源车适用 VAT·GST·IVA 一般税率 · 基建监管/税负 · 税法〔24〕",
+  },
+  {
+    id: "nevTaxGap",
+    label: "新能源税差",
+    unit: "百分点",
+    sense: "high_risk",
+    scale: "diverging0",
+    divergeNegTone: "green",
+    divergeLegend: { neg: "负 · 进口相对轻", pos: "正 · 进口相对重" },
+    field: "nevTaxGap",
+    blurb:
+      "税差＝进口关税%−出厂增值税% · 地图以 0 分轴：绿=负（进口相对轻）、琥珀=正（进口相对重）；两侧各自拉满色阶，负值不被大额正值压扁 · 双端齐全才测算〔24〕",
+  },
 ];
 
 /** 从宏观快照文案中抽出第一个可比较数值 */
@@ -137,6 +200,33 @@ export function buildMacroMetric(id: MacroMapFactorId): MacroMetricSeries {
   const byCode: Record<string, number> = {};
   const rawByCode: Record<string, string> = {};
   for (const [code, snap] of Object.entries(COUNTRY_MACRO)) {
+    if (id === "nevTaxGap") {
+      const gap = deriveNevTaxGap(snap);
+      if (!gap) continue;
+      byCode[code] = gap.n;
+      rawByCode[code] = gap.raw;
+      continue;
+    }
+    if (id === "fxChg") {
+      const series = resolveFxSeries(code, {
+        fxTrend: snap.fxTrend,
+        fxHint: snap.fxHint,
+        fxVolInYear: snap.fxVolInYear,
+      });
+      if (!series || series.points.length < 2) continue;
+      const pts = sliceFxPointsByMonths(series.points, 12);
+      if (pts.length < 2) continue;
+      const strength = fxLocalStrengthChgPct(series, pts);
+      // 地图约定：正=本币贬值（风险向暖色），负=本币升值（冷色）
+      const deprec = -strength;
+      byCode[code] = Number(deprec.toFixed(2));
+      const abs = Math.abs(strength);
+      rawByCode[code] = `近1年本币对美元${strength >= 0 ? "升值" : "贬值"}约 ${abs.toFixed(1)}%${
+        series.synthetic ? "·示意序列" : ""
+      }`;
+      continue;
+    }
+    if (!meta.field) continue;
     const raw = snap[meta.field];
     if (typeof raw !== "string" || !raw.trim()) continue;
     const n = parseMacroNumber(raw);
@@ -165,10 +255,27 @@ export function formatMacroValue(id: MacroMapFactorId, n: number): string {
   if (id === "gdpPc") return `USD ${Math.round(n).toLocaleString()}`;
   if (id === "incomePc") return `USD ${Math.round(n).toLocaleString()} PPP`;
   if (id === "fxVol") return `±${n}%`;
+  if (id === "fxChg") {
+    const abs = Math.abs(n);
+    const body = abs >= 10 ? abs.toFixed(1) : abs.toFixed(2);
+    if (Math.abs(n) < 0.05) return `持平约 0%`;
+    return n > 0 ? `本币贬值 ${body}%` : `本币升值 ${body}%`;
+  }
   if (id === "gasoline") return n.toFixed(2);
   if (id === "electricity") return n.toFixed(3);
   if (id === "fuelToPower") return n.toFixed(1);
-  const pct = id === "hhDebt" || id === "inflation" || id === "policyRate" || id === "unemployment";
+  if (id === "nevTaxGap") {
+    const sign = n > 0 ? "+" : "";
+    const body = Number.isInteger(n) ? String(n) : n.toFixed(1);
+    return `${sign}${body}百分点`;
+  }
+  const pct =
+    id === "hhDebt" ||
+    id === "inflation" ||
+    id === "policyRate" ||
+    id === "unemployment" ||
+    id === "nevTariff" ||
+    id === "nevVat";
   if (Number.isInteger(n)) return `${n}${pct ? "%" : ""}`;
   return `${n.toFixed(n >= 10 ? 1 : 2)}${pct ? "%" : ""}`;
 }

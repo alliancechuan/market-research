@@ -1,6 +1,6 @@
 {
-  "asOf": "2026-08-12 20:30",
-  "note": "上市公司数据链：腾讯/Yahoo 行情入口 + 定期披露原文 + 交易所门户；对齐顶栏「上市公司」与 T2 披露缓存。",
+  "asOf": "2026-08-17",
+  "note": "上市公司数据链：行情快照入口 + 定期披露原文 + 交易所门户；对齐顶栏「上市公司」与 T2 披露缓存。",
   "dataKeys": [
     "fintech-stock-watchlist",
     "fintech-stock-quotes",
@@ -10,19 +10,10 @@
   "hubs": [
     {
       "id": "yahoo",
-      "titleZh": "Yahoo Finance（股价入口/回退）",
+      "titleZh": "Yahoo Finance（股价/市值快照）",
       "url": "https://finance.yahoo.com/",
       "kind": "market_data",
-      "citeNo": 16,
-      "note": "观察池报价页入口；抓取以腾讯为主、Yahoo 回退"
-    },
-    {
-      "id": "tencent",
-      "titleZh": "腾讯行情（股价快照主源）",
-      "url": "https://qt.gtimg.cn/",
-      "kind": "market_data",
-      "citeNo": 16,
-      "note": "美/港/伦等；Yahoo 常 403 时作主抓取"
+      "citeNo": 16
     },
     {
       "id": "sec-edgar",
@@ -146,26 +137,6 @@
     {
       "name": "Tadawul",
       "url": "https://www.saudiexchange.sa/"
-    },
-    {
-      "name": "TSE",
-      "url": "https://www.jpx.co.jp/"
-    },
-    {
-      "name": "KRX",
-      "url": "https://global.krx.co.kr/"
-    },
-    {
-      "name": "DSE",
-      "url": "https://www.dsebd.org/"
-    },
-    {
-      "name": "COSE",
-      "url": "https://www.cse.lk/"
-    },
-    {
-      "name": "PSX",
-      "url": "https://www.psx.com.pk/"
     }
   ],
   "companies": [
@@ -209,7 +180,7 @@
       "origin": "ride-food",
       "irUrl": "https://www.gotocompany.com/en/investors",
       "period": "2026Q2",
-      "sourceNote": "公司业绩会摘要（Quartr 等转述）；待替换官方 PDF"
+      "sourceNote": "公司 IR/财务报表交叉·2026Q1 末权益约 IDR28.8 万亿 + Q2 业绩摘要；折美元约 IDR16000；收入/EBITDA 为季口径"
     },
     {
       "id": "nu",
@@ -377,7 +348,7 @@
       "origin": "credit-native",
       "irUrl": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0427/2026042702728.pdf",
       "period": "2026Q1",
-      "sourceNote": "港交所披露 / 公司业绩"
+      "sourceNote": "港交所披露 / 公司业绩；FY2025收入/净亏约21亿；Q1运营更新港交所"
     },
     {
       "id": "bajaj",
@@ -389,9 +360,9 @@
       "exchangeUrl": "https://www.nseindia.com/",
       "region": "south-asia",
       "origin": "credit-native",
-      "irUrl": "https://www.bajajfinserv.in/finance/investor-relations",
+      "irUrl": "https://www.business-standard.com/markets/capital-market-news/bajaj-finance-q1-pat-climbs-27-yoy-to-rs-5-986-cr-aum-tops-rs-5-46-lakh-crore-126073000969_1.html",
       "period": "FY27Q1",
-      "sourceNote": "公司 IR"
+      "sourceNote": "业绩新闻/IR"
     },
     {
       "id": "paytm",
@@ -405,7 +376,7 @@
       "origin": "payment",
       "irUrl": "https://paytm.com/document/ir/financial-results/Paytm_Earning-Release_Q1-FY-2027.pdf",
       "period": "FY27Q1",
-      "sourceNote": "公司 IR·Q1 FY27；金额已按约 INR87 折美元"
+      "sourceNote": "公司 IR·Q1 FY27；折美元约 INR87；准现金=Cash balance ₹13529 亿卢比；权益待资产负债表核验留空"
     },
     {
       "id": "sofi",
@@ -908,8 +879,8 @@
       "region": "se-asia",
       "origin": "payment",
       "irUrl": "https://www.axiata.com/media/news/2026/axiata-posts-rm365-million-in-profits-for-fy25",
-      "period": null,
-      "sourceNote": null
+      "period": "FY2025",
+      "sourceNote": "Axiata FY2025新闻稿；Boost 放贷账面扩张、亏损收窄·对照2026-02"
     },
     {
       "id": "inter-br",
@@ -935,9 +906,9 @@
       "exchangeUrl": "https://www.bmv.com.mx/",
       "region": "latam",
       "origin": "credit-native",
-      "irUrl": "https://www.gentera.com.mx/wcm/connect/7abc2fcf-dd5b-43cd-8eab-a934f31da07c/Gentera+4Q24.pdf?MOD=AJPERES",
-      "period": "FY2024",
-      "sourceNote": "公司 IR·4Q24"
+      "irUrl": "https://www.gentera.com.mx/wcm/connect/f4e9034d-b5e5-487a-8bf7-af1b071c7ef0/Gentera+4Q25.pdf?MOD=AJPERES",
+      "period": "FY2025",
+      "sourceNote": "Gentera 4Q25 IR；折美元约 MXN20；权益=YE Total stockholders' equity Ps.36,028m；信贷=Loan portfolio Ps.93,599m；准现金=Cash and investments Ps.17,736m；收入=FY2025 Interest income Ps.48,393m；负债率=Total liabilities/Total assets"
     },
     {
       "id": "globe-ph",
@@ -950,8 +921,8 @@
       "region": "se-asia",
       "origin": "payment",
       "irUrl": "https://www.globe.com.ph/about-us/investor-relations",
-      "period": "FY2024",
-      "sourceNote": "公司 IR"
+      "period": "FY2025",
+      "sourceNote": "Globe FY2025披露/媒体；Mynt权益贡献61亿PHP（GCash）·网赌监管拖累Q4·对照2026-02"
     },
     {
       "id": "telkom-id",
@@ -963,9 +934,9 @@
       "exchangeUrl": "https://www.idx.co.id/",
       "region": "se-asia",
       "origin": "payment",
-      "irUrl": "https://www.telkom.co.id/sites/about-telkom/en_US/page/investor-relations",
-      "period": "FY2024",
-      "sourceNote": "公司 IR"
+      "irUrl": "https://www.telkom.co.id/minio/show/data/lampiran/1778544447359_original_LK-Konsolidasian-Telkom-Tahun-2025-Audited-Eng.pdf",
+      "period": "FY2025",
+      "sourceNote": "Telkom ID FY2025 AFS/6-K；合并口径，LinkAja 未单列·对照2026"
     },
     {
       "id": "vodacom",
@@ -1005,9 +976,9 @@
       "exchangeUrl": "https://www.set.or.th/",
       "region": "se-asia",
       "origin": "payment",
-      "irUrl": "https://investor.truecorp.co.th/",
-      "period": "FY2024",
-      "sourceNote": "公司 IR"
+      "irUrl": "https://investor.truecorp.co.th/misc/AR/true-ar2025-en.pdf",
+      "period": "FY2025",
+      "sourceNote": "True Corp AR2025·服务/移动收入结构·对照2026"
     },
     {
       "id": "aeonts",
@@ -1019,9 +990,9 @@
       "exchangeUrl": "https://www.set.or.th/",
       "region": "se-asia",
       "origin": "credit-native",
-      "irUrl": "https://aeonts.listedcompany.com/",
-      "period": "FY2024",
-      "sourceNote": "公司 listedcompany IR"
+      "irUrl": "https://aeonts.listedcompany.com/misc/MDNA/20260407-aeonts-mdna-fy2025-en.pdf",
+      "period": "FY2025",
+      "sourceNote": "AEONTS MD&A FY2025（截止2026-02-28）·官网PDF"
     },
     {
       "id": "adira",
@@ -1034,8 +1005,8 @@
       "region": "se-asia",
       "origin": "credit-native",
       "irUrl": "https://www.adira.co.id/id/investor",
-      "period": "FY2024",
-      "sourceNote": "公司 IR"
+      "period": "FY2025",
+      "sourceNote": "IDX/媒体转述 FY2025；收入+2.9%、净利-14.7%（费用上行）·对照 2026-02"
     },
     {
       "id": "bfi",
@@ -1047,9 +1018,9 @@
       "exchangeUrl": "https://www.idx.co.id/",
       "region": "se-asia",
       "origin": "credit-native",
-      "irUrl": "https://www.bfi.co.id/en/investor",
-      "period": "FY2024",
-      "sourceNote": "公司 IR"
+      "irUrl": "https://digital-bucket.prod.bfi.co.id/assets/pdf/pdf_terbaru/10.%20Siaran%20Pers/English/2025/BFI%20Finance%20-%20Media%20Release%20-%202024%20Financial%20Performance%20-%20Fin%20%28Eng%29.pdf",
+      "period": "FY2025",
+      "sourceNote": "IDX/Ipot FY2025·对照2026-02"
     },
     {
       "id": "wom-finance",
@@ -1062,8 +1033,8 @@
       "region": "se-asia",
       "origin": "credit-native",
       "irUrl": "https://www.wom.co.id/",
-      "period": "FY2024",
-      "sourceNote": "公司官网/披露入口"
+      "period": "FY2025",
+      "sourceNote": "IDX/媒体 FY2025；新投放+9%、净利因拨备大降·对照2026-02/03"
     },
     {
       "id": "sbi-cards",
@@ -1077,7 +1048,7 @@
       "origin": "credit-native",
       "irUrl": "https://www.sbicard.com/sbi-card-en/assets/docs/pdf/who-we-are/notices/Disclosure-under-Regulation-30-Investor-Presentation.pdf",
       "period": "FY2026",
-      "sourceNote": "公司投资者材料·FY26；折美元约 INR87；信贷=Receivables"
+      "sourceNote": "公司投资者材料·FY26；折美元约 INR87；信贷=Receivables；权益字段待年报核验留空"
     },
     {
       "id": "cholafín",
@@ -1089,9 +1060,9 @@
       "exchangeUrl": "https://www.nseindia.com/",
       "region": "south-asia",
       "origin": "credit-native",
-      "irUrl": "https://www.cholamandalam.com/investors",
+      "irUrl": "https://files.cholamandalam.com/Press_Release_Chola_Q4_FY_25_72e0c07ec2.pdf",
       "period": "FY2025",
-      "sourceNote": "公司 IR"
+      "sourceNote": "公司新闻稿·FY25（至2025-03-31）；折美元约 INR87；信贷=AUM"
     },
     {
       "id": "muthoot",
@@ -1105,7 +1076,7 @@
       "origin": "credit-native",
       "irUrl": "https://www.muthootfinance.com/investor-presentation",
       "period": "FY27Q1",
-      "sourceNote": "公司 IR"
+      "sourceNote": "公司业绩/媒体交叉·Q1 FY27；折美元约 INR87；信贷=合并贷款 AUM；收入/权益待季报 PDF 核验留空"
     },
     {
       "id": "african-bank",
@@ -1296,12 +1267,12 @@
       "yahoo": "323410.KS",
       "yahooUrl": "https://finance.yahoo.com/quote/323410.KS",
       "exchange": "KRX",
-      "exchangeUrl": "https://global.krx.co.kr/",
+      "exchangeUrl": null,
       "region": "east-asia",
       "origin": "digibank",
       "irUrl": null,
       "period": null,
-      "sourceNote": "待缓存财报/IR"
+      "sourceNote": null
     },
     {
       "id": "kakaopay",
@@ -1310,12 +1281,12 @@
       "yahoo": "377300.KS",
       "yahooUrl": "https://finance.yahoo.com/quote/377300.KS",
       "exchange": "KRX",
-      "exchangeUrl": "https://global.krx.co.kr/",
+      "exchangeUrl": null,
       "region": "east-asia",
       "origin": "payment",
       "irUrl": null,
       "period": null,
-      "sourceNote": "待缓存财报/IR"
+      "sourceNote": null
     },
     {
       "id": "rakuten-bank",
@@ -1324,12 +1295,12 @@
       "yahoo": "5838.T",
       "yahooUrl": "https://finance.yahoo.com/quote/5838.T",
       "exchange": "TSE",
-      "exchangeUrl": "https://www.jpx.co.jp/",
+      "exchangeUrl": null,
       "region": "east-asia",
       "origin": "digibank",
       "irUrl": null,
       "period": null,
-      "sourceNote": "待缓存财报/IR"
+      "sourceNote": null
     },
     {
       "id": "acom",
@@ -1338,12 +1309,12 @@
       "yahoo": "8572.T",
       "yahooUrl": "https://finance.yahoo.com/quote/8572.T",
       "exchange": "TSE",
-      "exchangeUrl": "https://www.jpx.co.jp/",
+      "exchangeUrl": null,
       "region": "east-asia",
       "origin": "credit-native",
       "irUrl": null,
       "period": null,
-      "sourceNote": "待缓存财报/IR"
+      "sourceNote": null
     },
     {
       "id": "credit-saison",
@@ -1352,12 +1323,12 @@
       "yahoo": "8253.T",
       "yahooUrl": "https://finance.yahoo.com/quote/8253.T",
       "exchange": "TSE",
-      "exchangeUrl": "https://www.jpx.co.jp/",
+      "exchangeUrl": null,
       "region": "east-asia",
       "origin": "credit-native",
       "irUrl": null,
       "period": null,
-      "sourceNote": "待缓存财报/IR"
+      "sourceNote": null
     },
     {
       "id": "gmo-pg",
@@ -1366,12 +1337,12 @@
       "yahoo": "3769.T",
       "yahooUrl": "https://finance.yahoo.com/quote/3769.T",
       "exchange": "TSE",
-      "exchangeUrl": "https://www.jpx.co.jp/",
+      "exchangeUrl": null,
       "region": "east-asia",
       "origin": "payment",
       "irUrl": null,
       "period": null,
-      "sourceNote": "待缓存财报/IR"
+      "sourceNote": null
     },
     {
       "id": "mercari",
@@ -1380,12 +1351,12 @@
       "yahoo": "4385.T",
       "yahooUrl": "https://finance.yahoo.com/quote/4385.T",
       "exchange": "TSE",
-      "exchangeUrl": "https://www.jpx.co.jp/",
+      "exchangeUrl": null,
       "region": "east-asia",
       "origin": "ecommerce",
       "irUrl": null,
       "period": null,
-      "sourceNote": "待缓存财报/IR"
+      "sourceNote": null
     },
     {
       "id": "bracbank",
@@ -1394,12 +1365,12 @@
       "yahoo": "BRACBANK.BD",
       "yahooUrl": "https://finance.yahoo.com/quote/BRACBANK.BD",
       "exchange": "DSE",
-      "exchangeUrl": "https://www.dsebd.org/",
+      "exchangeUrl": null,
       "region": "south-asia",
       "origin": "payment",
-      "irUrl": "https://www.dsebd.org/displayCompany.php?name=BRACBANK",
-      "period": "",
-      "sourceNote": "监管/交易所披露入口；行情待腾讯/Yahoo 回填"
+      "irUrl": null,
+      "period": null,
+      "sourceNote": null
     },
     {
       "id": "dutchbangla",
@@ -1408,12 +1379,12 @@
       "yahoo": "DUTCHBANGL.BD",
       "yahooUrl": "https://finance.yahoo.com/quote/DUTCHBANGL.BD",
       "exchange": "DSE",
-      "exchangeUrl": "https://www.dsebd.org/",
+      "exchangeUrl": null,
       "region": "south-asia",
       "origin": "payment",
-      "irUrl": "https://www.dsebd.org/displayCompany.php?name=DUTCHBANGL",
-      "period": "",
-      "sourceNote": "监管/交易所披露入口；行情待腾讯/Yahoo 回填"
+      "irUrl": null,
+      "period": null,
+      "sourceNote": null
     },
     {
       "id": "lolc-finance",
@@ -1422,12 +1393,12 @@
       "yahoo": "LOFC-N0000.CM",
       "yahooUrl": "https://finance.yahoo.com/quote/LOFC-N0000.CM",
       "exchange": "COSE",
-      "exchangeUrl": "https://www.cse.lk/",
+      "exchangeUrl": null,
       "region": "south-asia",
       "origin": "credit-native",
-      "irUrl": "https://www.lolcfinance.com/",
-      "period": "",
-      "sourceNote": "监管/交易所披露入口；行情待腾讯/Yahoo 回填"
+      "irUrl": null,
+      "period": null,
+      "sourceNote": null
     },
     {
       "id": "dialog-finance",
@@ -1436,12 +1407,12 @@
       "yahoo": "CALF-N0000.CM",
       "yahooUrl": "https://finance.yahoo.com/quote/CALF-N0000.CM",
       "exchange": "COSE",
-      "exchangeUrl": "https://www.cse.lk/",
+      "exchangeUrl": null,
       "region": "south-asia",
       "origin": "credit-native",
-      "irUrl": "https://www.dialogfinance.lk/",
-      "period": "",
-      "sourceNote": "监管/交易所披露入口；行情待腾讯/Yahoo 回填"
+      "irUrl": null,
+      "period": null,
+      "sourceNote": null
     },
     {
       "id": "dialog-axiata",
@@ -1450,12 +1421,12 @@
       "yahoo": "DIAL-N0000.CM",
       "yahooUrl": "https://finance.yahoo.com/quote/DIAL-N0000.CM",
       "exchange": "COSE",
-      "exchangeUrl": "https://www.cse.lk/",
+      "exchangeUrl": null,
       "region": "south-asia",
       "origin": "payment",
-      "irUrl": "https://www.dialog.lk/about/investors",
-      "period": "",
-      "sourceNote": "监管/交易所披露入口；行情待腾讯/Yahoo 回填"
+      "irUrl": null,
+      "period": null,
+      "sourceNote": null
     },
     {
       "id": "hbl",
@@ -1464,12 +1435,12 @@
       "yahoo": "HBL.KA",
       "yahooUrl": "https://finance.yahoo.com/quote/HBL.KA",
       "exchange": "PSX",
-      "exchangeUrl": "https://www.psx.com.pk/",
+      "exchangeUrl": null,
       "region": "south-asia",
       "origin": "digibank",
-      "irUrl": "https://www.hbl.com/about-us/investor-relations",
-      "period": "",
-      "sourceNote": "监管/交易所披露入口；行情待腾讯/Yahoo 回填"
+      "irUrl": null,
+      "period": null,
+      "sourceNote": null
     },
     {
       "id": "meezan",
@@ -1478,12 +1449,12 @@
       "yahoo": "MEBL.KA",
       "yahooUrl": "https://finance.yahoo.com/quote/MEBL.KA",
       "exchange": "PSX",
-      "exchangeUrl": "https://www.psx.com.pk/",
+      "exchangeUrl": null,
       "region": "south-asia",
       "origin": "digibank",
-      "irUrl": "https://www.meezanbank.com/info-for-investors",
-      "period": "",
-      "sourceNote": "监管/交易所披露入口；行情待腾讯/Yahoo 回填"
+      "irUrl": null,
+      "period": null,
+      "sourceNote": null
     },
     {
       "id": "veon",
@@ -1495,14 +1466,14 @@
       "exchangeUrl": "https://www.nasdaq.com/",
       "region": "south-asia",
       "origin": "payment",
-      "irUrl": "https://www.veon.com/investors",
-      "period": "",
-      "sourceNote": "监管/交易所披露入口；行情待腾讯/Yahoo 回填"
+      "irUrl": null,
+      "period": null,
+      "sourceNote": null
     }
   ],
   "stats": {
     "companies": 95,
-    "withIr": 58,
-    "exchanges": 25
+    "withIr": 51,
+    "exchanges": 23
   }
 }

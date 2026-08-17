@@ -64,11 +64,17 @@ CC_STRONG = re.compile(
     re.I,
 )
 
-# 汇兑/宏观对现金贷定价与锁汇有用
+# 汇兑/宏观对现金贷定价与锁汇有用（避免「储备/通胀」单独误伤）
 CC_FX_MACRO = re.compile(
     r"央行|政策利率|基准利率|加息|降息|美联储|"
-    r"汇率|外汇|锁汇|汇兑|储备|外储|"
+    r"汇率|外汇|锁汇|汇兑|外汇储备|外储|"
     r"通胀|CPI|就业|失业|GDP|宏观",
+    re.I,
+)
+
+CC_FX_MACRO_STRONG = re.compile(
+    r"央行|政策利率|基准利率|加息|降息|美联储|"
+    r"汇率|外汇|锁汇|汇兑|外汇储备|外储",
     re.I,
 )
 
@@ -86,7 +92,12 @@ CC_NOISE = re.compile(
     r"星环聚能|核聚变|SpaceX|Cursor|Grok|"
     r"景区内自驾|爷爷不泡茶|旅游景区|"
     r"半导体上游|美股科技巨头|"
-    r"新能源集中报价|抱团抬价",
+    r"新能源集中报价|抱团抬价|"
+    r"潮玩|盲盒|开店计划|六城八店|文旅|娱乐旗下|"
+    r"航母|修改设计|绿色金融项目支持|座谈会|"
+    r"哈佛.*SpaceX|持有价值.*SpaceX|"
+    r"SB Energy|World Liberty|信托银行|"
+    r"粮食危机|食品通胀",
     re.I,
 )
 
@@ -119,12 +130,14 @@ BUCKET_META = {
 
 def classify_relevance(text: str) -> str:
     """strong | weak | noise"""
-    if CC_NOISE.search(text) and not (CC_STRONG.search(text) or CC_FX_MACRO.search(text)):
+    if CC_NOISE.search(text) and not CC_STRONG.search(text):
         return "noise"
     if is_reg_ops_flash(text) or CC_STRONG.search(text):
         return "strong"
-    if CC_FX_MACRO.search(text):
+    if CC_FX_MACRO_STRONG.search(text):
         return "strong"
+    if CC_FX_MACRO.search(text):
+        return "weak"
     if CC_WEAK.search(text) or FOCUS.search(text):
         return "weak"
     return "noise"
@@ -237,16 +250,19 @@ def bucket(r: dict) -> str:
         and re.search(r"牌照|监管|名录|持牌|利率上限|催收|保监|金管|条例|办法", t, re.I)
     ):
         return "监管·牌照"
-    if CC_FX_MACRO.search(t) or re.search(
-        r"利率|汇率|通胀|央行|加息|降息|外汇|锁汇|外储|债券发行", t, re.I
+    # 汇兑宏观：须真有利率/汇率/外储等锚；噪音文进弱相关
+    if CC_NOISE.search(t) and not CC_STRONG.search(t):
+        pass  # fall through
+    elif CC_FX_MACRO_STRONG.search(t) or (
+        CC_FX_MACRO.search(t)
+        and re.search(r"利率|汇率|通胀|央行|加息|降息|外汇|锁汇|外储|外汇储备", t, re.I)
     ):
-        # 黄金白银等噪音即使带「利率」也进弱相关
-        if CC_NOISE.search(t) and not CC_STRONG.search(t):
-            return "其他·弱相关"
         return "汇兑·宏观"
     if CC_STRONG.search(t) or re.search(
-        r"信贷|贷款|消金|小贷|NPL|不良|ABS|ABN|消费贷|现金贷|助贷", t, re.I
+        r"信贷|贷款|消金|小贷|NPL|不良|\bABS\b|\bABN\b|消费贷|现金贷|助贷", t, re.I
     ):
+        if CC_NOISE.search(t) and not CC_STRONG.search(t):
+            return "其他·弱相关"
         return "资产·定价"
     if rel == "noise":
         return "其他·弱相关"

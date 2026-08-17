@@ -1,12 +1,11 @@
 {
-  "asOf": "2026-08-12 23:50",
+  "asOf": "2026-08-17 03:04",
   "note": "最近一期财报/业绩 KPI 缓存；主源 T2 listed-player-disclosure，可手工续写。",
   "stats": {
     "total": 51,
     "fromDisclosure": 12,
     "watchlist": 95,
-    "coverage": 0.537,
-    "withFundamentals": 51
+    "coverage": 0.537
   },
   "items": [
     {
@@ -39,10 +38,10 @@
           "value": "₹1.10 万亿"
         }
       ],
-      "irUrl": "https://www.bajajfinserv.in/finance/investor-relations",
-      "sourceNote": "公司/交易所交叉·FY26 权益与年收入 + Q1 FY27 AUM；折美元约 INR87；收入=FY26 单体经营收入约数",
+      "irUrl": "https://www.business-standard.com/markets/capital-market-news/bajaj-finance-q1-pat-climbs-27-yoy-to-rs-5-986-cr-aum-tops-rs-5-46-lakh-crore-126073000969_1.html",
+      "sourceNote": "业绩新闻/IR",
       "cashLoanHint": "展业国 IN 资产质量与个贷锚",
-      "confidence": "中",
+      "confidence": "高",
       "source": "listed-player-disclosure",
       "fundamentals": {
         "creditAum": "$629 亿",
@@ -525,6 +524,42 @@
       "source": "manualIr"
     },
     {
+      "id": "muthoot",
+      "nameZh": "Muthoot Finance",
+      "ticker": "MUTHOOTFIN.NS",
+      "period": "FY27Q1",
+      "periodEnd": "2026-06-30",
+      "reportedAt": "2026-07",
+      "kpis": [
+        {
+          "id": "aum",
+          "label": "合并贷款 AUM",
+          "value": "₹1.915 万亿",
+          "yoy": "+43%"
+        },
+        {
+          "id": "pat",
+          "label": "合并 PAT",
+          "value": "₹2825 亿",
+          "yoy": "+43%"
+        },
+        {
+          "id": "standaloneAum",
+          "label": "单体 AUM",
+          "value": "₹1.721 万亿",
+          "yoy": "+43%"
+        }
+      ],
+      "fundamentals": {
+        "creditAum": "$220 亿"
+      },
+      "irUrl": "https://www.muthootfinance.com/investor-presentation",
+      "sourceNote": "公司业绩/媒体交叉·Q1 FY27；折美元约 INR87；信贷=合并贷款 AUM；收入/权益待季报 PDF 核验留空",
+      "cashLoanHint": "印度黄金贷龙头；线上化与跨品类交叉销售对照",
+      "confidence": "中",
+      "source": "company-ir"
+    },
+    {
       "id": "lexin",
       "nameZh": "乐信 Lexin",
       "ticker": "LX.O",
@@ -603,8 +638,8 @@
           "value": "3.11%"
         }
       ],
-      "irUrl": "https://www.sec.gov/Archives/edgar/data/1691445/000149315226025134/ex99-1.htm",
-      "sourceNote": "公司新闻稿/IR；6-K/新闻稿 2026Q1；海外收入约9.49亿RMB/+34.5% YoY·SEC〔17〕",
+      "irUrl": "https://www.prnewswire.com/news-releases/finvolution-group-reports-first-quarter-2026-unaudited-financial-results-302781329.html",
+      "sourceNote": "公司新闻稿/IR",
       "cashLoanHint": "海外量增；对照当地牌照",
       "confidence": "高",
       "source": "listed-player-disclosure",
@@ -726,7 +761,7 @@
         }
       ],
       "irUrl": "https://ir.yiren.com/2026-06-25-Yiren-Digital-Reports-First-Quarter-2026-Unaudited-Financial-Results",
-      "sourceNote": "公司 IR；IR 2026Q1·净利亏约4.95亿RMB〔17〕",
+      "sourceNote": "公司 IR",
       "cashLoanHint": null,
       "confidence": "高",
       "source": "listed-player-disclosure",
@@ -813,7 +848,7 @@
         }
       ],
       "irUrl": "https://international.nubank.com.br/company/nu-holdings-ltd-reports-first-quarter-2026-financial-results/",
-      "sourceNote": "公司 IR / SEC 6-K·Q1’26；收入=IFRS Total revenue（季）；权益=Total equity",
+      "sourceNote": "公司 IR",
       "cashLoanHint": "展业国 MX 对照；信用卡为主、无抵押贷增速快",
       "confidence": "高",
       "source": "listed-player-disclosure",
@@ -1617,6 +1652,42 @@
       "source": "manualIr"
     },
     {
+      "id": "aeonts",
+      "nameZh": "AEON Thana（泰消费金融）",
+      "ticker": "AEONTS.BK",
+      "period": "FY2025",
+      "periodEnd": "2026-02-28",
+      "reportedAt": "2026-04-07",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "营业收入",
+          "value": "THB217.75亿",
+          "yoy": "-1.5%"
+        },
+        {
+          "id": "netProfit",
+          "label": "归母净利",
+          "value": "THB30.94亿",
+          "yoy": "+8.2%"
+        },
+        {
+          "id": "eps",
+          "label": "EPS",
+          "value": "12.44 THB"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "约217.75亿THB",
+        "equity": "$7.7 亿"
+      },
+      "irUrl": "https://aeonts.listedcompany.com/misc/MDNA/20260407-aeonts-mdna-fy2025-en.pdf",
+      "sourceNote": "AEONTS MD&A FY2025（截止2026-02-28）·官网PDF",
+      "cashLoanHint": "TH 消金/卡分期；收入略降净利靠费用控制——利率上限下看息差",
+      "confidence": "高",
+      "source": "company-ir"
+    },
+    {
       "id": "vcredit",
       "nameZh": "维信 Vcredit",
       "ticker": "2003.HK",
@@ -1703,47 +1774,6 @@
       }
     },
     {
-      "id": "experian",
-      "nameZh": "Experian（征信）",
-      "ticker": "EXPN.L",
-      "period": "FY26H1",
-      "periodEnd": "2025-09-30",
-      "reportedAt": "2025-11-12",
-      "kpis": [
-        {
-          "id": "revenue",
-          "label": "持续业务收入",
-          "value": "$40.58 亿",
-          "yoy": "+13%"
-        },
-        {
-          "id": "organic",
-          "label": "有机收入增速",
-          "value": "+8%"
-        },
-        {
-          "id": "ebit",
-          "label": "Benchmark EBIT",
-          "value": "$11.49 亿",
-          "yoy": "+14%"
-        },
-        {
-          "id": "eps",
-          "label": "Benchmark EPS",
-          "value": "85.0¢",
-          "yoy": "+12%"
-        }
-      ],
-      "irUrl": "https://www.experian.com/content/dam/marketing/global/plc/en/assets/documents/results-and-presentations/2025/Experian-FY26-H1-results-announcement.pdf",
-      "sourceNote": "公司·FY26 H1 results announcement",
-      "cashLoanHint": "征信基础设施；有机增速与北美/拉美区域",
-      "confidence": "高",
-      "source": "manualIr",
-      "fundamentals": {
-        "revenue": "$40.6 亿"
-      }
-    },
-    {
       "id": "gentera",
       "nameZh": "Gentera",
       "ticker": "GENTERA.MX",
@@ -1804,42 +1834,6 @@
       "irUrl": "https://www.gentera.com.mx/wcm/connect/f4e9034d-b5e5-487a-8bf7-af1b071c7ef0/Gentera+4Q25.pdf?MOD=AJPERES",
       "sourceNote": "Gentera 4Q25 IR；折美元约 MXN20；权益=YE Total stockholders' equity Ps.36,028m；信贷=Loan portfolio Ps.93,599m；准现金=Cash and investments Ps.17,736m；收入=FY2025 Interest income Ps.48,393m；负债率=Total liabilities/Total assets",
       "cashLoanHint": "展业国 MX 小微/消费贷在位对照；资产质量与 ROE 锚",
-      "confidence": "高",
-      "source": "company-ir"
-    },
-    {
-      "id": "aeonts",
-      "nameZh": "AEON Thana（泰消费金融）",
-      "ticker": "AEONTS.BK",
-      "period": "FY2025",
-      "periodEnd": "2026-02-28",
-      "reportedAt": "2026-04-07",
-      "kpis": [
-        {
-          "id": "revenue",
-          "label": "营业收入",
-          "value": "THB217.75亿",
-          "yoy": "-1.5%"
-        },
-        {
-          "id": "netProfit",
-          "label": "归母净利",
-          "value": "THB30.94亿",
-          "yoy": "+8.2%"
-        },
-        {
-          "id": "eps",
-          "label": "EPS",
-          "value": "12.44 THB"
-        }
-      ],
-      "fundamentals": {
-        "revenue": "约217.75亿THB",
-        "equity": "$7.7 亿"
-      },
-      "irUrl": "https://aeonts.listedcompany.com/misc/MDNA/20260407-aeonts-mdna-fy2025-en.pdf",
-      "sourceNote": "AEONTS MD&A FY2025（截止2026-02-28）·官网PDF",
-      "cashLoanHint": "TH 消金/卡分期；收入略降净利靠费用控制——利率上限下看息差",
       "confidence": "高",
       "source": "company-ir"
     },
@@ -2095,85 +2089,6 @@
       "source": "company-ir"
     },
     {
-      "id": "cholafín",
-      "nameZh": "Cholamandalam",
-      "ticker": "CHOLAFIN.NS",
-      "period": "FY2025",
-      "periodEnd": "2025-03-31",
-      "reportedAt": "2025-04",
-      "kpis": [
-        {
-          "id": "aum",
-          "label": "AUM",
-          "value": "₹1.999 万亿",
-          "yoy": "+30%"
-        },
-        {
-          "id": "disbursement",
-          "label": "年放款",
-          "value": "₹1.009 万亿",
-          "yoy": "+14%"
-        },
-        {
-          "id": "totalIncome",
-          "label": "总收入",
-          "value": "₹26055 亿",
-          "yoy": "+36%"
-        },
-        {
-          "id": "pat",
-          "label": "PAT",
-          "value": "₹4259 亿",
-          "yoy": "+24%"
-        }
-      ],
-      "fundamentals": {
-        "revenue": "$29.9 亿",
-        "creditAum": "$230 亿"
-      },
-      "irUrl": "https://files.cholamandalam.com/Press_Release_Chola_Q4_FY_25_72e0c07ec2.pdf",
-      "sourceNote": "公司新闻稿·FY25（至2025-03-31）；折美元约 INR87；信贷=AUM",
-      "cashLoanHint": "印度车辆/住房/SME NBFC 对照；金贷新业务 2025 起观察",
-      "confidence": "高",
-      "source": "company-ir"
-    },
-    {
-      "id": "muthoot",
-      "nameZh": "Muthoot Finance",
-      "ticker": "MUTHOOTFIN.NS",
-      "period": "FY27Q1",
-      "periodEnd": "2026-06-30",
-      "reportedAt": "2026-07",
-      "kpis": [
-        {
-          "id": "aum",
-          "label": "合并贷款 AUM",
-          "value": "₹1.915 万亿",
-          "yoy": "+43%"
-        },
-        {
-          "id": "pat",
-          "label": "合并 PAT",
-          "value": "₹2825 亿",
-          "yoy": "+43%"
-        },
-        {
-          "id": "standaloneAum",
-          "label": "单体 AUM",
-          "value": "₹1.721 万亿",
-          "yoy": "+43%"
-        }
-      ],
-      "fundamentals": {
-        "creditAum": "$220 亿"
-      },
-      "irUrl": "https://www.muthootfinance.com/investor-presentation",
-      "sourceNote": "公司业绩/媒体交叉·Q1 FY27；折美元约 INR87；信贷=合并贷款 AUM；收入/权益待季报 PDF 核验留空",
-      "cashLoanHint": "印度黄金贷龙头；线上化与跨品类交叉销售对照",
-      "confidence": "中",
-      "source": "company-ir"
-    },
-    {
       "id": "axiata",
       "nameZh": "Axiata（Boost）",
       "ticker": "AXIATA.KL",
@@ -2216,6 +2131,90 @@
       "sourceNote": "Axiata FY2025新闻稿；Boost 放贷账面扩张、亏损收窄·对照2026-02",
       "cashLoanHint": "MY Boost 数字金融臂；母体财报仅给亏损/贷款账面，展业须再核牌照与投放质量",
       "confidence": "中",
+      "source": "company-ir"
+    },
+    {
+      "id": "experian",
+      "nameZh": "Experian（征信）",
+      "ticker": "EXPN.L",
+      "period": "FY26H1",
+      "periodEnd": "2025-09-30",
+      "reportedAt": "2025-11-12",
+      "kpis": [
+        {
+          "id": "revenue",
+          "label": "持续业务收入",
+          "value": "$40.58 亿",
+          "yoy": "+13%"
+        },
+        {
+          "id": "organic",
+          "label": "有机收入增速",
+          "value": "+8%"
+        },
+        {
+          "id": "ebit",
+          "label": "Benchmark EBIT",
+          "value": "$11.49 亿",
+          "yoy": "+14%"
+        },
+        {
+          "id": "eps",
+          "label": "Benchmark EPS",
+          "value": "85.0¢",
+          "yoy": "+12%"
+        }
+      ],
+      "irUrl": "https://www.experian.com/content/dam/marketing/global/plc/en/assets/documents/results-and-presentations/2025/Experian-FY26-H1-results-announcement.pdf",
+      "sourceNote": "公司·FY26 H1 results announcement",
+      "cashLoanHint": "征信基础设施；有机增速与北美/拉美区域",
+      "confidence": "高",
+      "source": "manualIr",
+      "fundamentals": {
+        "revenue": "$40.6 亿"
+      }
+    },
+    {
+      "id": "cholafín",
+      "nameZh": "Cholamandalam",
+      "ticker": "CHOLAFIN.NS",
+      "period": "FY2025",
+      "periodEnd": "2025-03-31",
+      "reportedAt": "2025-04",
+      "kpis": [
+        {
+          "id": "aum",
+          "label": "AUM",
+          "value": "₹1.999 万亿",
+          "yoy": "+30%"
+        },
+        {
+          "id": "disbursement",
+          "label": "年放款",
+          "value": "₹1.009 万亿",
+          "yoy": "+14%"
+        },
+        {
+          "id": "totalIncome",
+          "label": "总收入",
+          "value": "₹26055 亿",
+          "yoy": "+36%"
+        },
+        {
+          "id": "pat",
+          "label": "PAT",
+          "value": "₹4259 亿",
+          "yoy": "+24%"
+        }
+      ],
+      "fundamentals": {
+        "revenue": "$29.9 亿",
+        "creditAum": "$230 亿"
+      },
+      "irUrl": "https://files.cholamandalam.com/Press_Release_Chola_Q4_FY_25_72e0c07ec2.pdf",
+      "sourceNote": "公司新闻稿·FY25（至2025-03-31）；折美元约 INR87；信贷=AUM",
+      "cashLoanHint": "印度车辆/住房/SME NBFC 对照；金贷新业务 2025 起观察",
+      "confidence": "高",
       "source": "company-ir"
     }
   ]

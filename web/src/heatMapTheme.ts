@@ -106,6 +106,21 @@ export function heatStopsWarm(): string[] {
   return [...WARM_STOPS];
 }
 
+/** 通缩/负向：浅冰蓝 → 深蓝（与通胀暖色对仗） */
+const COOL_STOPS = ["#D6E8F5", "#9BBFDC", "#5B8FBF", "#2B6CB0", "#1A4A7A"] as const;
+
+export function heatColorCool(t: number): string {
+  const x = Math.min(1, Math.max(0, t));
+  const n = COOL_STOPS.length - 1;
+  const i = Math.min(n - 1, Math.floor(x * n));
+  const local = x * n - i;
+  return lerpHex(COOL_STOPS[i], COOL_STOPS[i + 1], local);
+}
+
+export function heatStopsCool(): string[] {
+  return [...COOL_STOPS];
+}
+
 export function heatStopsGray(_theme?: CanvasHostTheme): string[] {
   return [...GRAY_STOPS];
 }

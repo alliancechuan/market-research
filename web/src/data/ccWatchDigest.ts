@@ -5,6 +5,8 @@ export type CcWatchItem = {
   url: string;
   published?: string;
   source?: string;
+  /** 外文原标题（列表用中文钩子，展开可对照） */
+  titleEn?: string;
   query?: string;
   /** 叙事五问：首页展开优先展示 */
   who?: string;

@@ -1,6 +1,7 @@
-import { useMemo, useState, type MouseEvent } from "react";
+import { useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import { useCanvasState, useHostTheme, Text, Stack, Grid } from "./shims/cursor-canvas";
 import { mapChrome } from "./heatMapTheme";
+import { GlossedText } from "./GlossedText";
 import {
   FX_HISTORY,
   FX_CHG_PERIODS,
@@ -11,6 +12,32 @@ import {
   fxPointsSpanLabel,
   type FxHistoryCountry,
 } from "./data/fxHistory";
+import {
+  MACRO_STRESS_HISTORY,
+  STRESS_METRIC_META,
+  getStressCountry,
+  sliceStressByMonths,
+  stressChgPct,
+  stressSeriesReady,
+  type StressMetricId,
+  type StressSeries,
+} from "./data/macroStressHistory";
+import { CA_HISTORY, caChgPctPts, getCaHistory, sliceCaByYears } from "./data/caHistory";
+import {
+  RESERVES_HISTORY,
+  formatReservesYi,
+  getReservesHistory,
+  reservesChgPct,
+  sliceReservesByYears,
+} from "./data/reservesHistory";
+import {
+  getIncomeCompanion,
+  incomeChgPct,
+  incomeChgPts,
+  incomeSeriesReady,
+  sliceIncomeByYears,
+  type IncomeSeries,
+} from "./data/incomeCompanionHistory";
 
 /** 与 Atlas CountryMacroSnap 对齐的最小字段（避免循环依赖） */
 export type MacroChartSnap = {
@@ -150,8 +177,8 @@ function Panel({
 }: {
   title: string;
   subtitle?: string;
-  children: React.ReactNode;
-  footer?: React.ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
 }) {
   const theme = useHostTheme();
   const c = mapChrome(theme);
@@ -170,13 +197,21 @@ function Panel({
       }}
     >
       <div style={{ borderBottom: `1px solid ${c.panelBorder}`, paddingBottom: 6 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: c.textSecondary }}>{title}</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: c.textSecondary }}>
+          <GlossedText text={title} />
+        </div>
         {subtitle ? (
-          <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 2 }}>{subtitle}</div>
+          <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 2 }}>
+            <GlossedText text={subtitle} />
+          </div>
         ) : null}
       </div>
       {children}
-      {footer ? <div style={{ fontSize: 11, color: c.textSecondary, lineHeight: 1.4 }}>{footer}</div> : null}
+      {footer ? (
+        <div style={{ fontSize: 11, color: c.textSecondary, lineHeight: 1.4 }}>
+          {typeof footer === "string" ? <GlossedText text={footer} /> : footer}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -208,15 +243,24 @@ function HBar({
   );
 }
 
-export function IncomeSectorCharts({ snap, countryLabel }: { snap: MacroChartSnap; countryLabel: string }) {
+export function IncomeSectorCharts({
+  snap,
+  countryLabel,
+  countryCode,
+}: {
+  snap: MacroChartSnap;
+  countryLabel: string;
+  countryCode?: string;
+}) {
   const theme = useHostTheme();
   const c = mapChrome(theme);
   const sec = parseSector(snap.sectorMix);
   const gdpPc = firstNumber(snap.gdpPerCapitaUsd);
-  if (!sec && gdpPc == null) {
+  const incomePc = firstNumber(snap.incomePerCapita);
+  if (!sec && gdpPc == null && incomePc == null) {
     return (
       <Text size="small" tone="tertiary">
-        三产/人均GDP字段不足，暂无法作图。
+        三产/人均收入字段不足，暂无法作图。
       </Text>
     );
   }
@@ -228,64 +272,289 @@ export function IncomeSectorCharts({ snap, countryLabel }: { snap: MacroChartSna
     pS >= TERTIARY_HIGH ? "服务占比已过附加值偏高阈值" : pS >= 50 ? "服务占主导、制造仍有空间" : "仍偏初级/制造驱动";
   const primaryRisk = pA >= PRIMARY_HIGH;
 
+  const incomeFooter =
+    incomePc != null
+      ? "主尺为世行 GNI/人 PPP，不是住户可支配收入；与现价人均 GDP 不可直接比大小"
+      : gdpPc != null
+        ? "缺人均收入（GNI PPP）· 暂用人均 GDP 现价代理"
+        : "—";
+  const gdpBand =
+    gdpPc == null
+      ? null
+      : gdpPc >= 12000
+        ? "人均 GDP 已过成熟阈值 12000"
+        : gdpPc >= 2000
+          ? "人均 GDP 介于新兴与成熟阈值之间"
+          : "人均 GDP 低于准入关注阈值 2000";
+
+  const incomeFooterNode = (
+    <>
+      <GlossedText text={incomeFooter} />
+      {gdpBand ? (
+        <>
+          ；
+          <GlossedText text={gdpBand} />
+        </>
+      ) : null}
+    </>
+  );
+
   return (
-    <Grid columns={2} gap={8}>
-      <Panel
-        title={`${countryLabel} · 产业结构`}
-        subtitle="分项占比（TE 绝对值折算）"
-        footer={
-          <>
-            {highValue}
-            {primaryRisk ? `；农业占比偏高（≥${PRIMARY_HIGH}%阈值）` : ""}。服务阈值对照 {TERTIARY_HIGH}%。
-          </>
-        }
-      >
-        {sec ? (
-          <Stack gap={6}>
-            <HBar label="农业" pct={pA} color={theme.fill.primary} />
-            <HBar label="制造" pct={pM} color={c.accent} />
-            <HBar label="服务" pct={pS} color={c.added} />
-          </Stack>
-        ) : (
-          <Text size="small" tone="tertiary">
-            无三产分项
-          </Text>
-        )}
-      </Panel>
-      <Panel
-        title={`${countryLabel} · 收入能力`}
-        subtitle="人均GDP（美元）"
-        footer={
-          gdpPc != null
-            ? gdpPc >= 12000
-              ? "过成熟阈值 12000"
-              : gdpPc >= 2000
-                ? "介于新兴与成熟阈值之间"
-                : "低于准入关注阈值 2000"
-            : "—"
-        }
-      >
-        {gdpPc != null ? (
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 600, color: c.text }}>{Math.round(gdpPc).toLocaleString()}</div>
-            <div style={{ marginTop: 10, height: 8, background: theme.fill.quaternary }}>
-              <div
-                style={{
-                  width: `${Math.min(100, (gdpPc / 12000) * 100)}%`,
-                  height: "100%",
-                  background: gdpPc >= 12000 ? c.added : c.accent,
-                }}
-              />
+    <Stack gap={10}>
+      <Grid columns={2} gap={8}>
+        <Panel
+          title={`${countryLabel} · 产业结构`}
+          subtitle="分项占比（Trading Economics 绝对值折算）· 水平快照"
+          footer={
+            <>
+              {highValue}
+              {primaryRisk ? `；农业占比偏高（≥${PRIMARY_HIGH}%阈值）` : ""}。服务阈值对照 {TERTIARY_HIGH}%。
+              单看占比难判人均增减，见下方序时配看。
+            </>
+          }
+        >
+          {sec ? (
+            <Stack gap={6}>
+              <HBar label="农业" pct={pA} color={theme.fill.primary} />
+              <HBar label="制造" pct={pM} color={c.accent} />
+              <HBar label="服务" pct={pS} color={c.added} />
+            </Stack>
+          ) : (
+            <Text size="small" tone="tertiary">
+              无三产分项
+            </Text>
+          )}
+        </Panel>
+        <Panel
+          title={`${countryLabel} · 收入能力`}
+          subtitle="人均收入 · GNI/人 PPP（美元）"
+          footer={incomeFooterNode}
+        >
+          {incomePc != null || gdpPc != null ? (
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 600, color: c.text }}>
+                {Math.round(incomePc ?? gdpPc!).toLocaleString()}
+              </div>
+              <div style={{ fontSize: 11, color: c.textSecondary, marginTop: 4 }}>
+                <GlossedText
+                  text={incomePc != null ? "人均收入（GNI/人 PPP）" : "人均 GDP（现价·代理）"}
+                />
+              </div>
+              {incomePc != null && gdpPc != null ? (
+                <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 6, lineHeight: 1.4 }}>
+                  <GlossedText
+                    text={`对照人均 GDP 现价 ${Math.round(gdpPc).toLocaleString()} 美元${
+                      incomePc > gdpPc * 1.2
+                        ? " · PPP 抬升属常见（生活成本折算后购买力高于名义美元）"
+                        : ""
+                    }`}
+                  />
+                </div>
+              ) : null}
+              {gdpPc != null ? (
+                <>
+                  <div style={{ marginTop: 10, height: 8, background: theme.fill.quaternary }}>
+                    <div
+                      style={{
+                        width: `${Math.min(100, (gdpPc / 12000) * 100)}%`,
+                        height: "100%",
+                        background: gdpPc >= 12000 ? c.added : c.accent,
+                      }}
+                    />
+                  </div>
+                  <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 4 }}>
+                    <GlossedText text="准入成熟阈值进度按人均 GDP 现价（阈值 12000），不用 PPP 收入硬套" />
+                  </div>
+                </>
+              ) : null}
             </div>
-            <div style={{ fontSize: 10, color: c.textTertiary, marginTop: 4 }}>相对成熟阈值 12000 的进度</div>
-          </div>
-        ) : (
-          <Text size="small" tone="tertiary">
-            —
-          </Text>
-        )}
+          ) : (
+            <Text size="small" tone="tertiary">
+              —
+            </Text>
+          )}
+        </Panel>
+      </Grid>
+      <IncomeCompanionPanel countryCode={countryCode} countryLabel={countryLabel} />
+    </Stack>
+  );
+}
+
+function MiniSpark({
+  label,
+  series,
+  format,
+  mode,
+  years = 10,
+}: {
+  label: string;
+  series?: IncomeSeries | null;
+  format: (v: number) => string;
+  /** pct=相对变动%；pts=百分点差；level=只看末端 */
+  mode: "pct" | "pts";
+  years?: number;
+}) {
+  const theme = useHostTheme();
+  const c = mapChrome(theme);
+  if (!incomeSeriesReady(series)) {
+    return (
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 11, color: c.textTertiary }}>{label}</div>
+        <div style={{ fontSize: 12, color: c.textTertiary, marginTop: 6 }}>序时暂缺</div>
+      </div>
+    );
+  }
+  const pts = sliceIncomeByYears(series.points, years);
+  const last = pts[pts.length - 1]!;
+  const delta = mode === "pct" ? incomeChgPct(pts) : incomeChgPts(pts);
+  const flat = Math.abs(delta) < (mode === "pct" ? 1 : 0.3);
+  const up = delta > 0;
+  const stroke = flat ? c.accent : up ? "#1B8F4A" : "#C45C26";
+  const W = 140;
+  const H = 36;
+  const pad = 2;
+  const ys = pts.map((p) => p.v);
+  const lo = Math.min(...ys);
+  const hi = Math.max(...ys);
+  const span = hi - lo || 1;
+  const xAt = (i: number) => pad + (i / Math.max(1, pts.length - 1)) * (W - pad * 2);
+  const yAt = (v: number) => pad + (1 - (v - lo) / span) * (H - pad * 2);
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${xAt(i).toFixed(1)},${yAt(p.v).toFixed(1)}`).join(" ");
+  const sign = flat ? "" : up ? "+" : "";
+  const deltaTxt =
+    mode === "pct" ? `${sign}${delta.toFixed(0)}%` : `${sign}${delta.toFixed(1)}pt`;
+
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 6, alignItems: "baseline" }}>
+        <span style={{ fontSize: 11, color: c.textSecondary }}>{label}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: stroke, fontVariantNumeric: "tabular-nums" }}>
+          {deltaTxt}
+        </span>
+      </div>
+      <div style={{ fontSize: 14, fontWeight: 600, color: c.text, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
+        {format(last.v)}
+      </div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block", marginTop: 4, maxWidth: 160 }}>
+        <path d={line} fill="none" stroke={stroke} strokeWidth={1.6} />
+      </svg>
+      <div style={{ fontSize: 10, color: c.textTertiary }}>
+        {pts[0]!.d.slice(0, 4)}–{last.d.slice(0, 4)}
+      </div>
+    </div>
+  );
+}
+
+function IncomeCompanionPanel({
+  countryCode,
+  countryLabel,
+}: {
+  countryCode?: string;
+  countryLabel: string;
+}) {
+  const companion = countryCode ? getIncomeCompanion(countryCode) : undefined;
+  const infl = countryCode ? getStressCountry(countryCode)?.inflation : undefined;
+  const hasAny =
+    incomeSeriesReady(companion?.gdpPerCapita) ||
+    incomeSeriesReady(companion?.remittancesGdp) ||
+    incomeSeriesReady(companion?.agriShare) ||
+    incomeSeriesReady(companion?.servicesShare) ||
+    stressSeriesReady(infl);
+
+  // 结构 vs 人均：简短 so-what
+  let soWhat = "三产是形态快照；人均增减看序时，侨汇/通胀会让结构与口袋脱节。";
+  if (companion) {
+    const gdp = companion.gdpPerCapita;
+    const agri = companion.agriShare;
+    const svc = companion.servicesShare;
+    const remit = companion.remittancesGdp;
+    const bits: string[] = [];
+    if (incomeSeriesReady(gdp)) {
+      const d = incomeChgPct(sliceIncomeByYears(gdp.points, 10));
+      bits.push(d > 5 ? "近十年人均GDP上行" : d < -5 ? "近十年人均GDP承压" : "近十年人均GDP大致持平");
+    }
+    if (incomeSeriesReady(agri) && incomeSeriesReady(svc)) {
+      const da = incomeChgPts(sliceIncomeByYears(agri.points, 10));
+      const ds = incomeChgPts(sliceIncomeByYears(svc.points, 10));
+      if (da > 1 && ds < -1) bits.push("农业份额未降、服务回落→结构改善叙事要打折");
+      else if (da < -1 && ds > 1) bits.push("农业降、服务升→结构与人均更易同向");
+    }
+    if (incomeSeriesReady(remit)) {
+      const last = remit.points[remit.points.length - 1]!.v;
+      if (last >= 15) bits.push(`侨汇/GDP约${last.toFixed(0)}%，旁路收入权重高`);
+    }
+    if (bits.length) soWhat = bits.join("；") + "。";
+  }
+
+  if (!hasAny) {
+    return (
+      <Panel
+        title={`${countryLabel} · 人均与旁路收入（配看三产）`}
+        subtitle="序时暂缺"
+        footer="待接入世行人均GDP / 侨汇 / 三产份额序列"
+      >
+        <Text size="small" tone="tertiary">
+          {soWhat}
+        </Text>
       </Panel>
-    </Grid>
+    );
+  }
+
+  // 通胀转成 IncomeSeries 形态给 MiniSpark
+  const inflAsIncome: IncomeSeries | null = stressSeriesReady(infl)
+    ? {
+        unit: infl.unit,
+        source: infl.source,
+        points: infl.points.map((p) => ({ d: p.d, v: p.v })),
+      }
+    : null;
+
+  return (
+    <Panel
+      title={`${countryLabel} · 人均与旁路收入（配看三产）`}
+      subtitle="世行年频 · 近约十年 · 三产静态图请对照本行序时"
+      footer={soWhat}
+    >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+          gap: 12,
+        }}
+      >
+        <MiniSpark
+          label="人均 GDP"
+          series={companion?.gdpPerCapita}
+          mode="pct"
+          format={(v) => `${Math.round(v).toLocaleString()} 美元`}
+        />
+        <MiniSpark
+          label="侨汇 / GDP"
+          series={companion?.remittancesGdp}
+          mode="pts"
+          format={(v) => `${v.toFixed(1)}%`}
+        />
+        <MiniSpark
+          label="农业占 GDP"
+          series={companion?.agriShare}
+          mode="pts"
+          format={(v) => `${v.toFixed(1)}%`}
+        />
+        <MiniSpark
+          label="服务占 GDP"
+          series={companion?.servicesShare}
+          mode="pts"
+          format={(v) => `${v.toFixed(1)}%`}
+        />
+        <MiniSpark
+          label="通胀（月频）"
+          series={inflAsIncome}
+          mode="pts"
+          years={5}
+          format={(v) => `${v.toFixed(1)}%`}
+        />
+      </div>
+    </Panel>
   );
 }
 
@@ -510,6 +779,310 @@ function FxTrendPanel({
   );
 }
 
+const CA_YEAR_WINDOWS: readonly { id: "5y" | "10y" | "all"; label: string; years: number | null }[] = [
+  { id: "5y", label: "5年", years: 5 },
+  { id: "10y", label: "10年", years: 10 },
+  { id: "all", label: "全区间", years: null },
+];
+
+function ReservesTrendPanel({
+  countryLabel,
+  countryCode,
+  snapRes,
+  snapResAsOf,
+  fxLevelNote,
+}: {
+  countryLabel: string;
+  countryCode?: string;
+  snapRes: number | null;
+  snapResAsOf?: string | null;
+  fxLevelNote?: string | null;
+}) {
+  const theme = useHostTheme();
+  const c = mapChrome(theme);
+  const [win, setWin] = useCanvasState<"5y" | "10y" | "all">("resHistWin1", "10y");
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const series = countryCode ? getReservesHistory(countryCode) : undefined;
+  const winMeta = CA_YEAR_WINDOWS.find((w) => w.id === win) || CA_YEAR_WINDOWS[1]!;
+
+  if (!series) {
+    return (
+      <Panel
+        title={`${countryLabel} · 外汇储备`}
+        subtitle={`时点 · 亿美元${snapResAsOf ? ` · ${snapResAsOf}` : ""}`}
+        footer={fxLevelNote || (snapRes != null ? "序时暂缺" : "—")}
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: c.text }}>
+          {snapRes != null ? snapRes.toLocaleString() : "—"}
+        </div>
+      </Panel>
+    );
+  }
+
+  const pts = useMemo(() => sliceReservesByYears(series.points, winMeta.years), [series.points, winMeta.years]);
+  const chg = reservesChgPct(pts);
+  const flat = Math.abs(chg) < 0.5;
+  const up = chg > 0;
+  const stroke = flat ? c.accent : up ? "#1B8F4A" : "#C45C26";
+  const fill = flat ? "rgba(80,140,180,0.10)" : up ? "rgba(27,143,74,0.10)" : "rgba(196,92,38,0.12)";
+
+  const W = 320;
+  const H = 88;
+  const padX = 4;
+  const padY = 10;
+  const ys = pts.map((p) => p.v);
+  const lo = Math.min(...ys);
+  const hi = Math.max(...ys);
+  const span = hi - lo || Math.abs(lo) * 0.02 || 1;
+  const xAt = (i: number) => padX + (i / Math.max(1, pts.length - 1)) * (W - padX * 2);
+  const yAt = (v: number) => padY + (1 - (v - lo) / span) * (H - padY * 2);
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${xAt(i).toFixed(1)},${yAt(p.v).toFixed(1)}`).join(" ");
+  const area = `${line} L${xAt(pts.length - 1).toFixed(1)},${(H - padY).toFixed(1)} L${xAt(0).toFixed(1)},${(H - padY).toFixed(1)} Z`;
+  const activeIdx = hoverIdx != null && hoverIdx < pts.length ? hoverIdx : pts.length - 1;
+  const active = pts[activeIdx]!;
+  const last = pts[pts.length - 1]!;
+
+  const onMove = (e: MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const t = (e.clientX - rect.left) / rect.width;
+    setHoverIdx(Math.max(0, Math.min(pts.length - 1, Math.round(t * (pts.length - 1)))));
+  };
+
+  const attr = flat ? "区间大致持平" : up ? "外储增厚/缓冲改善" : "外储回落/失血压力";
+
+  return (
+    <Panel
+      title={`${countryLabel} · 外汇储备`}
+      subtitle={`年频 · 亿美元 · ${pts[0]!.d.slice(0, 4)}..${last.d.slice(0, 4)} · ${winMeta.label}`}
+      footer={`${series.source ?? "World Bank"}${series.note ? ` · ${series.note}` : ""} · ${attr}${fxLevelNote ? ` · ${fxLevelNote}` : ""}`}
+    >
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+        {CA_YEAR_WINDOWS.map((w) => {
+          const activeWin = win === w.id;
+          return (
+            <button
+              key={w.id}
+              type="button"
+              onClick={() => {
+                setWin(w.id);
+                setHoverIdx(null);
+              }}
+              style={{
+                height: 22,
+                padding: "0 8px",
+                borderRadius: 6,
+                border: `1px solid ${activeWin ? c.accent : c.panelBorder}`,
+                background: activeWin ? "rgba(80,140,180,0.12)" : c.panelBg,
+                color: activeWin ? c.text : c.textSecondary,
+                cursor: "pointer",
+                font: "inherit",
+                fontSize: 11,
+                fontWeight: activeWin ? 600 : 500,
+              }}
+            >
+              {w.label}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+        <div>
+          <span style={{ fontSize: 22, fontWeight: 600, color: hoverIdx != null ? stroke : c.text, fontVariantNumeric: "tabular-nums" }}>
+            {formatReservesYi(active.v)}
+          </span>
+          <span style={{ fontSize: 10, color: c.textTertiary, marginLeft: 6 }}>亿美元 · {active.d.slice(0, 7)}</span>
+        </div>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: flat ? c.textTertiary : up ? "#1B8F4A" : "#C45C26",
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {flat ? "–" : up ? "▲" : "▼"}
+          {flat ? "" : `${up ? "+" : ""}${chg.toFixed(1)}%`}
+        </span>
+      </div>
+      <div
+        style={{ position: "relative", width: "100%", marginTop: 2, cursor: "crosshair" }}
+        onMouseMove={onMove}
+        onMouseLeave={() => setHoverIdx(null)}
+      >
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={72} preserveAspectRatio="none" aria-hidden>
+          <path d={area} fill={fill} stroke="none" />
+          <path d={line} fill="none" stroke={stroke} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+          {hoverIdx != null ? (
+            <circle cx={xAt(hoverIdx)} cy={yAt(pts[hoverIdx]!.v)} r={2.8} fill={stroke} stroke={c.panelBg} strokeWidth={1.2} />
+          ) : null}
+        </svg>
+      </div>
+    </Panel>
+  );
+}
+
+function CaTrendPanel({
+  countryLabel,
+  countryCode,
+  snapCa,
+  snapCaAsOf,
+}: {
+  countryLabel: string;
+  countryCode?: string;
+  snapCa: number | null;
+  snapCaAsOf?: string | null;
+}) {
+  const theme = useHostTheme();
+  const c = mapChrome(theme);
+  const [win, setWin] = useCanvasState<"5y" | "10y" | "all">("caHistWin1", "10y");
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const series = countryCode ? getCaHistory(countryCode) : undefined;
+  const winMeta = CA_YEAR_WINDOWS.find((w) => w.id === win) || CA_YEAR_WINDOWS[1]!;
+
+  if (!series) {
+    return (
+      <Panel
+        title={`${countryLabel} · 经常账户`}
+        subtitle={`时点 · CA/GDP${snapCaAsOf ? ` · ${snapCaAsOf}` : ""}`}
+        footer={snapCa != null ? (snapCa >= 0 ? "顺差/平衡偏稳" : "逆差") : "序时暂缺"}
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: snapCa != null && snapCa < 0 ? c.removed : c.added }}>
+          {snapCa != null ? `${snapCa}%` : "—"}
+        </div>
+        <div style={{ marginTop: 8, height: 6, background: theme.fill.quaternary, position: "relative" }}>
+          <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: c.panelBorder }} />
+          {snapCa != null ? (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                left: snapCa < 0 ? `${50 - Math.min(45, Math.abs(snapCa) * 10)}%` : "50%",
+                width: `${Math.min(45, Math.abs(snapCa) * 10)}%`,
+                background: snapCa < 0 ? c.removed : c.added,
+              }}
+            />
+          ) : null}
+        </div>
+      </Panel>
+    );
+  }
+
+  const pts = useMemo(() => sliceCaByYears(series.points, winMeta.years), [series.points, winMeta.years]);
+  const delta = caChgPctPts(pts);
+  const flat = Math.abs(delta) < 0.05;
+  const up = delta > 0; // 顺差扩大或逆差收窄 = 外部缓冲改善
+  const stroke = flat ? c.accent : up ? "#1B8F4A" : "#C45C26";
+  const fill = flat ? "rgba(80,140,180,0.10)" : up ? "rgba(27,143,74,0.10)" : "rgba(196,92,38,0.12)";
+
+  const W = 320;
+  const H = 88;
+  const padX = 4;
+  const padY = 10;
+  const ys = pts.map((p) => p.v);
+  const lo = Math.min(0, ...ys);
+  const hi = Math.max(0, ...ys);
+  const span = hi - lo || 1;
+  const xAt = (i: number) => padX + (i / Math.max(1, pts.length - 1)) * (W - padX * 2);
+  const yAt = (v: number) => padY + (1 - (v - lo) / span) * (H - padY * 2);
+  const zeroY = yAt(0);
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${xAt(i).toFixed(1)},${yAt(p.v).toFixed(1)}`).join(" ");
+  const area = `${line} L${xAt(pts.length - 1).toFixed(1)},${zeroY.toFixed(1)} L${xAt(0).toFixed(1)},${zeroY.toFixed(1)} Z`;
+  const activeIdx = hoverIdx != null && hoverIdx < pts.length ? hoverIdx : pts.length - 1;
+  const active = pts[activeIdx]!;
+  const last = pts[pts.length - 1]!;
+
+  const onMove = (e: MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const t = (e.clientX - rect.left) / rect.width;
+    setHoverIdx(Math.max(0, Math.min(pts.length - 1, Math.round(t * (pts.length - 1)))));
+  };
+
+  const attr =
+    flat
+      ? "区间大致持平"
+      : up
+        ? delta > 0 && last.v >= 0
+          ? "顺差扩大/外部缓冲改善"
+          : "逆差收窄/外部压力缓解"
+        : last.v < 0
+          ? "逆差加深/外部压力上升"
+          : "顺差收窄";
+
+  return (
+    <Panel
+      title={`${countryLabel} · 经常账户`}
+      subtitle={`年频 · CA/GDP · ${pts[0]!.d.slice(0, 4)}..${last.d.slice(0, 4)} · ${winMeta.label}`}
+      footer={`${series.source ?? "World Bank"}${series.note ? ` · ${series.note}` : ""} · ${attr} · 零轴=平衡`}
+    >
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+        {CA_YEAR_WINDOWS.map((w) => {
+          const activeWin = win === w.id;
+          return (
+            <button
+              key={w.id}
+              type="button"
+              onClick={() => {
+                setWin(w.id);
+                setHoverIdx(null);
+              }}
+              style={{
+                height: 22,
+                padding: "0 8px",
+                borderRadius: 6,
+                border: `1px solid ${activeWin ? c.accent : c.panelBorder}`,
+                background: activeWin ? "rgba(80,140,180,0.12)" : c.panelBg,
+                color: activeWin ? c.text : c.textSecondary,
+                cursor: "pointer",
+                font: "inherit",
+                fontSize: 11,
+                fontWeight: activeWin ? 600 : 500,
+              }}
+            >
+              {w.label}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+        <div>
+          <span style={{ fontSize: 22, fontWeight: 600, color: active.v < 0 ? c.removed : c.added, fontVariantNumeric: "tabular-nums" }}>
+            {active.v.toFixed(1)}%
+          </span>
+          <span style={{ fontSize: 10, color: c.textTertiary, marginLeft: 6 }}>{active.d.slice(0, 7)}</span>
+        </div>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: flat ? c.textTertiary : up ? "#1B8F4A" : "#C45C26",
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {flat ? "–" : up ? "▲" : "▼"}
+          {flat ? "" : `${up ? "+" : ""}${delta.toFixed(1)}pt`}
+        </span>
+      </div>
+      <div
+        style={{ position: "relative", width: "100%", marginTop: 2, cursor: "crosshair" }}
+        onMouseMove={onMove}
+        onMouseLeave={() => setHoverIdx(null)}
+      >
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={72} preserveAspectRatio="none" aria-hidden>
+          <line x1={padX} x2={W - padX} y1={zeroY} y2={zeroY} stroke={c.panelBorder} strokeWidth={1} strokeDasharray="3 3" />
+          <path d={area} fill={fill} stroke="none" opacity={0.85} />
+          <path d={line} fill="none" stroke={stroke} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+          {hoverIdx != null ? (
+            <circle cx={xAt(hoverIdx)} cy={yAt(pts[hoverIdx]!.v)} r={2.8} fill={stroke} stroke={c.panelBg} strokeWidth={1.2} />
+          ) : null}
+        </svg>
+      </div>
+    </Panel>
+  );
+}
+
 export function FxCaCharts({
   snap,
   countryLabel,
@@ -603,10 +1176,16 @@ export function FxCaCharts({
     </div>
   );
 
-  const caAsOf = extractAsOf(snap.currentAccount);
   const resAsOf = extractAsOf(snap.fxReserves);
   const volAsOf = extractAsOf(snap.fxVolInYear);
   const fxLevelAsOf = extractAsOf(snap.fxTrend) || extractAsOf(snap.fxHint);
+  const fxLevelNote =
+    snap.fxTrend || snap.fxHint
+      ? `汇率水平${fxLevelAsOf ? ` · ${fxLevelAsOf}` : ""}：${splitValue(snap.fxTrend || snap.fxHint || "")}`
+      : null;
+  const hasExtHist = Boolean(
+    (countryCode && getCaHistory(countryCode)) || (countryCode && getReservesHistory(countryCode)),
+  );
 
   return (
     <Stack gap={8}>
@@ -620,53 +1199,19 @@ export function FxCaCharts({
         </Panel>
       )}
       <Grid columns={3} gap={8}>
-        <Panel
-          title={`${countryLabel} · 经常账户`}
-          subtitle={`时段 · CA/GDP${caAsOf ? ` · ${caAsOf}` : ""}`}
-          footer={ca != null ? (ca >= 0 ? "顺差/平衡偏稳" : "逆差") : "—"}
-        >
-          <div style={{ fontSize: 22, fontWeight: 600, color: ca != null && ca < 0 ? c.removed : c.added }}>
-            {ca != null ? `${ca}%` : "—"}
-          </div>
-          <div style={{ marginTop: 8, height: 6, background: theme.fill.quaternary, position: "relative" }}>
-            <div
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: 0,
-                bottom: 0,
-                width: 1,
-                background: c.panelBorder,
-              }}
-            />
-            {ca != null ? (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  left: ca < 0 ? `${50 - Math.min(45, Math.abs(ca) * 10)}%` : "50%",
-                  width: `${Math.min(45, Math.abs(ca) * 10)}%`,
-                  background: ca < 0 ? c.removed : c.added,
-                }}
-              />
-            ) : null}
-          </div>
-        </Panel>
-        <Panel
-          title={`${countryLabel} · 外汇储备`}
-          subtitle={`时点 · 亿美元${resAsOf ? ` · ${resAsOf}` : ""}`}
-          footer={
-            snap.fxTrend || snap.fxHint
-              ? `汇率水平（时点）${fxLevelAsOf ? ` · ${fxLevelAsOf}` : ""}：${snap.fxTrend || snap.fxHint}`
-              : "—"
-          }
-        >
-          <div style={{ fontSize: 22, fontWeight: 600, color: c.text }}>{res != null ? res.toLocaleString() : "—"}</div>
-          <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 6 }}>
-            波动（时段·年内）{snap.fxVolInYear ? `${splitValue(snap.fxVolInYear)}${volAsOf ? ` · ${volAsOf}` : ""}` : "—"}
-          </div>
-        </Panel>
+        <CaTrendPanel
+          countryLabel={countryLabel}
+          countryCode={countryCode}
+          snapCa={ca}
+          snapCaAsOf={extractAsOf(snap.currentAccount)}
+        />
+        <ReservesTrendPanel
+          countryLabel={countryLabel}
+          countryCode={countryCode}
+          snapRes={res}
+          snapResAsOf={resAsOf}
+          fxLevelNote={fxLevelNote}
+        />
         <Panel
           title={`${countryLabel} · 汇兑韧性`}
           subtitle={`示意分 ${score}/100 · 非评级 · 混用时段+时点`}
@@ -688,9 +1233,20 @@ export function FxCaCharts({
           </Stack>
           <div style={{ fontSize: 11, color: c.textTertiary, marginTop: 8, lineHeight: 1.4 }}>
             {notes.slice(0, 3).join("；")}
+            {snap.fxVolInYear ? `；波动 ${splitValue(snap.fxVolInYear)}${volAsOf ? ` · ${volAsOf}` : ""}` : ""}
           </div>
         </Panel>
       </Grid>
+      {hasExtHist ? (
+        <div style={{ fontSize: 10, color: c.textTertiary, lineHeight: 1.4 }}>
+          外部缓冲序时：CA/GDP · {CA_HISTORY.meta.range}；外储 · {RESERVES_HISTORY.meta.range || "—"}（世行年频，末端可并入国别卡）。与汇率图并读：逆差加深+外储回落常抬本币压力。对照{" "}
+          {CA_HISTORY.meta.asOf}
+          {RESERVES_HISTORY.meta.asOf && RESERVES_HISTORY.meta.asOf !== CA_HISTORY.meta.asOf
+            ? ` / 外储 ${RESERVES_HISTORY.meta.asOf}`
+            : ""}
+          。
+        </div>
+      ) : null}
     </Stack>
   );
 }
@@ -773,5 +1329,229 @@ export function CreditDebtCharts({ snap, countryLabel }: { snap: MacroChartSnap;
         </Stack>
       </Panel>
     </Grid>
+  );
+}
+
+const STRESS_CHG_PERIODS: readonly { id: FxChgPeriodId; label: string; months: number | null }[] = [
+  { id: "1y", label: "1年", months: 12 },
+  { id: "3y", label: "3年", months: 36 },
+  { id: "5y", label: "5年", months: 60 },
+  { id: "all", label: "全区间", months: null },
+];
+
+function StressSpark({
+  label,
+  series,
+  format,
+  accent,
+  months,
+  metricId,
+}: {
+  label: string;
+  series: StressSeries;
+  format: (v: number) => string;
+  accent: string;
+  months: number | null;
+  metricId?: StressMetricId;
+}) {
+  const theme = useHostTheme();
+  const c = mapChrome(theme);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const pts = useMemo(() => sliceStressByMonths(series.points, months), [series.points, months]);
+  const chg = stressChgPct(pts);
+  const flat = Math.abs(chg) < 0.05;
+  const up = chg > 0;
+  // 默认：升=压力↑暖色，降=缓用绿；通胀读数为负（通缩）则改冷色
+  let stroke = flat ? accent : up ? "#C45C26" : "#1B8F4A";
+  let fill = flat ? "rgba(80,140,180,0.10)" : up ? "rgba(196,92,38,0.12)" : "rgba(27,143,74,0.10)";
+
+  const W = 320;
+  const H = 72;
+  const padX = 4;
+  const padY = 8;
+  const ys = pts.map((p) => p.v);
+  const activeIdx = hoverIdx != null && hoverIdx < pts.length ? hoverIdx : pts.length - 1;
+  const active = pts[activeIdx]!;
+  const inflNeg = metricId === "inflation" && active.v < 0;
+  const crossesZero = metricId === "inflation" && Math.min(...ys) < 0 && Math.max(...ys) > 0;
+  const hasNeg = metricId === "inflation" && Math.min(...ys) < 0;
+  if (inflNeg) {
+    stroke = "#2B6CB0";
+    fill = "rgba(43,108,176,0.14)";
+  }
+  const valueColor = inflNeg ? "#2B6CB0" : hoverIdx != null ? stroke : c.text;
+
+  let lo = Math.min(...ys);
+  let hi = Math.max(...ys);
+  if (hasNeg) {
+    lo = Math.min(0, lo);
+    hi = Math.max(0, hi);
+  }
+  const span = hi - lo || Math.abs(lo) * 0.02 || 1;
+  const xAt = (i: number) => padX + (i / Math.max(1, pts.length - 1)) * (W - padX * 2);
+  const yAt = (v: number) => padY + (1 - (v - lo) / span) * (H - padY * 2);
+  const zeroY = hasNeg ? yAt(0) : H - padY;
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${xAt(i).toFixed(1)},${yAt(p.v).toFixed(1)}`).join(" ");
+  const area = hasNeg
+    ? `${line} L${xAt(pts.length - 1).toFixed(1)},${zeroY.toFixed(1)} L${xAt(0).toFixed(1)},${zeroY.toFixed(1)} Z`
+    : `${line} L${xAt(pts.length - 1).toFixed(1)},${(H - padY).toFixed(1)} L${xAt(0).toFixed(1)},${(H - padY).toFixed(1)} Z`;
+
+  const onMove = (e: MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const t = (e.clientX - rect.left) / rect.width;
+    setHoverIdx(Math.max(0, Math.min(pts.length - 1, Math.round(t * (pts.length - 1)))));
+  };
+
+  return (
+    <div
+      style={{
+        minWidth: 0,
+        padding: "8px 8px 6px",
+        border: `1px solid ${c.panelBorder}`,
+        borderRadius: 6,
+        background: c.panelBg,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: c.textSecondary }}>
+          <GlossedText text={label} />
+          {series.synthetic ? (
+            <span style={{ marginLeft: 6, fontWeight: 400, color: c.textTertiary }}>示意</span>
+          ) : null}
+          {inflNeg ? (
+            <span style={{ marginLeft: 6, fontWeight: 500, color: "#2B6CB0" }}>通缩</span>
+          ) : null}
+        </div>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: flat ? c.textTertiary : up ? "#C45C26" : "#1B8F4A",
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {flat ? "–" : up ? "▲" : "▼"}
+          {flat ? "" : `${up ? "+" : ""}${chg.toFixed(1)}%`}
+        </span>
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 2 }}>
+        <span style={{ fontSize: 18, fontWeight: 600, color: valueColor, fontVariantNumeric: "tabular-nums" }}>
+          {format(active.v)}
+        </span>
+        <span style={{ fontSize: 10, color: c.textTertiary }}>{active.d.slice(0, 7)}</span>
+      </div>
+      <div
+        style={{ position: "relative", width: "100%", marginTop: 2, cursor: "crosshair" }}
+        onMouseMove={onMove}
+        onMouseLeave={() => setHoverIdx(null)}
+      >
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={64} preserveAspectRatio="none" aria-hidden>
+          {crossesZero || hasNeg ? (
+            <line
+              x1={padX}
+              x2={W - padX}
+              y1={zeroY}
+              y2={zeroY}
+              stroke={c.panelBorder}
+              strokeWidth={1}
+              strokeDasharray="3 3"
+            />
+          ) : null}
+          <path d={area} fill={fill} stroke="none" />
+          <path d={line} fill="none" stroke={stroke} strokeWidth={1.4} strokeLinejoin="round" strokeLinecap="round" />
+          {hoverIdx != null ? (
+            <circle cx={xAt(hoverIdx)} cy={yAt(pts[hoverIdx]!.v)} r={2.8} fill={stroke} stroke={c.panelBg} strokeWidth={1.2} />
+          ) : null}
+        </svg>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: c.textTertiary }}>
+        <span>{pts[0]?.d.slice(0, 7)}</span>
+        <span>{series.source ?? ""}</span>
+        <span>{pts[pts.length - 1]?.d.slice(0, 7)}</span>
+      </div>
+    </div>
+  );
+}
+
+/** 景气与定价压测：通胀 / 政策利率 / 零售汽油精要折线（观测；汽油多为示意） */
+export function StressPricingCharts({
+  countryCode,
+  countryLabel,
+}: {
+  countryCode: string;
+  countryLabel: string;
+}) {
+  const theme = useHostTheme();
+  const c = mapChrome(theme);
+  const [period, setPeriod] = useCanvasState<FxChgPeriodId>("stressChgPeriod1", "3y");
+  const row = getStressCountry(countryCode);
+  const periodMeta = STRESS_CHG_PERIODS.find((p) => p.id === period) || STRESS_CHG_PERIODS[1]!;
+
+  const cards = STRESS_METRIC_META.map((m) => {
+    const series = row?.[m.id];
+    if (!stressSeriesReady(series)) return null;
+    return { ...m, series };
+  }).filter(Boolean) as { id: StressMetricId; label: string; format: (v: number) => string; series: StressSeries }[];
+
+  if (!cards.length) {
+    return (
+      <Panel title={`${countryLabel} · 压测趋势`} subtitle="序时暂缺">
+        <Text size="small" tone="tertiary">
+          该国暂无通胀/政策利率/汽油序时落库（BIS 未覆盖或汽油缺快照）。
+        </Text>
+      </Panel>
+    );
+  }
+
+  return (
+    <Stack gap={8}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+        <span style={{ fontSize: 11, color: c.textTertiary }}>
+          压测序时 · {MACRO_STRESS_HISTORY.meta.range} · 窗口
+        </span>
+        {STRESS_CHG_PERIODS.map((p) => {
+          const active = period === p.id;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPeriod(p.id)}
+              style={{
+                height: 22,
+                padding: "0 8px",
+                borderRadius: 6,
+                border: `1px solid ${active ? c.accent : c.panelBorder}`,
+                background: active ? "rgba(80,140,180,0.12)" : c.panelBg,
+                color: active ? c.text : c.textSecondary,
+                cursor: "pointer",
+                font: "inherit",
+                fontSize: 11,
+                fontWeight: active ? 600 : 500,
+              }}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+      <Grid columns={cards.length >= 3 ? 3 : cards.length} gap={8}>
+        {cards.map((card) => (
+          <StressSpark
+            key={card.id}
+            label={card.label}
+            series={card.series}
+            format={card.format}
+            accent={c.accent}
+            months={periodMeta.months}
+            metricId={card.id}
+          />
+        ))}
+      </Grid>
+      <div style={{ fontSize: 10, color: c.textTertiary, lineHeight: 1.4 }}>
+        通胀/政策利率：BIS 月度观测。零售汽油标「示意」时=TE 泵价水平×布伦特月均路径，非官方零售序时。涨跌按区间首末变动（升=定价压力↑）；通胀负值标通缩冷色并画零轴。对照时点{" "}
+        {MACRO_STRESS_HISTORY.meta.asOf}。
+      </div>
+    </Stack>
   );
 }

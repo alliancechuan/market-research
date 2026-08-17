@@ -242,6 +242,7 @@ export function IncomeSectorCharts({ snap }: { snap: MacroChartSnap }) {
   const c = mapChrome(theme);
   const sectors = parseSectorAbs(snap.sectorMix);
   const gdpPc = parseFirstNumber(snap.gdpPerCapitaUsd);
+  const incomePc = parseFirstNumber(snap.incomePerCapita);
   const total = sectors ? sectors.agri + sectors.mfg + sectors.svc : 0;
   const shares = sectors && total > 0
     ? {
@@ -291,42 +292,64 @@ export function IncomeSectorCharts({ snap }: { snap: MacroChartSnap }) {
 
       <Panel
         title="收入能力"
-        subtitle={`人均GDP成熟阈值 ${THRESH.gdpPerCapitaMatureUsd.toLocaleString()} 美元`}
+        subtitle="人均收入主尺 · GNI/人 PPP（非住户可支配收入）"
         footer={
-          gdpPc != null
-            ? gdpPc >= THRESH.gdpPerCapitaMatureUsd
-              ? "已过成熟阈值 · 收入底盘相对扎实"
-              : gdpPc >= 5000
-                ? "中等收入带 · 信贷定价需兼顾增速与波动"
-                : "偏低收入带 · 客群偿付与客单价约束更强"
-            : "缺人均GDP"
+          incomePc != null
+            ? `PPP 收入与现价人均GDP口径不同，新兴市场常见 PPP＞名义；准入成熟阈值仍按人均GDP ${THRESH.gdpPerCapitaMatureUsd.toLocaleString()} 美元`
+            : gdpPc != null
+              ? "缺人均收入（GNI PPP）· 暂以人均GDP现价代理"
+              : "缺人均收入与人均GDP"
         }
       >
-        {gdpPc != null ? (
-          <Meter
-            label="人均GDP（美元）"
-            value={gdpPc}
-            max={Math.max(THRESH.gdpPerCapitaMatureUsd * 1.4, gdpPc * 1.1)}
-            marker={THRESH.gdpPerCapitaMatureUsd}
-            format={(v) => `${Math.round(v).toLocaleString()}`}
-            tone={
-              gdpPc >= THRESH.gdpPerCapitaMatureUsd
-                ? "good"
-                : gdpPc >= 5000
-                  ? "warn"
-                  : "bad"
-            }
-          />
+        {incomePc != null || gdpPc != null ? (
+          <Stack gap={8}>
+            <Meter
+              label={incomePc != null ? "人均收入（GNI/人 PPP，美元）" : "人均GDP（现价·代理，美元）"}
+              value={incomePc ?? gdpPc!}
+              max={Math.max(
+                (incomePc ?? gdpPc!) * 1.15,
+                THRESH.gdpPerCapitaMatureUsd * 1.4,
+              )}
+              format={(v) => `${Math.round(v).toLocaleString()}`}
+              tone="neutral"
+            />
+            {incomePc != null && gdpPc != null ? (
+              <Meter
+                label="对照 · 人均GDP现价（美元）"
+                value={gdpPc}
+                max={Math.max(THRESH.gdpPerCapitaMatureUsd * 1.4, gdpPc * 1.1)}
+                marker={THRESH.gdpPerCapitaMatureUsd}
+                format={(v) => `${Math.round(v).toLocaleString()}`}
+                tone={
+                  gdpPc >= THRESH.gdpPerCapitaMatureUsd
+                    ? "good"
+                    : gdpPc >= 5000
+                      ? "warn"
+                      : "bad"
+                }
+              />
+            ) : gdpPc != null && incomePc == null ? (
+              <Meter
+                label="人均GDP（美元）"
+                value={gdpPc}
+                max={Math.max(THRESH.gdpPerCapitaMatureUsd * 1.4, gdpPc * 1.1)}
+                marker={THRESH.gdpPerCapitaMatureUsd}
+                format={(v) => `${Math.round(v).toLocaleString()}`}
+                tone={
+                  gdpPc >= THRESH.gdpPerCapitaMatureUsd
+                    ? "good"
+                    : gdpPc >= 5000
+                      ? "warn"
+                      : "bad"
+                }
+              />
+            ) : null}
+          </Stack>
         ) : (
           <Text size="small" tone="tertiary">
             —
           </Text>
         )}
-        {!snap.incomePerCapita ? (
-          <Text size="small" tone="tertiary">
-            人均可支配收入未单列 · 现以人均GDP作收入能力代理
-          </Text>
-        ) : null}
       </Panel>
     </Grid>
   );

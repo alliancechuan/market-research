@@ -31,7 +31,7 @@ import {
 import { MapMacroKV } from "./SourceCite";
 import { enrichMacroField } from "./data/macroFieldProvenance";
 import { getCountryMacro } from "./data/countryMacro";
-import { heatColorWarm, heatColorGreen } from "./heatMapTheme";
+import { heatColorWarm, heatColorGreen, heatColorCool } from "./heatMapTheme";
 import { summarizeNbfcForCountry } from "./data/countryZoomDetails";
 import {
   INVESTED_BY_CODE,
@@ -193,13 +193,16 @@ function MacroDetailPanel({
   const snap = getCountryMacro(code);
   const fieldMeta = MACRO_MAP_FACTORS.find((f) => f.id === factorId);
   const raw = fieldMeta ? metric.rawByCode[code] : undefined;
-  const prov = fieldMeta && raw ? enrichMacroField(fieldMeta.field, raw, snap?.asOf) : null;
+  const prov =
+    fieldMeta?.field && raw ? enrichMacroField(fieldMeta.field, raw, snap?.asOf) : null;
   const reading =
     prov?.value ||
     (v != null
       ? factorId === "fxVol"
         ? `${formatMacroValue(factorId, v)}（年内高低/均价）`
-        : `${formatMacroValue(factorId, v)}${metric.unit ? ` · ${metric.unit}` : ""}`
+        : factorId === "fxChg"
+          ? `${formatMacroValue(factorId, v)}（近1年本币对美元）`
+          : `${formatMacroValue(factorId, v)}${metric.unit ? ` · ${metric.unit}` : ""}`
       : "暂无数值");
   return (
     <MapDetailShell
@@ -289,10 +292,32 @@ export function MacroHeatGlobe({
   const minV = useMemo(() => (vals.length ? Math.min(...vals) : 0), [vals]);
   const maxV = useMemo(() => (vals.length ? Math.max(...vals) : 1), [vals]);
   const warmRisk = metric.sense === "high_risk";
+  const factorMeta = MACRO_MAP_FACTORS.find((f) => f.id === factor);
+  const diverging0 = factorMeta?.scale === "diverging0";
+  /** 负/正各自归一：负值色阶不被 US/CA 等大额正值压扁 */
+  const negSpan = minV < 0 ? Math.abs(minV) : 0;
+  const posSpan = maxV > 0 ? maxV : 0;
 
   const intensity = (v: number) => {
+    if (diverging0) {
+      if (v < 0 && negSpan > 0) return Math.min(1, Math.max(0, Math.abs(v) / negSpan));
+      if (v > 0 && posSpan > 0) return Math.min(1, Math.max(0, v / posSpan));
+      return 0;
+    }
     if (!(maxV > minV)) return 1;
     return Math.min(1, Math.max(0, (v - minV) / (maxV - minV)));
+  };
+
+  const landFill = (v: number) => {
+    const t = intensity(v);
+    if (diverging0) {
+      if (v < 0) {
+        return factorMeta?.divergeNegTone === "cool" ? heatColorCool(t) : heatColorGreen(t);
+      }
+      if (v > 0) return heatColorWarm(t);
+      return c.emptyLand;
+    }
+    return warmRisk ? heatColorWarm(t) : heatColorGreen(t);
   };
 
   const countries = useMemo(() => {
@@ -402,8 +427,6 @@ export function MacroHeatGlobe({
     }
     return out;
   }, [showInvested, projection, width, height, regionSet]);
-
-  const landFill = (t: number) => (warmRisk ? heatColorWarm(t) : heatColorGreen(t));
 
   return (
     <div
@@ -608,7 +631,7 @@ export function MacroHeatGlobe({
             const has = v != null;
             const invested = a2 ? INVESTED_BY_CODE[a2] : undefined;
             const showStroke = Boolean(showInvested && invested);
-            const fillColor = has ? landFill(intensity(v)) : c.emptyLand;
+            const fillColor = has ? landFill(v) : c.emptyLand;
             return (
               <path
                 key={`${f.id ?? i}`}
@@ -694,7 +717,17 @@ export function MacroHeatGlobe({
           <MapTooltip
             left={Math.min(hover.x + 12, width - 200)}
             top={Math.max(8, hover.y - 56)}
-            accent={warmRisk ? "removed" : "added"}
+            accent={
+              diverging0
+                ? hover.value < 0
+                  ? "added"
+                  : hover.value > 0
+                    ? "removed"
+                    : "neutral"
+                : warmRisk
+                  ? "removed"
+                  : "added"
+            }
           >
             <div style={{ fontWeight: 600 }}>{hover.name}</div>
             {hover.raw || metric.byCode[hover.a2] != null ? (
@@ -725,13 +758,32 @@ export function MacroHeatGlobe({
       ) : null}
       {!focus ? (
         <MapSideLegend title={fill ? undefined : metric.label} placement={place} overlay={fill}>
-          <SteppedLegend
-            label={metric.label}
-            kind={warmRisk ? "warm" : "green"}
-            compact={bottomLegend}
-            low={formatMacroValue(factor, metric.min)}
-            high={formatMacroValue(factor, metric.max)}
-          />
+          {diverging0 ? (
+            <>
+              <SteppedLegend
+                label={factorMeta?.divergeLegend?.neg ?? "负"}
+                kind={factorMeta?.divergeNegTone === "cool" ? "cool" : "green"}
+                compact={bottomLegend}
+                low="0"
+                high={formatMacroValue(factor, minV < 0 ? minV : 0)}
+              />
+              <SteppedLegend
+                label={factorMeta?.divergeLegend?.pos ?? "正"}
+                kind="warm"
+                compact={bottomLegend}
+                low="0"
+                high={formatMacroValue(factor, maxV > 0 ? maxV : 0)}
+              />
+            </>
+          ) : (
+            <SteppedLegend
+              label={metric.label}
+              kind={warmRisk ? "warm" : "green"}
+              compact={bottomLegend}
+              low={formatMacroValue(factor, metric.min)}
+              high={formatMacroValue(factor, metric.max)}
+            />
+          )}
         </MapSideLegend>
       ) : null}
     </div>

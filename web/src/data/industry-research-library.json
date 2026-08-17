@@ -177,7 +177,10 @@
         "diandian-2026-annual-overseas-cashloan"
       ]
     },
-    "note": "点点《2026H1海外现金贷》已于2026-08公开；H2尚未发布，pending 保留 diandian-2026h2-overseas-cashloan。"
+    "note": "点点《2026H1海外现金贷》已于2026-08公开；H2尚未发布，pending 保留 diandian-2026h2-overseas-cashloan。",
+    "lastChecked": "2026-08-17",
+    "pendingNote": "点点 2026H2 尚未公开发布，继续挂起 diandian-2026h2-overseas-cashloan",
+    "notes": "PDF 核验 OK；点点 2026H2 仍未公开发布，pending 保留。"
   },
   "reports": [
     {
@@ -3367,5 +3370,6 @@
         ]
       }
     }
-  ]
+  ],
+  "lastChecked": "2026-08-17"
 }

@@ -8,6 +8,7 @@ import {
   parseCiteNos,
   sourceCiteKindLabel,
 } from "./data/sourceCitations";
+import { GlossedText } from "./GlossedText";
 
 const HUB_RETURN_LABEL: Record<string, string> = {
   home: "总览",
@@ -90,7 +91,11 @@ export function CitedText({
 
   if (!canCite) {
     const plain = stripCiteMarks(text) || text;
-    return <span style={{ fontSize, lineHeight: 1.5, color }}>{plain}</span>;
+    return (
+      <span style={{ fontSize, lineHeight: 1.5, color }}>
+        <GlossedText text={plain} />
+      </span>
+    );
   }
 
   const parts: Array<string | number> = [];
@@ -104,7 +109,11 @@ export function CitedText({
   }
   if (last < text.length) parts.push(text.slice(last));
   if (parts.length === 1 && typeof parts[0] === "string" && !parseCiteNos(text).length) {
-    return <span style={{ fontSize, lineHeight: 1.5, color }}>{text}</span>;
+    return (
+      <span style={{ fontSize, lineHeight: 1.5, color }}>
+        <GlossedText text={text} />
+      </span>
+    );
   }
   return (
     <span style={{ fontSize, lineHeight: 1.5, color }}>
@@ -132,7 +141,7 @@ export function CitedText({
             {citeMark(p)}
           </button>
         ) : (
-          <span key={`t-${i}`}>{p}</span>
+          <GlossedText key={`t-${i}`} text={p} />
         ),
       )}
     </span>

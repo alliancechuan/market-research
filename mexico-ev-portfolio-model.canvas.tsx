@@ -10960,42 +10960,52 @@ function UnitCfTimelinePanel(props: {
   );
 }
 
-/** 投资人同屏三列：左假设 · 中图/表 · 右指标；窄屏自动单列堆叠 */
-const INV_PANE_GRID =
-  "repeat(auto-fit, minmax(min(100%, 300px), 1fr))";
+/** 投资人布局：上核心输出平铺 · 下假设+实时两列 */
+const INV_PANE_GRID_TWO = "minmax(0,1fr) minmax(0,1.15fr)";
 const INV_PANE_GAP = 6;
 const INV_PANE_PAD = 6;
 
+/** 窄屏：仍保持上条+下两列，略缩内边距 */
 const INV_OPS_RESPONSIVE_CSS = `
 @media (max-width: 920px) {
-  .inv-ops-shell {
-    height: auto !important;
-    max-height: none !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-  }
-  .inv-ops-body {
-    flex: none !important;
-    overflow: visible !important;
-  }
   .inv-ops-grid {
-    height: auto !important;
-    overflow: visible !important;
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) !important;
+    min-width: 0;
   }
   .inv-ops-col {
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
+    min-width: 0;
+    padding: 4px !important;
   }
-  .inv-ops-col-assume { order: 1; }
-  .inv-ops-col-focus { order: 2; }
-  .inv-ops-col-out { order: 3; }
-  .inv-ops-hide-narrow { display: none !important; }
+  .inv-ops-out-top {
+    padding: 4px !important;
+  }
 }
 `;
 
-/** 列内滚动壳：三列同屏时只滚列；窄屏随内容增高、整页可滚 */
+/** 顶部核心输出条（平铺指标，不参与列内滚动） */
+function InvPaneTopStrip(props: {
+  children?: any;
+  theme: ReturnType<typeof useHostTheme>;
+}) {
+  const { children, theme } = props;
+  return (
+    <div
+      className="inv-ops-out-top"
+      style={{
+        flexShrink: 0,
+        padding: INV_PANE_PAD,
+        border: `1px solid ${theme.stroke.secondary}`,
+        background: theme.bg.elevated,
+        boxSizing: "border-box",
+        overflowX: "auto",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** 列内滚动壳：下区两列各自滚动，不滚整页 */
 function InvPaneScrollCol(props: {
   children?: any;
   theme: ReturnType<typeof useHostTheme>;
@@ -14058,11 +14068,9 @@ export default function MexicoEvPortfolioModel() {
                 <Pill size="sm" active>
                   投资人
                 </Pill>
-                <span className="inv-ops-hide-narrow">
-                  <Text size="small" tone="tertiary">
-                    左假设 · 中图 · 右指标 · 列内滚
-                  </Text>
-                </span>
+                <Text size="small" tone="tertiary">
+                  上指标 · 下左假设 · 下右图 · 列内滚
+                </Text>
                 <Spacer />
                 <Text size="small" tone="tertiary">
                   {cfgSku.nameZh}
@@ -14147,7 +14155,7 @@ export default function MexicoEvPortfolioModel() {
                 ))}
               </Row>
 
-              {/* 投资人三列：同屏 · 窄屏单列堆叠 */}
+              {/* 投资人：上核心输出 · 下假设+实时两列 */}
               <div
                 className="inv-ops-body"
                 style={{
@@ -14582,16 +14590,122 @@ export default function MexicoEvPortfolioModel() {
                     })();
                     return (
                     <div
-                      className="inv-ops-grid"
+                      className="inv-ops-layout"
                       style={{
                         height: "100%",
                         minHeight: 0,
-                        display: "grid",
-                        gridTemplateColumns: INV_PANE_GRID,
+                        display: "flex",
+                        flexDirection: "column",
                         gap: INV_PANE_GAP,
                         overflow: "hidden",
                       }}
                     >
+                      <InvPaneTopStrip theme={theme}>
+                        <Stack gap={6}>
+                          <InvColTitle
+                            title="核心输出"
+                            hint="路径回本 · IRR · NPV · 敏感性"
+                          />
+                          <Grid columns={GRID_STATS} gap={8}>
+                            <Stat
+                              value={
+                                pathPbMo != null ? `M${pathPbMo}` : "未回本"
+                              }
+                              label={
+                                invResidualInPath
+                                  ? "路径静态回收期 · 含残值"
+                                  : "路径静态回收期"
+                              }
+                            />
+                            <Stat
+                              value={
+                                pathDynamicPb.months != null
+                                  ? `M${pathDynamicPb.months}`
+                                  : "未回本"
+                              }
+                              label={`动态回收期 · ${pct(UNIT_CF_DISCOUNT_ANN, 0)}`}
+                            />
+                            <Stat
+                              value={pct(pathIrrAnn)}
+                              label={`${holdYears}年路径 IRR${invResidualInPath ? "·含残值" : ""}`}
+                              tone={
+                                pathIrrAnn != null && pathIrrAnn > 0.12
+                                  ? "success"
+                                  : pathIrrAnn != null && pathIrrAnn > 0
+                                    ? "info"
+                                    : undefined
+                              }
+                            />
+                            <div
+                              title={unitNpvTipZh({
+                                annualRate: UNIT_CF_DISCOUNT_ANN,
+                                pathMonths: pathNetsForMetrics.length,
+                                opsYears: holdYears,
+                              }).replace(/\n+/g, " · ")}
+                              style={{ cursor: "help" }}
+                            >
+                              <Stat
+                                value={
+                                  (pathNpvMxn >= 0 ? "+" : "") +
+                                  moneyMxn(pathNpvMxn, fx, ccy)
+                                }
+                                label={`NPV ${pct(UNIT_CF_DISCOUNT_ANN, 0)}${invResidualInPath ? "·含残值" : ""}`}
+                                tone={
+                                  pathNpvMxn > 0
+                                    ? "success"
+                                    : pathNpvMxn < 0
+                                      ? "warning"
+                                      : undefined
+                                }
+                              />
+                            </div>
+                          </Grid>
+                          <Row gap={10} wrap align="center">
+                            <Text size="small">
+                              期初 {moneyMxn(initInv, fx, ccy, 0)}
+                            </Text>
+                            <Text size="small">
+                              路径累计 {moneyMxn(cumPathNet, fx, ccy, 0)}
+                            </Text>
+                            <Text size="small">
+                              残值 {moneyMxn(residualMxn, fx, ccy, 0)}
+                            </Text>
+                            <Text size="small" weight="semibold">
+                              总回报 {moneyMxn(totalReturnMxn, fx, ccy, 0)}
+                              {returnMultiple != null
+                                ? ` · ${fmt(returnMultiple, 2)}x`
+                                : ""}
+                            </Text>
+                          </Row>
+                          <CollapsibleSection
+                            title="敏感性（同引擎重算）"
+                            defaultOpen={false}
+                            trailing={`${sensRows.length} 情景`}
+                          >
+                            <Table
+                              headers={["情景", "路径回收", "IRR"]}
+                              columnAlign={["left", "right", "right"]}
+                              rows={sensRows.map((r) => [
+                                r.label,
+                                r.pb,
+                                r.irr,
+                              ])}
+                              striped
+                            />
+                          </CollapsibleSection>
+                        </Stack>
+                      </InvPaneTopStrip>
+                      <div
+                        className="inv-ops-grid"
+                        style={{
+                          flex: 1,
+                          minHeight: 0,
+                          display: "grid",
+                          gridTemplateColumns: INV_PANE_GRID_TWO,
+                          gap: INV_PANE_GAP,
+                          overflow: "hidden",
+                        }}
+                      >
                       <InvPaneScrollCol
                         theme={theme}
                         className="inv-ops-col inv-ops-col-assume"
@@ -16070,113 +16184,7 @@ export default function MexicoEvPortfolioModel() {
                         </Callout>
                       </Stack>
                       </InvPaneScrollCol>
-                      <InvPaneScrollCol
-                        theme={theme}
-                        className="inv-ops-col inv-ops-col-out"
-                      >
-                      {/* 右列：核心输出 */}
-                      <Stack gap={6}>
-                        <InvColTitle
-                          title="核心输出"
-                          hint="路径回本 · IRR · NPV · 敏感性"
-                        />
-                        <Grid
-                          columns="repeat(auto-fit, minmax(min(100%, 130px), 1fr))"
-                          gap={8}
-                        >
-                          <Stat
-                            value={
-                              pathPbMo != null ? `M${pathPbMo}` : "未回本"
-                            }
-                            label={
-                              invResidualInPath
-                                ? "路径静态回收期 · 含残值"
-                                : "路径静态回收期"
-                            }
-                          />
-                          <Stat
-                            value={
-                              pathDynamicPb.months != null
-                                ? `M${pathDynamicPb.months}`
-                                : "未回本"
-                            }
-                            label={`动态回收期 · ${pct(UNIT_CF_DISCOUNT_ANN, 0)}`}
-                          />
-                          <Stat
-                            value={pct(pathIrrAnn)}
-                            label={`${holdYears}年路径 IRR${invResidualInPath ? "·含残值" : ""}`}
-                            tone={
-                              pathIrrAnn != null && pathIrrAnn > 0.12
-                                ? "success"
-                                : pathIrrAnn != null && pathIrrAnn > 0
-                                  ? "info"
-                                  : undefined
-                            }
-                          />
-                          <div
-                            title={unitNpvTipZh({
-                              annualRate: UNIT_CF_DISCOUNT_ANN,
-                              pathMonths: pathNetsForMetrics.length,
-                              opsYears: holdYears,
-                            }).replace(/\n+/g, " · ")}
-                            style={{ cursor: "help" }}
-                          >
-                            <Stat
-                              value={
-                                (pathNpvMxn >= 0 ? "+" : "") +
-                                moneyMxn(pathNpvMxn, fx, ccy)
-                              }
-                              label={`NPV ${pct(UNIT_CF_DISCOUNT_ANN, 0)}${invResidualInPath ? "·含残值" : ""}`}
-                              tone={
-                                pathNpvMxn > 0
-                                  ? "success"
-                                  : pathNpvMxn < 0
-                                    ? "warning"
-                                    : undefined
-                              }
-                            />
-                          </div>
-                        </Grid>
-                        <Divider />
-                        <Text size="small" weight="medium">
-                          投入回报（含所选残值）
-                        </Text>
-                        <Text size="small">
-                          期初投入 {moneyMxn(initInv, fx, ccy, 0)}
-                        </Text>
-                        <Text size="small">
-                          路径累计净额 {moneyMxn(cumPathNet, fx, ccy, 0)}
-                        </Text>
-                        <Text size="small">
-                          + 期末残值 {moneyMxn(residualMxn, fx, ccy, 0)}
-                        </Text>
-                        <Text size="small" weight="semibold">
-                          总回报 {moneyMxn(totalReturnMxn, fx, ccy, 0)}
-                          {returnMultiple != null
-                            ? ` · 倍数 ${fmt(returnMultiple, 2)}x`
-                            : ""}
-                        </Text>
-                        <Text size="small" tone="tertiary">
-                          {invResidualInPath
-                            ? "IRR/NPV/路径回本已把残值加在路径末月；倍数仍用路径累计+残值对照。"
-                            : "IRR/NPV 不含残值；倍数把残值加回，便于对照处置假设。"}
-                        </Text>
-                        <Divider />
-                        <Text size="small" weight="medium">
-                          敏感性（同引擎重算）
-                        </Text>
-                        <Table
-                          headers={["情景", "路径回收", "IRR"]}
-                          columnAlign={["left", "right", "right"]}
-                          rows={sensRows.map((r) => [
-                            r.label,
-                            r.pb,
-                            r.irr,
-                          ])}
-                          striped
-                        />
-                      </Stack>
-                      </InvPaneScrollCol>
+                      </div>
                     </div>
                     );
                   })()}
@@ -16352,16 +16360,111 @@ export default function MexicoEvPortfolioModel() {
                       })();
                       return (
                         <div
-                          className="inv-ops-grid"
+                          className="inv-ops-layout"
                           style={{
                             height: "100%",
                             minHeight: 0,
-                            display: "grid",
-                            gridTemplateColumns: INV_PANE_GRID,
+                            display: "flex",
+                            flexDirection: "column",
                             gap: INV_PANE_GAP,
                             overflow: "hidden",
                           }}
                         >
+                          <InvPaneTopStrip theme={theme}>
+                            <Stack gap={6}>
+                              <InvColTitle
+                                title="核心输出"
+                                hint="路径回本 · IRR · NPV · 敏感性"
+                              />
+                              <Grid columns={GRID_STATS} gap={8}>
+                                <Stat
+                                  value={
+                                    stPb.months != null
+                                      ? `M${stPb.months}`
+                                      : "未回本"
+                                  }
+                                  label="路径静态回收期"
+                                />
+                                <Stat
+                                  value={
+                                    stDyn.months != null
+                                      ? `M${stDyn.months}`
+                                      : "未回本"
+                                  }
+                                  label={`动态回收期 · ${pct(UNIT_CF_DISCOUNT_ANN, 0)}`}
+                                />
+                                <Stat
+                                  value={pct(stIrrAnn)}
+                                  label={`${Math.round(horizon / 12)}年路径 IRR`}
+                                  tone={
+                                    stIrrAnn != null && stIrrAnn > 0.12
+                                      ? "success"
+                                      : stIrrAnn != null && stIrrAnn > 0
+                                        ? "info"
+                                        : undefined
+                                  }
+                                />
+                                <Stat
+                                  value={
+                                    (stNpv >= 0 ? "+" : "") +
+                                    moneyMxn(stNpv, fx, ccy)
+                                  }
+                                  label={`NPV ${pct(UNIT_CF_DISCOUNT_ANN, 0)}`}
+                                  tone={
+                                    stNpv > 0
+                                      ? "success"
+                                      : stNpv < 0
+                                        ? "warning"
+                                        : undefined
+                                  }
+                                />
+                              </Grid>
+                              <Row gap={10} wrap align="center">
+                                <Text size="small">
+                                  期初 {moneyMxn(stInit, fx, ccy, 0)}
+                                </Text>
+                                <Text size="small">
+                                  累计 {moneyMxn(stCum, fx, ccy, 0)}
+                                </Text>
+                                <Text size="small">
+                                  残值 {moneyMxn(stResidualMxn, fx, ccy, 0)}
+                                </Text>
+                                <Text size="small" weight="semibold">
+                                  总回报 {moneyMxn(stTotal, fx, ccy, 0)}
+                                  {stMult != null
+                                    ? ` · ${fmt(stMult, 2)}x`
+                                    : ""}
+                                </Text>
+                              </Row>
+                              <CollapsibleSection
+                                title="敏感性"
+                                defaultOpen={false}
+                                trailing={`${sensSt.length} 情景`}
+                              >
+                                <Table
+                                  headers={["情景", "路径回收", "IRR"]}
+                                  columnAlign={["left", "right", "right"]}
+                                  rows={sensSt.map((r) => [
+                                    r.label,
+                                    r.pb,
+                                    r.irr,
+                                  ])}
+                                  striped
+                                />
+                              </CollapsibleSection>
+                            </Stack>
+                          </InvPaneTopStrip>
+                          <div
+                            className="inv-ops-grid"
+                            style={{
+                              flex: 1,
+                              minHeight: 0,
+                              display: "grid",
+                              gridTemplateColumns: INV_PANE_GRID_TWO,
+                              gap: INV_PANE_GAP,
+                              overflow: "hidden",
+                            }}
+                          >
                           <InvPaneScrollCol
                             theme={theme}
                             className="inv-ops-col inv-ops-col-assume"
@@ -16609,89 +16712,7 @@ export default function MexicoEvPortfolioModel() {
                             </Callout>
                           </Stack>
                           </InvPaneScrollCol>
-                          <InvPaneScrollCol
-                            theme={theme}
-                            className="inv-ops-col inv-ops-col-out"
-                          >
-                          <Stack gap={6}>
-                            <InvColTitle
-                              title="核心输出"
-                              hint="路径回本 · IRR · NPV · 敏感性"
-                            />
-                            <Grid
-                              columns="repeat(auto-fit, minmax(min(100%, 130px), 1fr))"
-                              gap={8}
-                            >
-                              <Stat
-                                value={
-                                  stPb.months != null
-                                    ? `M${stPb.months}`
-                                    : "未回本"
-                                }
-                                label="路径静态回收期"
-                              />
-                              <Stat
-                                value={
-                                  stDyn.months != null
-                                    ? `M${stDyn.months}`
-                                    : "未回本"
-                                }
-                                label={`动态回收期 · ${pct(UNIT_CF_DISCOUNT_ANN, 0)}`}
-                              />
-                              <Stat
-                                value={pct(stIrrAnn)}
-                                label={`${Math.round(horizon / 12)}年路径 IRR`}
-                                tone={
-                                  stIrrAnn != null && stIrrAnn > 0.12
-                                    ? "success"
-                                    : stIrrAnn != null && stIrrAnn > 0
-                                      ? "info"
-                                      : undefined
-                                }
-                              />
-                              <Stat
-                                value={
-                                  (stNpv >= 0 ? "+" : "") +
-                                  moneyMxn(stNpv, fx, ccy)
-                                }
-                                label={`NPV ${pct(UNIT_CF_DISCOUNT_ANN, 0)}`}
-                                tone={
-                                  stNpv > 0
-                                    ? "success"
-                                    : stNpv < 0
-                                      ? "warning"
-                                      : undefined
-                                }
-                              />
-                            </Grid>
-                            <Divider />
-                            <Text size="small">
-                              期初 {moneyMxn(stInit, fx, ccy, 0)} · 累计{" "}
-                              {moneyMxn(stCum, fx, ccy, 0)} · 残值{" "}
-                              {moneyMxn(stResidualMxn, fx, ccy, 0)}
-                            </Text>
-                            <Text size="small" weight="semibold">
-                              总回报 {moneyMxn(stTotal, fx, ccy, 0)}
-                              {stMult != null
-                                ? ` · ${fmt(stMult, 2)}x`
-                                : ""}
-                            </Text>
-                            <Divider />
-                            <Text size="small" weight="medium">
-                              敏感性
-                            </Text>
-                            <Table
-                              headers={["情景", "路径回收", "IRR"]}
-                              columnAlign={["left", "right", "right"]}
-                              rows={sensSt.map((r) => [
-                                r.label,
-                                r.pb,
-                                r.irr,
-                              ])}
-                              striped
-                            />
-                          </Stack>
-                          </InvPaneScrollCol>
+                          </div>
                         </div>
                       );
                     })()}
